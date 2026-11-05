@@ -1,0 +1,1 @@
+import {readdirSync} from 'node:fs';import {spawnSync} from 'node:child_process';for(const f of readdirSync('dist').filter(x=>/\.(mjs|js)$/.test(x))){const r=spawnSync(process.execPath,['--check','dist/'+f],{stdio:'inherit'});if(r.status)process.exit(r.status);}
