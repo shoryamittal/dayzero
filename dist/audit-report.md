@@ -49,3 +49,7 @@ No invented success rate, jury quality score, human evaluation, cross-editor com
 ## Launch dependencies
 
 Custom domain requires the owner's chosen domain and DNS access. Live AI/search and cloud storage require provider configuration, backend implementation and end-to-end verification. Checkout requires payment credentials, signed webhook handling, reconciliation and agreed commercial terms. These are outstanding product work, not completed integrations.
+
+## Community model update — 6 November 2026
+
+The final business direction is a community-led preparation service, with the software as its workspace. The homepage and former package page now explain a proposed four-week ₹499 pilot. Enrollment remains closed. A four-week personal calendar download is implemented and explicitly does not book hosted sessions. The automated suite now has 55 passing tests. See [the business model](community-model.md) for the pilot scope, operating requirements and validation metrics. Live community delivery, reviewed event shortlists, enrollment and payments remain outstanding.
