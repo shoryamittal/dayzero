@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {calendarPlan,weeks} from '../dist/community.mjs';
+test('personal calendar has four weekly India-time blocks across year boundary',()=>{const s=calendarPlan('2026-12-28');assert.equal((s.match(/BEGIN:VEVENT/g)||[]).length,4);assert.match(s,/DTSTART:20261228T043000Z/);assert.match(s,/DTSTART:20270118T043000Z/);assert.match(s,/No hosted session or enrollment is booked/);assert.equal(weeks.length,4);});
+test('invalid dates and newline calendar injection are rejected',()=>{for(const d of ['2026-02-30','2026-11-06\nSUMMARY:Fake','invalid','2025-01-01','2101-01-01'])assert.throws(()=>calendarPlan(d));assert.match(calendarPlan('2028-02-29'),/DTSTART:20280229T043000Z/);});
