@@ -53,3 +53,9 @@ Custom domain requires the owner's chosen domain and DNS access. Live AI/search 
 ## Community model update — 6 November 2026
 
 The final business direction is a community-led preparation service, with the software as its workspace. The homepage and former package page now explain a proposed four-week ₹499 pilot. Enrollment remains closed. A four-week personal calendar download is implemented and explicitly does not book hosted sessions. The automated suite now has 55 passing tests. See [the business model](community-model.md) for the pilot scope, operating requirements and validation metrics. Live community delivery, reviewed event shortlists, enrollment and payments remain outstanding.
+
+## Search repair — 6 November 2026
+
+Event search now uses token matching across event names, aliases, topics and locations; it accepts reordered words, punctuation, edition years and a single-character typo in longer names. The bundled library has seven source-linked records, including explicitly labeled past/uncertain editions. It is not a comprehensive or real-time event database. Wikipedia is an optional, separate background lookup. Empty category results offer a clear-filter action. A user can create a source-linked brief, attach it to a saved project and search for it again after a refresh. Those records share the project's local storage/retention policy.
+
+Browser verification: Harvard hackathon matched HackHarvard; an incompatible category produced a clear empty state; clear-filter restored matches; a fictional QA event with a supplied source was attached to the sample project and found again after reload. The automated suite has 56 passing tests. Current official sources checked for the added records: https://www.hhuh.io/ , https://www.pennapps.com/ , https://solve.mit.edu/challenges . These checks do not establish application eligibility or a current open round.
