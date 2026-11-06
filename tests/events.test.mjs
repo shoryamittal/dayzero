@@ -21,3 +21,15 @@ test('event aliases match even when an edition year is included',()=>{
  assert.equal(catalogSearch('Smart India Hackathon 2027')[0]?.id,'sih');
  assert.equal(catalogSearch('Hult Prize 2026')[0]?.id,'hult');
 });
+
+test('library searches punctuation, reordered words, topics, locations and a small typo',()=>{
+ assert.equal(catalogSearch('smart-india 2027')[0]?.id,'sih');
+ assert.equal(catalogSearch('prize hult')[0]?.id,'hult');
+ assert.equal(catalogSearch('Harvard hackathon')[0]?.id,'hackharvard');
+ assert.equal(catalogSearch('HackHarvrd')[0]?.id,'hackharvard');
+ assert.ok(catalogSearch('social innovation').some(e=>e.id==='mitsolve'));
+ assert.ok(catalogSearch('Cambridge').some(e=>e.id==='hackharvard'));
+ assert.equal(catalogSearch('MIT Solve','Hackathon').length,0);
+ assert.equal(new Set(eventCatalog.map(e=>e.id)).size,eventCatalog.length);
+ assert.ok(eventCatalog.every(e=>e.source.startsWith('https://')));
+});
