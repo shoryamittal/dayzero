@@ -26,3 +26,7 @@ Export a library backup before switching hosts, then import it on the new host. 
 Event search provides official references and Wikipedia background. It cannot discover every campus event or verify current deadlines. AI generation, cloud collaboration, and payments are not connected. A paid launch must accurately describe these limits. PPTX filling requires manual layout review in PowerPoint. Generated decks have six sections. PDF supports Latin text; use PPTX for other scripts.
 
 Third-party licenses are retained under dist/vendor/.
+
+## Community-led direction
+
+The homepage and Community pilot page describe a proposed four-week preparation cohort. The free workspace remains available. Enrollment and payments are closed until hosts, schedule, delivery capacity and commercial terms are confirmed. `dist/community-model.md` records the final model and owner decisions. `dist/community.mjs` includes the personal four-week calendar generator; calendar files do not reserve a seat or hosted meeting.
