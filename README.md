@@ -30,3 +30,9 @@ Third-party licenses are retained under dist/vendor/.
 ## Community-led direction
 
 The homepage and Community pilot page describe a proposed four-week preparation cohort. The free workspace remains available. Enrollment and payments are closed until hosts, schedule, delivery capacity and commercial terms are confirmed. `dist/community-model.md` records the final model and owner decisions. `dist/community.mjs` includes the personal four-week calendar generator; calendar files do not reserve a seat or hosted meeting.
+
+## AI Studio
+
+Open a project and choose AI Studio. Use a Gemini key from a free-tier Google AI Studio project. Review the outbound text before sending. A key is used for one request and is never included in project storage or exports. Google may use free-tier submissions to improve its products.
+
+The Vercel deployment runs /api/assist. For local development, run npm run dev and open http://127.0.0.1:4176/. Render continues serving the static workspace. AI Studio there links to Vercel.
