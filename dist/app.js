@@ -1,6 +1,6 @@
 import {assistStudio,initAssist} from './assist-ui.mjs?v=audit-1';
 import {communityHome,communityPlans} from './community.mjs?v=community-1';
-import {templateBridge,initTemplate} from './template-ui.mjs?v=ai-1.0';
+import {templateBridge,initTemplate} from './template-ui.mjs?v=audit-2';
 import {preparationHub,initPreparation} from './preparation-ui.mjs?v=ai-1.0';
 import {preparationReport} from './preparation.mjs?v=ai-1.0';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
