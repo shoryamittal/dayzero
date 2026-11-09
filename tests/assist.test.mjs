@@ -37,14 +37,18 @@ test('missing key, foreign origin and invalid mode never call Gemini', async () 
   assert.equal((await handleAssist(request({mode: 'draft', input}, {'x-gemini-key': ''}), noCall)).status, 401);
   assert.equal((await handleAssist(request({mode: 'draft', input}, {origin: 'https://other.example'}), noCall)).status, 403);
   assert.equal((await handleAssist(request({mode: 'anything', input}), noCall)).status, 400);
-  assert.equal((await handleAssist(request({mode: 'review', input: {problem: 'a'.repeat(66000)}}), noCall)).status, 400);
+  assert.equal((await handleAssist(request({mode: 'review', input: {problem: 'a'.repeat(262145)}}), noCall)).status, 400);
 });
 
 test('rule findings require pasted wording and incomplete drafts fail closed', async () => {
-  const rule = await handleAssist(request({mode: 'rules', input}), async () => upstream({gaps: [], findings: [
+  const rule = await handleAssist(request({mode: 'rules', input}), async (_url, options) => {
+    const payload = JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);
+    assert.deepEqual(payload, {event: '', rules: input.rules});
+    return upstream({gaps: [], findings: [
     {section: 'rules', quote: input.rules, advice: 'Keep the deck to six slides.'},
     {section: 'rules', quote: 'Deadline is Monday', advice: 'Submit early.'}
-  ]}));
+    ]});
+  });
   assert.equal((await rule.json()).result.findings.length, 1);
   const draft = await handleAssist(request({mode: 'draft', input}), async () => upstream({story: {problem: 'Only one section'}}));
   assert.equal(draft.status, 502);
