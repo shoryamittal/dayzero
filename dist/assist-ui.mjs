@@ -1,4 +1,4 @@
-import {assistInput, sections, validateAssistResult} from './assist-model.mjs';
+import {assistInput, sections, validateAssistResult} from './assist-model.mjs?v=audit-1';
 import {analyze} from './engine.mjs';
 import {challengeQuestions} from './preparation.mjs';
 
@@ -18,7 +18,7 @@ export function initAssist(options) {
 function visibleOutput(project) {
   if (!output || output.id !== project.id) return '';
   const {mode, result, input, model} = output;
-  const current = JSON.stringify(assistInput(project)) === input;
+  const current = JSON.stringify(assistInput(project, mode)) === input;
   const draft = mode === 'draft' ? sections.map(key => `<article class="requirement-card"><h4>${key}</h4><p>${escape(result.story[key])}</p></article>`).join('') : '';
   const findings = (result.findings || []).map(item => `<article class="requirement-card"><span class="eyebrow">${escape(item.section)}</span><blockquote>${escape(item.quote)}</blockquote><p>${escape(item.advice)}</p></article>`).join('');
   return `<section class="panel"><span class="eyebrow">GEMINI · ${escape(model)}</span><h3>${labels[mode]}</h3>
@@ -38,7 +38,7 @@ export function assistStudio(project) {
       <form id="assist-form" method="post">
         <div class="field"><label for="assist-mode">What do you want to work on?</label><select id="assist-mode" name="mode">${Object.entries(labels).map(([key, label]) => `<option value="${key}">${label}</option>`).join('')}</select></div>
         <div class="field"><label for="assist-key">Gemini API key</label><input id="assist-key" type="password" autocomplete="off" maxlength="200" required></div>
-        <details><summary>See the text sent in an AI request</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:20rem;overflow:auto">${escape(JSON.stringify(assistInput(project), null, 2))}</pre></details>
+        <details><summary>See the text sent in an AI request</summary><pre id="assist-preview" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:20rem;overflow:auto">${escape(JSON.stringify(assistInput(project, "draft"), null, 2))}</pre></details>
         <label class="check-label"><input type="checkbox" required name="consent"> Send the displayed text to Google Gemini. Google may use free-tier submissions to improve its products. Use material you can share.</label>
         <button class="btn primary" type="submit" ${pending ? 'disabled' : ''}>${pending ? 'Waiting for Gemini…' : 'Send to Gemini ↗'}</button>
         <p id="assist-status" role="status">${escape(message)}</p>
@@ -50,6 +50,12 @@ export function assistStudio(project) {
 }
 
 if (typeof document !== 'undefined') {
+  document.addEventListener('change', event => {
+    if (event.target.id !== 'assist-mode') return;
+    const form = event.target.form;
+    form.elements.consent.checked = false;
+    form.querySelector('#assist-preview').textContent = JSON.stringify(assistInput(api.project(), event.target.value), null, 2);
+  });
   document.addEventListener('submit', async event => {
     if (event.target.id !== 'assist-form') return;
     event.preventDefault();
@@ -62,7 +68,7 @@ if (typeof document !== 'undefined') {
     const mode = fields.get('mode');
     const keyField = form.querySelector('#assist-key');
     const key = keyField.value.trim();
-    const input = assistInput(project);
+    const input = assistInput(project, mode);
     const id = project.id;
     keyField.value = '';
     pending = true;
@@ -103,10 +109,11 @@ if (typeof document !== 'undefined') {
       api.download(JSON.stringify({provider: 'Gemini', model: output.model, mode: output.mode, ...output.result}, null, 2));
       return;
     }
-    if (output.mode !== 'draft' || JSON.stringify(assistInput(project)) !== output.input) return;
+    if (output.mode !== 'draft' || JSON.stringify(assistInput(project, output.mode)) !== output.input) return;
     project.history = [...project.history, {at: Date.now(), data: Object.fromEntries(sections.map(key => [key, project[key]]))}].slice(-5);
     for (const key of sections) project[key] = output.result.story[key];
-    project.checklist = {};
+    project.checklist.facts = false;
+    project.checklist.files = false;
     output = undefined;
     await api.save();
     message = 'Draft applied. Restore the previous version from Story studio if needed.';

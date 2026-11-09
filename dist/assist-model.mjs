@@ -6,10 +6,11 @@ function bounded(value, max) {
   return typeof value === 'string' ? value.replace(/\0/g, '').trim().slice(0, max) : '';
 }
 
-export function assistInput(project) {
+export function assistInput(project, mode) {
+  const context = {event: bounded(project.event, 160), rules: bounded(project.rules, 10000)};
+  if (mode === "rules") return context;
   return {
-    event: bounded(project.event, 160),
-    rules: bounded(project.rules, 10000),
+    ...context,
     story: Object.fromEntries(sections.map(key => [key, bounded(project.story?.[key] ?? project[key], 3000)])),
     evidence: Array.isArray(project.evidence) ? project.evidence.slice(0, 12).map(item => ({
       section: sections.includes(item?.section ?? item?.slide) ? (item.section ?? item.slide) : 'proof',

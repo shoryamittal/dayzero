@@ -1,10 +1,15 @@
-const CACHE='dayzero-shell-ai-1';
+const CACHE='dayzero-shell-audit-1';
 const SHELL=['/','/index.html','/styles.css','/studio.css','/app.js','/engine.mjs','/event-engine.mjs','/event-ui.mjs','/claim-engine.mjs','/preparation.mjs','/preparation-ui.mjs','/template-ui.mjs','/template-bridge.mjs','/community.mjs','/assist-ui.mjs','/assist-model.mjs'];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()));});
+const VERSIONED=[
+ '/app.js?v=audit-1','/assist-ui.mjs?v=audit-1','/assist-model.mjs?v=audit-1','/community.mjs?v=community-1',
+ ...SHELL.filter(path=>path.endsWith('.mjs')&&!path.includes('/assist-')&&!path.includes('/community.')).map(path=>path+'?v=ai-1.0'),
+ '/styles.css?v=ai-1.0','/studio.css?v=ai-1.0'
+];
+self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([...SHELL,...VERSIONED])).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('dayzero-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
 self.addEventListener('fetch',event=>{
  const url=new URL(event.request.url);
  if(event.request.method!=='GET'||url.origin!==self.location.origin)return;
  if(!SHELL.includes(url.pathname)&&!url.pathname.startsWith('/vendor/'))return;
- event.respondWith(fetch(event.request,{cache:'no-store'}).then(response=>{if(response.ok){const copy=response.clone();caches.open(CACHE).then(c=>c.put(event.request,copy));}return response;}).catch(async()=>{const cached=await caches.match(event.request);if(cached)return cached;if(event.request.mode==='navigate')return caches.match('/index.html');return new Response('Not available offline yet',{status:503});}));
+ event.respondWith(fetch(event.request,{cache:'no-store'}).then(async response=>{if(response.ok){const cache=await caches.open(CACHE);await cache.put(event.request,response.clone()).catch(()=>{});}return response;}).catch(async()=>{const cached=await caches.match(event.request);if(cached)return cached;if(event.request.mode==='navigate')return caches.match('/index.html');return new Response('Not available offline yet',{status:503});}));
 });
