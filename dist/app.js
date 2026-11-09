@@ -1,5 +1,5 @@
-import {sampleDesign} from './sample-deck.mjs?v=sample-2';
-import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=sample-2';
+import {sampleDesign} from './sample-deck.mjs?v=sample-3';
+import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=sample-3';
 import {assistStudio,initAssist} from './assist-ui.mjs?v=audit-1';
 import {communityHome,communityPlans} from './community.mjs?v=exhibit-1';
 import {templateBridge,initTemplate} from './template-ui.mjs?v=audit-2';

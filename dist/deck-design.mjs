@@ -137,7 +137,7 @@ export async function makePowerPoint(project, PptxGenJS, designSlide = slideDesi
         align:item.align, valign:'top', margin:0, fit:'shrink'
       });
     }
-    page.addNotes([
+    page.addNotes(design.notes ? [design.notes] : [
       project.notes?.[slide.key] || '',
       ...(project.evidence || []).filter(note => note.slide === slide.key)
         .map(note => `Source note (student supplied): ${note.claim} | ${note.source}`),

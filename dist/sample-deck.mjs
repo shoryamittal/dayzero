@@ -61,57 +61,85 @@ export function sampleDesign(_project, _slide, index) {
     type('Show this code at pickup',606,403,254,27,17,{color:ink});
   }
   if (index===2) {
-    heading('From listing to pickup');
+    heading('One reservation, three handoffs');
     const steps = [
-      ['01','List','Staff set the quantity and a collection window.'],
-      ['02','Reserve','A student picks a meal and gets a pickup code.'],
-      ['03','Collect','Staff check the code at the counter.']
+      ['01','CANTEEN STAFF','List','Post the available portions and set a pickup window.'],
+      ['02','STUDENT','Reserve','Claim one portion and receive a pickup code.'],
+      ['03','COUNTER STAFF','Collect','Check the code and mark the meal collected.']
     ];
-    steps.forEach(([n,title,detail],i)=>{
+    box(48,226,864,2,'789681');
+    steps.forEach(([n,owner,title,detail],i)=>{
       const x=48+i*296;
-      box(x,220,272,2,'789681');
-      label(n,x,243,120,lime);
-      type(title,x,277,260,54,37,{bold:true});
-      copy(detail,x,348,252,108,23);
+      box(x,213,38,28,lime);
+      label(n,x+8,218,28,ink);
+      label(owner,x,258,260);
+      type(title,x,289,265,53,40,{bold:true});
+      copy(detail,x,354,259,89,23);
     });
+    label('AT CLOSE  /  UNCOLLECTED RESERVATIONS EXPIRE',48,463,864,mint);
   }
   if (index===3) {
-    heading('The prototype covers\nthe pickup flow',860,53);
-    box(48,261,864,1,line);
-    box(480,279,1,166,line);
-    label('DEMONSTRATED IN THE PROTOTYPE',48,284,405);
-    copy('A clickable flow for listing, reservation and code-based pickup.',48,322,385,112,25);
-    label('QUESTIONS FOR THE PILOT',515,284,390);
-    copy('Will staff keep listings current? Will students collect what they reserve?',515,322,383,120,25);
+    heading('What the prototype shows',860,54);
+    box(48,207,864,1,line);
+    box(479,229,1,175,line);
+    label('SHOWN IN THE CLICKABLE DEMO',48,237,409);
+    type('The screens connect',48,276,403,47,30,{bold:true});
+    copy('Walk through listing a meal, reserving it, and checking its pickup code.',48,337,378,84,23);
+    label('OPEN QUESTION FOR THE PILOT',513,237,387);
+    type('Can it work at closing?',513,276,397,47,30,{bold:true});
+    copy('Observe whether staff can keep stock current and students arrive in time.',513,337,380,84,23);
+    box(48,431,864,47,'DDE7D4');
+    type('Prototype only. Field usage and food recovery are still unmeasured.',64,445,822,25,17,{bold:true});
   }
   if (index===4) {
-    heading('What the pilot will measure');
-    label('MEASURE',48,213,290);
-    label('HOW WE’LL TRACK IT',374,213,496);
+    heading('Two weeks to test the handoff',870,53);
+    box(48,188,418,87,'DDE7D4');
+    box(483,188,429,87,'DDE7D4');
+    label('WEEK 01  /  BASELINE',62,200,379);
+    type('Log leftover portions at closing.',62,232,375,31,20,{bold:true});
+    label('WEEK 02  /  LIVE PICKUPS',498,200,394);
+    type('Run one staffed pickup window daily.',498,232,393,31,20,{bold:true});
     const rows=[
-      ['Meals collected','Compare pickup records with portions listed.'],
-      ['Missed pickups','Count reservations that expire uncollected.'],
-      ['Staff workload','Record the time spent posting and handing over meals.']
+      ['Recovery','Portions collected out of portions listed'],
+      ['No-shows','Uncollected reservations out of reservations made'],
+      ['Staff time','Minutes spent listing and handing over meals']
     ];
     rows.forEach(([metric,method],i)=>{
-      const y=254+i*68;
-      box(48,y-12,864,1,line);
-      type(metric,48,y,301,51,24,{bold:true});
-      copy(method,374,y,522,54,21);
+      const y=304+i*53;
+      box(48,y-9,864,1,line);
+      type(metric,48,y,242,37,21,{bold:true});
+      copy(method,303,y,603,36,20);
     });
-    label('PROPOSED MEASURES  /  BASELINE AND RESULTS PENDING',48,463,864);
+    label('PROPOSED PILOT  /  RESULTS PENDING',48,471,864);
   }
   if (index===5) {
-    heading('Approval for a\none-canteen pilot',605,57);
-    copy('Start with one staffed pickup window. Review collection and staff workload before expanding.',50,268,490,145,27);
-    box(600,105,312,326,lime);
-    label('WHAT WE NEED',624,130,244,ink);
-    type('A canteen lead',624,185,253,52,27,{color:ink,bold:true});
-    box(624,246,260,1,'859844');
-    type('An agreed pickup window',624,266,251,68,27,{color:ink,bold:true});
-    box(624,342,260,1,'859844');
-    type('A short review after the pilot',624,362,258,66,22,{color:ink,bold:true});
+    heading('Approve a trial at\none canteen',560,59);
+    copy('At the end of week two, review recovery, missed pickups and staff time with the canteen lead.',50,267,489,116,25);
+    box(50,423,472,2,mint);
+    label('DECISION  /  CONTINUE, ADJUST, OR STOP',50,443,480,lime);
+    box(589,105,323,333,lime);
+    label('WHAT WE NEED TO START',612,129,283,ink);
+    const needs=[
+      ['01','Name a canteen lead'],
+      ['02','Agree on a pickup window'],
+      ['03','Set a date to review results']
+    ];
+    needs.forEach(([n,detail],i)=>{
+      const y=177+i*81;
+      box(612,y-10,276,1,'859844');
+      label(n,612,y+9,37,ink);
+      type(detail,659,y+4,221,62,25,{color:ink,bold:true});
+    });
   }
 
-  return {background:isDark ? dark : paper, shapes, images, items};
+  return {background:isDark ? dark : paper, shapes, images, items, notes:speakerNotes[index]};
 }
+
+const speakerNotes = [
+  'Open at the end of a canteen day. ReLoop tests whether a short pickup window can get unsold meals to students. The cover shows the intended handoff as a concept image.',
+  'Walk through the two sides. Staff list what is available. A student reserves a meal, receives a code, and shows it at the counter. The screen and code are illustrative.',
+  'Follow one meal through listing, reservation, and collection. At closing, any uncollected reservation expires. Ask staff who should update availability during a rush.',
+  'Show the clickable prototype. It demonstrates the screen sequence. The pilot needs to establish whether the handoff works during a real closing shift.',
+  'Log closing leftovers during the first week. In week two, run a staffed pickup window and track collections, no-shows, and staff time. The comparison is an operational signal, not a causal estimate.',
+  'Ask for approval to test at one canteen, a named lead, and a review date. At the review, use the results and staff feedback to decide whether to continue, adjust, or stop.'
+];
