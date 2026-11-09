@@ -13,6 +13,7 @@ export function sampleDesign(_project, _slide, index) {
   const secondary = isDark ? mint : muted;
   const items = [];
   const shapes = [];
+  const images = [];
   const box = (x,y,w,h,color) => shapes.push({box:[x,y,w,h],color});
   const type = (value,x,y,width,height,size,{color=foreground,bold=false,role=''}={}) =>
     items.push({value,x,y,width,height,size,color,bold,align:'left',role});
@@ -29,26 +30,35 @@ export function sampleDesign(_project, _slide, index) {
   label(String(index+1).padStart(2,'0')+' / 06',848,509,64);
 
   if (index===0) {
-    heading('Good food.\nOne more chance.',590,65);
-    copy('ReLoop gives campus canteens a way to offer unsold meals for student pickup before closing.',50,284,490,126,27);
-    box(606,99,306,350,lime);
-    label('CANTEEN CLOSE',629,126,245,ink);
-    type('Unsold\nmeals',629,163,252,110,42,{color:ink,bold:true});
-    box(629,291,254,1,'859844');
-    label('STUDENT PICKUP',629,316,245,ink);
-    type('Reserve and\ncollect',629,350,245,82,31,{color:ink,bold:true});
+    type('ReLoop',48,104,460,102,82,{bold:true,role:'title'});
+    box(50,221,75,4,lime);
+    type('A second chance\nfor unsold meals',48,250,502,116,47,{bold:true});
+    copy('A campus canteen pilot for reserving and collecting surplus food before closing.',50,394,482,77,23);
+    images.push({
+      src:'/reloop-handoff.png',
+      alt:'Concept image of a canteen worker handing a lunch bowl to a student',
+      box:[595,78,317,396]
+    });
+    label('AI-GENERATED CONCEPT IMAGE',595,477,317,mint);
   }
   if (index===1) {
-    heading('A pickup window for\nunsold meals',548,55);
-    copy('Staff post the available meals. Students see what’s left and reserve a pickup before closing.',50,259,486,140,27);
-    box(592,99,320,354,dark);
-    box(608,146,288,288,white);
-    label('RELOOP  /  RESERVATION PREVIEW',610,116,287,mint);
-    label('TODAY AT THE CAMPUS CANTEEN',629,171,245,muted);
-    type('Veg lunch bowl',629,215,247,55,30,{color:ink,bold:true});
-    type('Collection at the counter\nPickup window  4:30–5:00 pm',629,280,247,80,18,{color:ink});
-    box(629,371,245,41,lime);
-    type('Reserve a meal',644,381,218,27,17,{color:ink,bold:true});
+    heading('Reserve a meal.\nCollect before close.',532,51);
+    copy('Staff list unsold portions. Students reserve a meal and show their code at the counter.',50,243,470,107,25);
+    box(50,381,455,1,line);
+    label('CANTEEN STAFF',50,398,196);
+    label('STUDENTS',270,398,205);
+    type('Set stock and pickup time',50,428,201,52,18,{bold:true});
+    type('Reserve and collect',270,428,201,52,18,{bold:true});
+    box(568,91,344,375,dark);
+    label('RELOOP  /  PROTOTYPE',590,111,292,mint);
+    box(588,145,304,132,white);
+    label('AVAILABLE TODAY',606,159,246,muted);
+    type('Veg lunch bowl',606,188,255,45,28,{color:ink,bold:true});
+    type('Pickup at the counter · 4:30–5:00 pm',606,236,265,27,15,{color:ink});
+    box(588,292,304,149,lime);
+    label('RESERVATION CONFIRMED',606,307,264,ink);
+    type('RL–024',606,334,248,58,42,{color:ink,bold:true});
+    type('Show this code at pickup',606,403,254,27,17,{color:ink});
   }
   if (index===2) {
     heading('From listing to pickup');
@@ -103,5 +113,5 @@ export function sampleDesign(_project, _slide, index) {
     type('A short review after the pilot',624,362,258,66,22,{color:ink,bold:true});
   }
 
-  return {background:isDark ? dark : paper, shapes, items};
+  return {background:isDark ? dark : paper, shapes, images, items};
 }

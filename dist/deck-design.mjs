@@ -90,12 +90,22 @@ export function renderDeckSlide(project, index, designSlide = slideDesign) {
   const design = designSlide(project, slide, index);
   return `<article class="designed-slide" aria-label="${slide.title} slide" style="background:#${design.background}">
     ${design.shapes.map(({box,color}) => `<span aria-hidden="true" class="designed-slide-layer" style="${bounds(...box)};background:#${color}"></span>`).join('')}
+    ${(design.images || []).map(({src,alt,box}) => `<img class="designed-slide-layer" src="${escape(src)}" alt="${escape(alt)}" style="${bounds(...box)};object-fit:cover">`).join('')}
     ${design.items.map(item => {
       const tag = item.role === 'title' ? 'h2' : item.role === 'body' ? 'p' : 'span';
       const font = fit(item).size;
       return `<${tag} class="designed-slide-layer designed-slide-${item.role || 'label'}" ${item.role==='mark'?'aria-hidden="true"':''} style="${bounds(item.x,item.y,item.width,item.height)};color:#${item.color};font-size:${font/WIDTH*100}cqw;font-weight:${item.bold?700:400};text-align:${item.align}">${escape(item.value)}</${tag}>`;
     }).join('')}
   </article>`;
+}
+
+async function imageData(src) {
+  const response = await fetch(src);
+  if (!response.ok) throw Error('Could not load the slide image.');
+  const bytes = new Uint8Array(await response.arrayBuffer());
+  let binary = '';
+  for (let i=0; i<bytes.length; i+=8192) binary += String.fromCharCode(...bytes.subarray(i,i+8192));
+  return 'data:image/png;base64,' + btoa(binary);
 }
 
 export async function makePowerPoint(project, PptxGenJS, designSlide = slideDesign) {
@@ -115,6 +125,10 @@ export async function makePowerPoint(project, PptxGenJS, designSlide = slideDesi
         x:x/72, y:y/72, w:width/72, h:height/72,
         fill:{color}, line:{color, transparency:100}
       });
+    }
+    for (const {src, data, alt, box:[x,y,width,height]} of design.images || []) {
+      const picture = data || await imageData(src);
+      page.addImage({data:picture, altText:alt, x:x/72, y:y/72, w:width/72, h:height/72});
     }
     for (const item of design.items) {
       page.addText(item.value, {
