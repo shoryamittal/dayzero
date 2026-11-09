@@ -1,5 +1,5 @@
 import {assistStudio,initAssist} from './assist-ui.mjs?v=audit-1';
-import {communityHome,communityPlans} from './community.mjs?v=community-1';
+import {communityHome,communityPlans} from './community.mjs?v=exhibit-1';
 import {templateBridge,initTemplate} from './template-ui.mjs?v=audit-2';
 import {preparationHub,initPreparation} from './preparation-ui.mjs?v=ai-1.0';
 import {preparationReport} from './preparation.mjs?v=ai-1.0';
@@ -56,11 +56,55 @@ function projectCard(p){
 }
 function sampleCard(){return `<button class="project-card" data-action="demo"><div class="project-preview theme-botanical" style="--card-bg:#28412E;--card-fg:#FFFFFF;--card-accent:#D5F867"><div class="preview-kicker"><span>YOUR INSIDE LOOK</span>${icon('external',13)}</div><h3>ReLoop</h3><p>Good food. A second chance.</p><span class="cover-geometry geometry-botanical" aria-hidden="true"></span><div class="preview-bottom"><span>FICTIONAL PROJECT / DEMO</span><span>01 — 06</span></div></div><div class="project-info"><div class="title-line">A little inspiration ${icon('arrow',16)}</div><p>Explore the complete workspace. No sign-up needed.</p><div class="card-footer"><span>Fictional sample</span><span class="pill">Try it yourself</span></div></div></button>`;}
 function newCard(){return `<button class="new-card" data-action="new"><span class="new-art" aria-hidden="true"><span></span><span></span><span></span><b>+</b></span><strong>What are you<br>thinking about?</strong><span>A rough idea is enough to start.</span><span class="mosaic-link">Create a project ${icon('arrow',15)}</span></button>`;}
-function home(){return communityHome();}
+const previewProject = {...sample, evidence: []};
+const previewSlides = slides(previewProject);
+function sampleExhibit(){
+ return `<section class="sample-exhibit" aria-label="Sample pitch deck">
+  <div class="exhibit-stage-label"><span><b aria-hidden="true"></b> THE DECK, IN PRACTICE</span><span>RELOOP / FICTIONAL SAMPLE</span></div>
+  <div class="exhibit-slide" id="sample-slide" aria-live="polite">${renderSlide(previewProject,heroLens)}</div>
+  <div class="exhibit-control" role="group" aria-label="Choose a sample slide">${previewSlides.map((slide,i)=>`<button type="button" data-lens="${i}" aria-label="Slide ${i+1}: ${slide.title}" aria-pressed="${i===heroLens}"><span>0${i+1}</span><strong>${slide.title}</strong></button>`).join('')}</div>
+  <div class="exhibit-caption"><span>Slide <b id="sample-slide-number">0${heroLens+1}</b> / 06</span><span>Actual Day-Zero deck preview</span></div>
+ </section>`;
+}
+function home(){return communityHome(sampleExhibit());}
+
+const intakeStages = ['Project', 'Problem & solution', 'Approach & evidence', 'Impact & next step'];
+const intakeTitles = ['Give the idea a name.', 'Make the problem clear.', 'Show how it works.', 'Land the next step.'];
+const intakeGuides = [
+ 'Start with a working title. You can add the event now or find it later.',
+ 'Describe who has the problem and what your idea changes for them.',
+ 'Walk through the idea. Add a prototype, observation or result if you have one.',
+ 'Say what you hope to change and what you need to move forward.'
+];
+function intakePreview(){
+ const name = clean(intakeDraft.name,80);
+ const event = clean(intakeDraft.event,160);
+ const section = previewSlides[(intakeStep-1)*2];
+ const text = section && clean(intakeDraft[section.key],3000);
+ return `<div class="intake-preview-meta"><span>${section?'STORY PREVIEW':'PROJECT COVER PREVIEW'}</span><span>${section?'0'+(intakeStep*2-1)+' / 06':'DAY-ZERO / 00'}</span></div>
+  <div class="intake-art" aria-hidden="true"><i></i><i></i><i></i><span>✳</span></div>
+  <div class="intake-preview-copy">${section?`<span class="intake-project-label">${esc(name||'YOUR PROJECT')}</span>`:''}
+    <p class="intake-preview-title">${section?section.title+'.':esc(name||'Your idea goes here.')}</p>
+    <p class="intake-preview-text">${esc(section ? (text ? text.slice(0,160)+(text.length>160?'…':'') : 'Your opening words will appear here.') : (event||'Competition pitch / working draft'))}</p>
+  </div>`;
+}
 function projects(){return `<div class="page-heading"><div class="eyebrow">YOUR IDEAS, WITH ROOM TO GROW</div><h1>The drawing <em>board.</em></h1><p>Every project has a different story. Keep up to ${MAX_PROJECTS} on this device, without replacing the one you’re working on.</p></div><div class="project-toolbar"><div class="search-wrap">${icon('eye',17)}<input type="search" id="project-search" placeholder="Find a project or event…" aria-label="Search your projects"></div><div class="toolbar-actions">${project?btn('Duplicate active project','duplicate','','file'):''}${btn('Import a project','import','','upload')}${btn('New project','new','primary','plus')}</div></div><div class="project-grid library-grid" id="project-library">${library.map(projectCard).join('')}${newCard()}</div><p id="project-empty-search" class="notice neutral" hidden>No projects match that search. Try another name or event.</p><p class="disabled-note">Local projects expire 24 hours after their last edit and are removed when you next open the app. Export backups to keep your work.</p>`;}
 function startNew(){if(library.length>=MAX_PROJECTS){toast('Your local library is full. Export a backup and manage your saved projects.');return go('settings');}newConfirm();}
 function newConfirm(){resetRehearsal();intakeDraft={id:createId(),name:'',team:'',event:'',problem:'',solution:'',approach:'',proof:'',impact:'',ask:'',rules:'',deadline:'',template:'signal',plan:'team',demo:false,confirmed:false,createdAt:Date.now(),updatedAt:Date.now(),history:[],notes:{},evidence:[],checklist:{}};intakeStep=0;go('intake');}
-function intake(){const stepFields=intakeStep===0?`<div class="field-row"><div class="field"><label for="name">What’s your project called?</label><input id="name" name="name" required maxlength="80" placeholder="e.g. ReLoop" value="${esc(intakeDraft.name)}" autocomplete="off"></div><div class="field"><label for="team">Team name <span class="subtle">(optional)</span></label><input id="team" name="team" maxlength="100" placeholder="e.g. Second Nature" value="${esc(intakeDraft.team)}"></div></div><div class="field"><label for="event">Which event are you preparing for?</label><input id="event" name="event" maxlength="160" placeholder="Event name, or leave blank for a general pitch" value="${esc(intakeDraft.event)}"><div class="hint">Search event background, then review the current organizer rules. <button type="button" class="btn text intake-event-link" data-action="event-desk">Find my event ↗</button></div></div><div class="field"><label for="deadline">Submission deadline <span class="subtle">(optional)</span></label><input id="deadline" name="deadline" type="date" value="${esc(intakeDraft.deadline)}"></div>`:fields.slice((intakeStep-1)*2,intakeStep*2).map(([k,label,hint])=>`<div class="field"><label for="${k}">${label} <span class="subtle">(add later if you need)</span></label><textarea id="${k}" name="${k}" maxlength="3000" placeholder="${esc(hint)}">${esc(intakeDraft[k])}</textarea><div class="hint">${esc(hint)}</div></div>`).join('');return `<div class="page-heading"><div class="eyebrow">A GOOD PITCH STARTS WITH YOU</div><h1>${['First, the basics.','What are you changing?','Show us how it works.','Where do you go from here?'][intakeStep]}</h1><p>${['Give your idea a name. Everything else can evolve.','A specific problem and a clear solution make a strong opening.','Separate what you have built from what you plan to build.','Keep your goals honest and your next step concrete.'][intakeStep]}</p></div><div class="split"><form class="panel" id="intake-form"><div class="progress-steps" aria-label="Step ${intakeStep+1} of 4">${[0,1,2,3].map(n=>`<span class="${n<=intakeStep?'done':''}"></span>`).join('')}</div><div class="subtle" style="margin-bottom:20px">STEP ${intakeStep+1} OF 4 · ${intakeStep===0?'Your project':'Your story'}</div>${stepFields}<p id="form-error" class="inline-error" role="alert"></p><div class="form-actions"><button type="button" class="btn" data-action="intake-back">${icon('back',15)} ${intakeStep?'Back':'Cancel'}</button><button type="submit" class="btn primary">${intakeStep===3?'Create workspace':'Continue'} ${icon('arrow',15)}</button></div><p class="disabled-note">Your answers are saved to this device as you continue. No payment is taken. Missing details stay marked [ADD DATA].</p></form><aside class="aside-card">${icon('leaf',26)}<h3>A real idea beats<br>a perfect-sounding one.</h3><p>You don’t need traction, a polished prototype, or all the answers to start.</p><ul><li>Write how you would explain it to a friend.</li><li>Leave unknown numbers blank.</li><li>Keep confidential details out.</li><li>You can edit every slide later.</li></ul><p>${icon('shield',14)} Your draft stays in this browser. <button class="btn text small" data-action="privacy">How storage works ${icon('arrow',13)}</button></p></aside></div>`;}
+function intake(){const stepFields=intakeStep===0?`<div class="field-row"><div class="field"><label for="name">What’s your project called?</label><input id="name" name="name" required maxlength="80" placeholder="e.g. ReLoop" value="${esc(intakeDraft.name)}" autocomplete="off"></div><div class="field"><label for="team">Team name <span class="subtle">(optional)</span></label><input id="team" name="team" maxlength="100" placeholder="e.g. Second Nature" value="${esc(intakeDraft.team)}"></div></div><div class="field"><label for="event">Which event are you preparing for?</label><input id="event" name="event" maxlength="160" placeholder="Event name, or leave blank for a general pitch" value="${esc(intakeDraft.event)}"><div class="hint">Search event background, then review the current organizer rules. <button type="button" class="btn text intake-event-link" data-action="event-desk">Find my event ↗</button></div></div><div class="field"><label for="deadline">Submission deadline <span class="subtle">(optional)</span></label><input id="deadline" name="deadline" type="date" value="${esc(intakeDraft.deadline)}"></div>`:fields.slice((intakeStep-1)*2,intakeStep*2).map(([k,label,hint])=>`<div class="field"><label for="${k}">${label} <span class="subtle">(add later if you need)</span></label><textarea id="${k}" name="${k}" maxlength="3000" placeholder="${esc(hint)}">${esc(intakeDraft[k])}</textarea><div class="hint">${esc(hint)}</div></div>`).join('');return `<section class="intake-studio" aria-label="Pitch intake">
+ <header class="intake-heading"><span class="exhibit-kicker"><b>✳</b> NEW PITCH / STEP 0${intakeStep+1} OF 04</span><h1>${intakeTitles[intakeStep]}</h1><p>${intakeGuides[intakeStep]}</p></header>
+ <ol class="intake-rail" aria-label="Pitch setup progress">${intakeStages.map((stage,i)=>`<li ${i===intakeStep?'aria-current="step"':''} class="${i<intakeStep?'complete':''}"><span>${i<intakeStep?'✓':'0'+(i+1)}</span><strong>${stage}</strong></li>`).join('')}</ol>
+ <div class="intake-composition">
+  <form class="panel intake-fields" id="intake-form">${stepFields}<p id="form-error" class="inline-error" role="alert"></p>
+   <div class="form-actions"><button type="button" class="btn" data-action="intake-back">${icon('back',15)} ${intakeStep?'Back':'Cancel'}</button><button type="submit" class="btn primary">${intakeStep===3?'Create workspace':'Continue'} ${icon('arrow',15)}</button></div>
+   <p class="intake-save-note">${icon('shield',14)} Saved in this browser after you name your project.</p>
+  </form>
+  <aside class="intake-side" aria-label="Pitch preview">
+    <div class="intake-preview" id="intake-preview">${intakePreview()}</div>
+    <div class="intake-direction"><span>FROM NOTES TO SLIDES</span><p>${intakeStep===0?'Give the pitch a title now. The next three steps lay out six editable slides.':'These are working notes. Refine the words and choose your slide design in the workspace.'}</p></div>
+  </aside>
+ </div>
+ </section>`;}
 function workspace(){
  if(!project)return `<div class="empty"><span class="empty-star">✳</span><h2>Something good starts here.</h2><p>Give your next idea a place to become a story.</p>${btn('Create a project','new')}${btn('Explore the sample','demo','')}</div>`;
  const a=analyze(project),days=daysLeft(project.deadline);
@@ -164,7 +208,13 @@ async function duplicateProject(){if(!project)return;if(library.length>=MAX_PROJ
 document.addEventListener('submit',e=>{if(e.target.matches('#intake-form,#evidence-form,#project-details-form'))e.preventDefault();},true);
 document.addEventListener('click',async e=>{const projectButton=e.target.closest('[data-project]');if(projectButton)return openProject(projectButton.dataset.project);
  const ruleLink=e.target.closest('[data-open-rules]');if(ruleLink){openProject(ruleLink.dataset.openRules);tab='rules';go('workspace');return;}
- const lens=e.target.closest('[data-lens]');if(lens){heroLens=Number(lens.dataset.lens);return render();}
+ const lens=e.target.closest('[data-lens]');if(lens){
+  heroLens=Number(lens.dataset.lens);
+  $('#sample-slide').innerHTML=renderSlide(previewProject,heroLens);
+  $('#sample-slide-number').textContent='0'+(heroLens+1);
+  document.querySelectorAll('[data-lens]').forEach(button=>button.setAttribute('aria-pressed',String(button===lens)));
+  return;
+ }
  const quick=e.target.closest('[data-quick]');if(quick)return quickView(quick.dataset.quick);
  const storyButton=e.target.closest('[data-story-slide]');if(storyButton){slideIndex=Number(storyButton.dataset.storySlide);return render();}
  const style=e.target.closest('[data-style]');if(style&&project){project.template=style.dataset.style;project.checklist.files=false;await save();return render();}
@@ -208,7 +258,7 @@ document.addEventListener('submit',async e=>{
  const entry={id:data.noteId||createId(),claim:clean(data.claim,1200),source:clean(data.source,2000),type:data.type,slide:data.slide};const existing=project.evidence.findIndex(x=>x.id===entry.id);if(existing>=0)project.evidence[existing]=entry;else project.evidence.push(entry);project.checklist.facts=false;project.checklist.files=false;await save();render();toast('Source note saved. Add only what it actually supports to your slides.');
 });
 
-document.addEventListener('input',e=>{if(!e.target.closest('#intake-form'))return;captureIntake();if(!intakeDraft.name)return;project=validateProject(intakeDraft);intakeDraft.id=project.id;project.updatedAt=Date.now();const index=library.findIndex(p=>p.id===project.id);if(index<0&&library.length<MAX_PROJECTS)library.push(project);else if(index>=0)library[index]=project;const draft=project;clearTimeout(saving);saving=setTimeout(()=>writeStored(draft).catch(()=>{storageError=true;}),350);});
+document.addEventListener('input',e=>{if(!e.target.closest('#intake-form'))return;captureIntake();$('#intake-preview').innerHTML=intakePreview();if(!intakeDraft.name)return;project=validateProject(intakeDraft);intakeDraft.id=project.id;project.updatedAt=Date.now();const index=library.findIndex(p=>p.id===project.id);if(index<0&&library.length<MAX_PROJECTS)library.push(project);else if(index>=0)library[index]=project;const draft=project;clearTimeout(saving);saving=setTimeout(()=>writeStored(draft).catch(()=>{storageError=true;}),350);});
 
 function projectDetails(){showModal('A few details. A little more you.',`<form id="project-details-form"><div class="field"><label for="detail-name">Project name</label><input id="detail-name" name="projectName" required maxlength="80" value="${esc(project.name)}"></div><div class="field"><label for="detail-team">Team name</label><input id="detail-team" name="team" maxlength="100" value="${esc(project.team)}"></div><div class="field"><label for="detail-event">Event name</label><input id="detail-event" name="event" maxlength="160" value="${esc(project.event)}"></div><div class="field"><label for="detail-deadline">Submission deadline</label><input id="detail-deadline" name="deadline" type="date" value="${esc(project.deadline)}"></div><p class="disabled-note">Changing the event clears its rules, requirement map, and submission record. Update the deadline for the new event before saving.</p><button class="btn primary" type="submit">Save project details ${icon('check',15)}</button><div class="details-extra-actions"><button type="button" class="btn text" data-action="export-project">Export a backup ${icon('download',13)}</button><button type="button" class="btn text remove-link" data-action="remove-project">Remove project</button></div></form>`);}
 document.addEventListener('submit',async e=>{if(e.target.getAttribute('id')!=='project-details-form')return;e.preventDefault();const data=Object.fromEntries(new FormData(e.target));const changed=project.event!==clean(data.event,160);project.name=clean(data.projectName,80);if(!project.name)return;project.team=clean(data.team,100);project.event=clean(data.event,160);const deadline=clean(data.deadline,20);if(changed){clearEventReview(project);project.deadline=deadline===project.deadline?'':deadline;}else if(project.deadline!==deadline){project.deadline=deadline;project.checklist.portal=false;}await save();$('#modal').close();render();toast(changed?'Details saved. Recheck the rules for the new event.':'Project details saved.');});

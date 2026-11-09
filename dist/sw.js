@@ -1,9 +1,9 @@
-const CACHE='dayzero-shell-audit-2';
+const CACHE='dayzero-shell-exhibit-1';
 const SHELL=['/','/index.html','/styles.css','/studio.css','/app.js','/engine.mjs','/event-engine.mjs','/event-ui.mjs','/claim-engine.mjs','/preparation.mjs','/preparation-ui.mjs','/template-ui.mjs','/template-bridge.mjs','/community.mjs','/assist-ui.mjs','/assist-model.mjs'];
 const VERSIONED=[
- '/app.js?v=audit-2','/assist-ui.mjs?v=audit-1','/assist-model.mjs?v=audit-1','/community.mjs?v=community-1','/template-ui.mjs?v=audit-2','/template-bridge.mjs?v=audit-2',
+ '/app.js?v=exhibit-1','/assist-ui.mjs?v=audit-1','/assist-model.mjs?v=audit-1','/community.mjs?v=exhibit-1','/template-ui.mjs?v=audit-2','/template-bridge.mjs?v=audit-2',
  ...SHELL.filter(path=>path.endsWith('.mjs')&&!path.includes('/assist-')&&!path.includes('/community.')&&!path.includes('/template-')).map(path=>path+'?v=ai-1.0'),
- '/styles.css?v=ai-1.0','/studio.css?v=ai-1.0'
+ '/styles.css?v=ai-1.0','/studio.css?v=exhibit-1'
 ];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([...SHELL,...VERSIONED])).then(()=>self.skipWaiting()));});
 self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('dayzero-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
