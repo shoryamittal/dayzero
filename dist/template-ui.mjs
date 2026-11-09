@@ -1,4 +1,4 @@
-import {readTemplate,fillTemplate} from './template-bridge.mjs?v=search-2.0';
+import {readTemplate,fillTemplate} from './template-bridge.mjs?v=ai-1.0';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let api={},loaded=null,owner='',filename='',mapping={},busy=false;
 export function initTemplate(options){api=options;}

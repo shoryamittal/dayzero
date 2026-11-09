@@ -59,3 +59,9 @@ The final business direction is a community-led preparation service, with the so
 Event search now uses token matching across event names, aliases, topics and locations; it accepts reordered words, punctuation, edition years and a single-character typo in longer names. The bundled library has seven source-linked records, including explicitly labeled past/uncertain editions. It is not a comprehensive or real-time event database. Wikipedia is an optional, separate background lookup. Empty category results offer a clear-filter action. A user can create a source-linked brief, attach it to a saved project and search for it again after a refresh. Those records share the project's local storage/retention policy.
 
 Browser verification: Harvard hackathon matched HackHarvard; an incompatible category produced a clear empty state; clear-filter restored matches; a fictional QA event with a supplied source was attached to the sample project and found again after reload. The automated suite has 56 passing tests. Current official sources checked for the added records: https://www.hhuh.io/ , https://www.pennapps.com/ , https://solve.mit.edu/challenges . These checks do not establish application eligibility or a current open round.
+
+## Gemini AI Studio update
+
+The Vercel release adds a Gemini endpoint that uses the key provided for each request. AI Studio previews the exact project text, requires consent, and clears the key field when submitted. Drafts require explicit application and preserve the previous story. Review and rules findings are accepted only when their quotes match the supplied source text. The local checklist still runs independently. This does not verify organizer websites or predict judging outcomes.
+
+The endpoint was tested with a mocked provider. A live generation check requires a valid Gemini API key and access to the configured model. The Render static release serves the local workspace and links to Vercel for Gemini.

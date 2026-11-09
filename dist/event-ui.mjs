@@ -1,4 +1,4 @@
-import {eventCatalog,catalogSearch,searchEventRecords,searchPublicEvents,eventChecks,pitchCompass,eventBriefText,normalizeEvent} from './event-engine.mjs?v=search-2.0';
+import {eventCatalog,catalogSearch,searchEventRecords,searchPublicEvents,eventChecks,pitchCompass,eventBriefText,normalizeEvent} from './event-engine.mjs?v=ai-1.0';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let initialized=false,options={},query='',kind='All',selected=eventCatalog[0],results=[],status='idle',controller,searchDelay,sequence=0,view='overview';
 export function initEvents(config){options=config;}

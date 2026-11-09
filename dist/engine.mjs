@@ -1,6 +1,6 @@
-import {normalizePreparation} from './preparation.mjs?v=search-2.0';
-import {reviewClaims} from './claim-engine.mjs?v=search-2.0';
-import {normalizeEvent,eventChecks} from './event-engine.mjs?v=search-2.0';
+import {normalizePreparation} from './preparation.mjs?v=ai-1.0';
+import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
+import {normalizeEvent,eventChecks} from './event-engine.mjs?v=ai-1.0';
 export const VERSION = 1;
 export const TTL = 24 * 60 * 60 * 1000;
 export const MAX_PROJECTS = 12;
