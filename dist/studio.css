@@ -131,13 +131,7 @@ body,.topbar{background:var(--paper)}.sidebar{background:#292431;color:#F5F1E8}.
  border-radius:50%;
  background:#dbf777;
 }
-.exhibit-slide{container-type:inline-size;margin-top:14px;border:1px solid #ffffff40;border-radius:8px;overflow:hidden}
-.exhibit-slide .slide-render{aspect-ratio:16/9;padding:6%;min-height:0}
-.exhibit-slide .slide-copy{padding:4% 0}
-.exhibit-slide .slide-render h2{font-size:clamp(25px,8cqw,55px);margin-bottom:3%;line-height:1.05}
-.exhibit-slide .slide-render p{font-size:clamp(10px,2.8cqw,17px);line-height:1.45}
-.exhibit-slide .slide-meta,.exhibit-slide .evidence-strip{font-size:clamp(6px,1.55cqw,9px)!important}
-.exhibit-slide .slide-chapter{font-size:clamp(6px,1.55cqw,9px);margin-bottom:2%;letter-spacing:.12em}
+.exhibit-slide{margin-top:14px;border:1px solid #ffffff40;border-radius:8px;overflow:hidden}
 .exhibit-control{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin:13px 0 10px}
 .exhibit-control button{
  display:grid;
@@ -159,6 +153,18 @@ body,.topbar{background:var(--paper)}.sidebar{background:#292431;color:#F5F1E8}.
 .exhibit-control strong{font-weight:650;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .exhibit-caption{padding-top:9px;border-top:1px solid #ffffff29;letter-spacing:.04em}
 .exhibit-caption b{color:#e7f9af}
+.exhibit-caption button{
+ border:0;
+ background:none;
+ color:#f4ebf8;
+ padding:7px 2px;
+ min-height:32px;
+ font-size:11px;
+ text-decoration:underline;
+ text-underline-offset:3px;
+}
+.exhibit-caption button:hover{color:#e7f9af}
+.exhibit-caption button:disabled{opacity:.7}
 
 .intake-studio{max-width:1180px;margin:auto}
 .intake-heading{padding:clamp(6px,2vw,28px) 0 24px}
@@ -249,3 +255,29 @@ body,.topbar{background:var(--paper)}.sidebar{background:#292431;color:#F5F1E8}.
  .intake-heading{padding-bottom:16px}
  .intake-preview{min-height:220px}
 }
+
+/* Preview and exports share a 16:9 grid and typography. */
+.designed-slide{
+ position:relative;
+ isolation:isolate;
+ container-type:inline-size;
+ width:100%;
+ aspect-ratio:16/9;
+ overflow:hidden;
+ font-family:Arial,sans-serif;
+}
+.designed-slide-layer{
+ position:absolute;
+ margin:0;
+ padding:0;
+ font-family:inherit;
+ line-height:1.22;
+ white-space:pre-wrap;
+ overflow-wrap:anywhere;
+ overflow:hidden;
+}
+.designed-slide-title{letter-spacing:-.04em}
+.designed-slide-mark{user-select:none;letter-spacing:-.06em}
+.designed-slide-name{letter-spacing:.025em}
+.present-content>.designed-slide{min-width:0}
+@media print{.designed-slide{print-color-adjust:exact;-webkit-print-color-adjust:exact}}
