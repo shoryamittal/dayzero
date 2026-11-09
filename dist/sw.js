@@ -1,8 +1,8 @@
-const CACHE='dayzero-shell-deck-1';
-const SHELL=['/','/index.html','/styles.css','/studio.css','/app.js','/engine.mjs','/deck-design.mjs','/event-engine.mjs','/event-ui.mjs','/claim-engine.mjs','/preparation.mjs','/preparation-ui.mjs','/template-ui.mjs','/template-bridge.mjs','/community.mjs','/assist-ui.mjs','/assist-model.mjs'];
+const CACHE='dayzero-shell-sample-1';
+const SHELL=['/','/index.html','/styles.css','/studio.css','/app.js','/engine.mjs','/deck-design.mjs','/sample-deck.mjs','/event-engine.mjs','/event-ui.mjs','/claim-engine.mjs','/preparation.mjs','/preparation-ui.mjs','/template-ui.mjs','/template-bridge.mjs','/community.mjs','/assist-ui.mjs','/assist-model.mjs'];
 const VERSIONED=[
- '/app.js?v=deck-1','/deck-design.mjs?v=deck-1','/assist-ui.mjs?v=audit-1','/assist-model.mjs?v=audit-1','/community.mjs?v=exhibit-1','/template-ui.mjs?v=audit-2','/template-bridge.mjs?v=audit-2',
- ...SHELL.filter(path=>path.endsWith('.mjs')&&!path.includes('/assist-')&&!path.includes('/community.')&&!path.includes('/template-')&&!path.includes('/deck-design.')).map(path=>path+'?v=ai-1.0'),
+ '/app.js?v=sample-1','/deck-design.mjs?v=sample-1','/sample-deck.mjs?v=sample-1','/assist-ui.mjs?v=audit-1','/assist-model.mjs?v=audit-1','/community.mjs?v=exhibit-1','/template-ui.mjs?v=audit-2','/template-bridge.mjs?v=audit-2',
+ ...SHELL.filter(path=>path.endsWith('.mjs')&&!path.includes('/assist-')&&!path.includes('/community.')&&!path.includes('/template-')&&!path.includes('/deck-design.')&&!path.includes('/sample-deck.')).map(path=>path+'?v=ai-1.0'),
  '/styles.css?v=ai-1.0','/studio.css?v=deck-1'
 ];
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([...SHELL,...VERSIONED])).then(()=>self.skipWaiting()));});

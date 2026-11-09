@@ -85,9 +85,9 @@ export function slideDesign(project, slide, index) {
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
 const bounds = (x, y, width, height) => 'left:'+x/WIDTH*100+'%;top:'+y/HEIGHT*100+'%;width:'+width/WIDTH*100+'%;height:'+height/HEIGHT*100+'%';
 
-export function renderDeckSlide(project, index) {
+export function renderDeckSlide(project, index, designSlide = slideDesign) {
   const slide = slides(project)[index];
-  const design = slideDesign(project, slide, index);
+  const design = designSlide(project, slide, index);
   return `<article class="designed-slide" aria-label="${slide.title} slide" style="background:#${design.background}">
     ${design.shapes.map(({box,color}) => `<span aria-hidden="true" class="designed-slide-layer" style="${bounds(...box)};background:#${color}"></span>`).join('')}
     ${design.items.map(item => {
@@ -98,7 +98,7 @@ export function renderDeckSlide(project, index) {
   </article>`;
 }
 
-export async function makePowerPoint(project, PptxGenJS) {
+export async function makePowerPoint(project, PptxGenJS, designSlide = slideDesign) {
   const deck = new PptxGenJS();
   deck.defineLayout({name: 'Day-Zero Wide', width: WIDTH / 72, height: HEIGHT / 72});
   deck.layout = 'Day-Zero Wide';
@@ -108,7 +108,7 @@ export async function makePowerPoint(project, PptxGenJS) {
   deck.lang = 'en-IN';
   for (const [index, slide] of slides(project).entries()) {
     const page = deck.addSlide();
-    const design = slideDesign(project, slide, index);
+    const design = designSlide(project, slide, index);
     page.background = {color: design.background};
     for (const {box:[x,y,width,height],color} of design.shapes) {
       page.addShape(deck.ShapeType.rect, {

@@ -1,4 +1,5 @@
-import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=deck-1';
+import {sampleDesign} from './sample-deck.mjs?v=sample-1';
+import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=sample-1';
 import {assistStudio,initAssist} from './assist-ui.mjs?v=audit-1';
 import {communityHome,communityPlans} from './community.mjs?v=exhibit-1';
 import {templateBridge,initTemplate} from './template-ui.mjs?v=audit-2';
@@ -62,7 +63,7 @@ const previewSlides = slides(previewProject);
 function sampleExhibit(){
  return `<section class="sample-exhibit" aria-label="Sample pitch deck">
   <div class="exhibit-stage-label"><span><b aria-hidden="true"></b> THE DECK, IN PRACTICE</span><span>RELOOP / FICTIONAL SAMPLE</span></div>
-  <div class="exhibit-slide" id="sample-slide" aria-live="polite">${renderDeckSlide(previewProject,heroLens)}</div>
+  <div class="exhibit-slide" id="sample-slide" aria-live="polite">${renderDeckSlide(previewProject,heroLens,sampleDesign)}</div>
   <div class="exhibit-control" role="group" aria-label="Choose a sample slide">${previewSlides.map((slide,i)=>`<button type="button" data-lens="${i}" aria-label="Slide ${i+1}: ${slide.title}" aria-pressed="${i===heroLens}"><span>0${i+1}</span><strong>${slide.title}</strong></button>`).join('')}</div>
   <div class="exhibit-caption"><span>Slide <b id="sample-slide-number">0${heroLens+1}</b> / 06</span><button type="button" data-action="sample-pptx">Download editable sample ↓</button></div>
  </section>`;
@@ -167,11 +168,11 @@ function method(){showModal('What readiness actually checks.',`<p>We check wheth
 function downloadBlob(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 function exportProject(){if(!project)return toast('Create a project first.');downloadBlob(new Blob([JSON.stringify({format:'dayzero-project',version:1,...project},null,2)],{type:'application/json'}),safeFilename(project.name)+'-project.json');toast('Project backup downloaded. Keep it somewhere safe.');}
 function loadScript(src){return new Promise((resolve,reject)=>{let s=document.querySelector(`script[src="${src}"]`);if(s?.dataset.loaded)return resolve();s=document.createElement('script');s.src=src;s.onload=()=>{s.dataset.loaded='true';resolve()};s.onerror=()=>{s.remove();reject(Error('The export library could not load. Try again while online.'))};document.head.append(s);});}
-async function pptxBlob(p){await loadScript('/vendor/pptxgen.bundle.js');return makePowerPoint(p,window.PptxGenJS);}
+async function pptxBlob(p,design){await loadScript('/vendor/pptxgen.bundle.js');return makePowerPoint(p,window.PptxGenJS,design);}
 async function downloadSample(button){
  const label=button.textContent;
  button.disabled=true;button.textContent='Preparing PowerPoint…';
- try{downloadBlob(await pptxBlob(previewProject),'ReLoop-fictional-sample.pptx');toast('Sample PowerPoint downloaded.');}
+ try{downloadBlob(await pptxBlob(previewProject,sampleDesign),'ReLoop-fictional-sample.pptx');toast('Sample PowerPoint downloaded.');}
  catch{toast('Could not prepare the sample PowerPoint. Try again.');}
  finally{button.disabled=false;button.textContent=label;}
 }
@@ -216,7 +217,7 @@ document.addEventListener('click',async e=>{const projectButton=e.target.closest
  const ruleLink=e.target.closest('[data-open-rules]');if(ruleLink){openProject(ruleLink.dataset.openRules);tab='rules';go('workspace');return;}
  const lens=e.target.closest('[data-lens]');if(lens){
   heroLens=Number(lens.dataset.lens);
-  $('#sample-slide').innerHTML=renderDeckSlide(previewProject,heroLens);
+  $('#sample-slide').innerHTML=renderDeckSlide(previewProject,heroLens,sampleDesign);
   $('#sample-slide-number').textContent='0'+(heroLens+1);
   document.querySelectorAll('[data-lens]').forEach(button=>button.setAttribute('aria-pressed',String(button===lens)));
   return;
