@@ -11,7 +11,7 @@ Event preparation and pitch studio. Browser-local projects, evidence, editable d
 
 ## Run
 
-Node 22+ and Python 3. No package dependencies or API keys required.
+Use Node 22 or later. The local workspace runs without package dependencies or API keys.
 
     npm run build
     npm run dev
@@ -21,9 +21,9 @@ Vercel: import this repository; settings are included.
 
 ## Storage and service boundaries
 
-Export a library backup before switching hosts, then import it on the new host. Browser storage is isolated by origin. Drafts expire 24 hours after last edit, checked on opening. Export backups for durable storage.
+Export a library backup before switching hosts, then unzip it and import each project JSON on the new host. Browser storage is isolated by origin. Drafts expire 24 hours after last edit, checked on opening. Export backups for durable storage.
 
-Event search provides official references and Wikipedia background. It cannot discover every campus event or verify current deadlines. AI generation, cloud collaboration, and payments are not connected. A paid launch must accurately describe these limits. PPTX filling requires manual layout review in PowerPoint. Generated decks have six sections. PDF supports Latin text; use PPTX for other scripts.
+Event search provides official references and Wikipedia background. It cannot discover every campus event or verify current deadlines. AI Studio is optional and uses your Gemini API key. Projects stay local unless you export them or send selected text to Gemini. A paid launch must accurately describe these limits. PPTX filling requires manual layout review in PowerPoint. Generated decks have six sections. If the built-in PDF cannot render your text, the pitch kit still includes the editable PowerPoint and other files.
 
 Third-party licenses are retained under dist/vendor/.
 
