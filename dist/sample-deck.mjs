@@ -48,8 +48,9 @@ export function sampleDesign(project, _slide, index) {
 
   if (index===1) {
     serif('A reservation in two screens',47,77,865,79,53);
-    copy('Staff list surplus portions. A student reserves a meal and shows their code at the counter.',48,209,262,160,25);
-    label('ILLUSTRATIVE PROTOTYPE',48,427,275);
+    copy('Staff list surplus portions. A student reserves a meal and shows their code at the counter.',48,174,262,118,23);
+    photo('/before-close-listing.png','AI-generated concept photo of the meal in the example listing',48,297,228,171);
+    label('AI-GENERATED CONCEPT IMAGE',48,473,281);
     box(345,171,260,290,cream);
     box(626,171,286,290,cobalt);
     box(345,171,260,4,coral);
@@ -67,8 +68,10 @@ export function sampleDesign(project, _slide, index) {
   }
 
   if (index===2) {
-    serif('From kitchen\nto counter',46,111,363,143,53);
-    copy('A single pickup window. Three people with a clear next step.',48,301,322,110,23);
+    serif('From kitchen\nto counter',46,86,363,134,49);
+    copy('One pickup window, three handoffs.',48,218,333,42,19);
+    photo('/before-close-pickup.png','AI-generated concept photo of a phone and reserved meal at pickup',48,263,266,199.5);
+    label('AI-GENERATED CONCEPT IMAGE',48,470,314);
     box(420,89,2,363,blueLine);
     const steps = [
       ['01','CANTEEN STAFF','List','Post the available portions and collection time.'],
@@ -99,22 +102,24 @@ export function sampleDesign(project, _slide, index) {
 
   if (index===4) {
     serif('A two-week field test',47,78,867,81,57);
-    box(48,175,864,100,cobalt);
-    box(480,188,1,71,blueLine);
-    label('WEEK 01  /  BASELINE',65,190,402,yellow);
-    type('Log leftovers at closing.',65,222,399,40,25,{color:cream,bold:true});
-    label('WEEK 02  /  LIVE PICKUPS',503,190,386,yellow);
-    type('Run a staffed pickup window.',503,222,388,40,24,{color:cream,bold:true});
+    photo('/before-close-log.png','AI-generated concept photo of a staff member logging leftovers',672,156,237,316);
+    label('AI-GENERATED CONCEPT IMAGE',672,475,238);
+    box(48,163,594,103,cobalt);
+    box(344,179,1,69,blueLine);
+    label('WEEK 01  /  BASELINE',63,179,271,yellow);
+    type('Log closing leftovers.',63,213,268,40,20,{color:cream,bold:true});
+    label('WEEK 02  /  LIVE PICKUPS',362,179,266,yellow);
+    type('Run a staffed pickup window.',362,213,269,40,20,{color:cream,bold:true});
     const measures = [
-      ['Meal recovery','Collected portions out of portions listed'],
-      ['Missed pickups','Uncollected reservations out of reservations made'],
-      ['Staff time','Minutes spent listing and handing over meals']
+      ['Meal recovery','Portions collected / portions listed'],
+      ['Missed pickups','Uncollected / reserved meals'],
+      ['Staff time','Minutes spent on listings and handoffs']
     ];
     measures.forEach(([name,detail],i)=>{
-      const y=305+i*52;
-      box(48,y-9,864,1,line);
-      type(name,48,y,246,40,21,{bold:true});
-      copy(detail,303,y,606,37,20);
+      const y=292+i*55;
+      box(48,y-9,594,1,line);
+      type(name,48,y,202,38,20,{bold:true});
+      copy(detail,252,y,384,40,18);
     });
     label('PROPOSED PILOT  /  RESULTS PENDING',48,467,862);
   }
@@ -131,7 +136,10 @@ export function sampleDesign(project, _slide, index) {
       label(String(i+1).padStart(2,'0'),646,y+4,36,ink);
       type(need,686,y+2,223,61,24,{bold:true});
     });
-    label('AFTER THE REVIEW  /  CONTINUE, ADJUST, OR STOP',49,447,858,ink);
+    box(49,430,534,1,'AC392A');
+    label('01 CANTEEN',49,448,139,ink);
+    label('02 WEEKS',214,448,139,ink);
+    label('01 REVIEW',374,448,139,ink);
   }
 
   const background = dark ? cobalt : index===5 ? coral : index===1 ? 'FBE6DF' : index===3 ? 'F8FFCF' : cream;

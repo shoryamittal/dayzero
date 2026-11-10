@@ -1,3 +1,4 @@
+import {isSlideImageData} from './slide-images.mjs?v=visual-qa-1';
 import {normalizePreparation} from './preparation.mjs?v=ai-1.0';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
 import {normalizeEvent,eventChecks} from './event-engine.mjs?v=ai-1.0';
@@ -9,7 +10,7 @@ export const themes={botanical:{name:'Botanical',label:'Human by nature.',bg:'28
 export function createId(){return globalThis.crypto?.randomUUID?.()||Date.now().toString(36)+'-'+Math.random().toString(36).slice(2);}
 export function safeURL(value){try{const u=new URL(clean(value,2000));return ['https:','http:'].includes(u.protocol)?u.href:null;}catch{return null;}}
 export function normalizePDFText(value){return String(value).replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/[\u2013\u2014]/g,'-').replace(/\u2026/g,'...').replace(/\u00a0/g,' ');}
-export function canExportPDF(p){return !/[^\x20-\x7E\n\r\t]/.test(normalizePDFText(slides(p).map(s=>s.text).join('\n')+'\n'+p.name));}
+export function canExportPDF(p){return !/[^\x20-\x7E\n\r\t]/.test(normalizePDFText(slides(p).flatMap(s=>[s.text,p.slideHeadlines?.[s.key]||'']).join('\n')+'\n'+p.name));}
 export function readingTime(value,wpm=130){const words=clean(value,50000).split(/\s+/).filter(Boolean).length;return {words,seconds:Math.ceil(words/Math.max(1,wpm)*60)};}
 export const sample = {
  name:'Before Close',team:'Team Second Nature',event:'Example Hackathon 2026',plan:'team',template:'blueprint',demo:true,
@@ -31,12 +32,17 @@ export function validateProject(p){
  result.name=result.name.slice(0,80);result.team=result.team.slice(0,100);result.event=result.event.slice(0,160);
  if(!result.name)throw Error('Add a project name first.');
  const notes=Object.fromEntries(fields.map(([k])=>[k,clean(p.notes?.[k],3000)]));
+ const slideHeadlines=Object.fromEntries(fields.map(([key])=>[key,clean(p.slideHeadlines?.[key],90)]));
+ const slideImages=Object.fromEntries(fields.flatMap(([key])=>{
+  const image=p.slideImages?.[key];
+  return isSlideImageData(image?.data)?[[key,{data:image.data,alt:clean(image.alt,160)}]]:[];
+ }));
  const evidence=Array.isArray(p.evidence)?p.evidence.slice(0,30).filter(v=>v&&typeof v==='object'&&!Array.isArray(v)).map(v=>({id:clean(v.id,80)||createId(),claim:clean(v.claim,1200),source:clean(v.source,2000),type:['interview','demo','measurement','reference'].includes(v.type)?v.type:'reference',slide:fields.some(([k])=>k===v.slide)?v.slide:'proof'})).filter(v=>v.claim):[];
  const history=Array.isArray(p.history)?p.history.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&v.data&&typeof v.data==='object').map(v=>({at:v.at,data:Object.fromEntries(fields.map(([k])=>[k,clean(v.data[k],6000)]))})):[];
  const checklist=Object.fromEntries(checklistItems.map(([k])=>[k,p.checklist?.[k]===true]));
  const answers=Array.from({length:6},(_,n)=>clean(p.answers?.[n],3000));
  const rehearsals=Array.isArray(p.rehearsals)?p.rehearsals.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&Number.isFinite(v.seconds)&&v.seconds>=0&&v.seconds<=86400).map(v=>({at:v.at,seconds:v.seconds})):[];
- return {...result,preparation:normalizePreparation(p.preparation),id:/^[A-Za-z0-9-]{1,80}$/.test(p.id||'')?p.id:createId(),plan:p.plan==='solo'?'solo':'team',template:Object.hasOwn(themes,p.template)?p.template:'botanical',demo:p.demo===true,confirmed:p.confirmed===true&&!!result.rules,createdAt:Number(p.createdAt)||Date.now(),updatedAt:Number(p.updatedAt)||Date.now(),history,notes,evidence,checklist,answers,rehearsals,eventBrief:normalizeEvent(p.eventBrief)?.name===result.event?normalizeEvent(p.eventBrief):null,eventChecks:Object.fromEntries(eventChecks.map(([k])=>[k,p.eventChecks?.[k]===true]))};
+ return {...result,preparation:normalizePreparation(p.preparation),id:/^[A-Za-z0-9-]{1,80}$/.test(p.id||'')?p.id:createId(),plan:p.plan==='solo'?'solo':'team',template:Object.hasOwn(themes,p.template)?p.template:'botanical',demo:p.demo===true,confirmed:p.confirmed===true&&!!result.rules,createdAt:Number(p.createdAt)||Date.now(),updatedAt:Number(p.updatedAt)||Date.now(),history,notes,slideImages,slideHeadlines,evidence,checklist,answers,rehearsals,eventBrief:normalizeEvent(p.eventBrief)?.name===result.event?normalizeEvent(p.eventBrief):null,eventChecks:Object.fromEntries(eventChecks.map(([k])=>[k,p.eventChecks?.[k]===true]))};
 }
 export function normalizeWorkspace(raw,now=Date.now()){
  const candidates=raw?.version===2&&Array.isArray(raw.projects)?raw.projects:raw?[raw]:[];

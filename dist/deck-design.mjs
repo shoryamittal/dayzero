@@ -1,4 +1,4 @@
-import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=ai-1.0';
+import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=visual-qa-1';
 
 const WIDTH = 960;
 const HEIGHT = 540;
@@ -62,24 +62,32 @@ export function slideDesign(project, slide, index) {
   const accent = light ? mix(theme.bg, INK, 0.42) : theme.accent;
   const original = layouts[slide.key];
   const dense = slide.text.length > 430 || slide.text.split('\n').length > 7;
-  const layout = dense ? compact : original;
+  const picture = project.slideImages?.[slide.key];
+  const headline = project.slideHeadlines?.[slide.key];
+  const layout = picture
+    ? {title:[54,118,466,104,headline?42:52],body:[55,249,463,219,26]}
+    : headline ? {title:[54,89,852,135,52],body:[56,253,848,218,29],rule:[54,232,852,2]}
+    : dense ? compact : original;
   const ordinal = String(index + 1).padStart(2, '0');
   const sourceNotes = project.evidence?.filter(note => note.slide === slide.key).length || 0;
   const provenance = project.demo ? 'Fictional sample' : sourceNotes
     ? sourceNotes + (sourceNotes === 1 ? ' source note' : ' source notes') + ' supplied by you'
     : 'Draft for review';
   const shapes = [{box: [INSET, 488, 852, 1], color: mix(background, foreground, 0.3)}];
+  if (picture) shapes.push({box:[539,123,376,286],color:mix(background,foreground,0.12)},{box:[55,234,71,3],color:accent});
   if (layout.rule) shapes.push({box: layout.rule, color: accent});
   if (layout.band) shapes.push({box: layout.band, color: mix(background, theme.bg, 0.09)});
   const items = [
     text(project.name, [INSET, 30, 670, 35, 15], muted, {bold: true, role: 'name'}),
     text(ordinal + ' / 06', [745, 30, 161, 24, 15], muted, {align: 'right'}),
-    text(slide.title, layout.title, foreground, {bold: true, align: layout.align, role: 'title'}),
+    text(headline||slide.title, layout.title, foreground, {bold: true, align: layout.align, role: 'title'}),
     text(slide.text, layout.body, foreground, {align: layout.align, role: 'body'}),
     text(provenance, [INSET, 503, 745, 21, 12], muted)
   ];
+  if (headline||picture) items.push(text(slide.title.toUpperCase(),[54,picture?84:65,400,18,12],muted,{bold:true}));
   if (layout.mark) items.unshift(text(ordinal, layout.mark, mix(background, foreground, 0.22), {bold: true, role: 'mark'}));
-  return {background, shapes, items};
+  const images=picture?[{data:picture.data,alt:picture.alt||slide.title+' image',box:[548,132,358,268.5]}]:[];
+  return {background, shapes, images, items};
 }
 
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
@@ -90,7 +98,7 @@ export function renderDeckSlide(project, index, designSlide = slideDesign) {
   const design = designSlide(project, slide, index);
   return `<article class="designed-slide" aria-label="${slide.title} slide" style="background:#${design.background}">
     ${design.shapes.map(({box,color}) => `<span aria-hidden="true" class="designed-slide-layer" style="${bounds(...box)};background:#${color}"></span>`).join('')}
-    ${(design.images || []).map(({src,alt,box}) => `<img class="designed-slide-layer" src="${escape(src)}" alt="${escape(alt)}" style="${bounds(...box)};object-fit:cover">`).join('')}
+    ${(design.images || []).map(({src,data,alt,box}) => `<img class="designed-slide-layer" src="${escape(data || src)}" alt="${escape(alt)}" style="${bounds(...box)};object-fit:cover">`).join('')}
     ${design.items.map(item => {
       const tag = item.role === 'title' ? 'h2' : item.role === 'body' ? 'p' : 'span';
       const font = fit(item).size;
@@ -161,6 +169,10 @@ export async function makePDF(project, {PDFDocument, StandardFonts, rgb}) {
     page.drawRectangle({x:0, y:0, width:WIDTH, height:HEIGHT, color:color(design.background)});
     for (const {box:[x,y,width,height],color:fill} of design.shapes) {
       page.drawRectangle({x, y:HEIGHT-y-height, width, height, color:color(fill)});
+    }
+    for (const {data,box:[x,y,width,height]} of design.images) {
+      const image = await document.embedJpg(data);
+      page.drawImage(image,{x,y:HEIGHT-y-height,width,height});
     }
     for (const item of design.items) {
       const font = item.bold ? fonts.bold : fonts.regular;

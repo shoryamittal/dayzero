@@ -193,3 +193,7 @@
 .swatch-noir {background:#2d2730}
 .swatch-signal {background:#ef795e}
 .story-coach .eyebrow {margin-top:13px}
+
+.deck-image-field input[type=file]{width:100%;font-size:12px;padding:8px}
+.deck-image-field small{display:block;color:#5e5263;line-height:1.45;margin:6px 0 10px}
+.deck-image-field .btn{margin-top:8px}
