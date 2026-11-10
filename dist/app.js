@@ -1,6 +1,6 @@
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
 import {launchPage} from './launch.mjs?v=launch-1';
-import {sampleDesign} from './sample-deck.mjs?v=visual-qa-1';
+import {sampleDesign} from './sample-deck.mjs?v=closing-1';
 import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=visual-qa-1';
 import {assistStudio,initAssist} from './assist-ui.mjs?v=audit-1';
 import {communityPlans} from './community.mjs?v=launch-1';

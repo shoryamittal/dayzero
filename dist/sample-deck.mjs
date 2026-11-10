@@ -39,6 +39,37 @@ export function sampleDesign(project, _slide, index) {
     return {background:cobalt,shapes,images,items,notes:speakerNotes[index]};
   }
 
+  if (index===5) {
+    box(0,0,354,540,cobalt);
+    label(project.name.toUpperCase()+'  /  PROPOSED PILOT',43,29,282,cream);
+    box(43,65,268,1,blueLine);
+    serif('01',40,95,144,122,91,{color:cream,role:'label'});
+    type('CANTEEN',178,165,126,28,19,{color:yellow,bold:true});
+    box(43,228,268,1,blueLine);
+    serif('02',40,240,144,122,91,{color:cream,role:'label'});
+    type('WEEKS',178,310,126,28,19,{color:yellow,bold:true});
+    label('ONE STAFFED PICKUP WINDOW',43,416,271,cream);
+    label('FICTIONAL PRODUCT PITCH',43,508,269,cream);
+
+    label('DECISION REQUEST',397,29,516,ink);
+    box(397,65,516,1,'AC392A');
+    serif('Approve the pilot',396,88,517,80,57);
+    label('TO START',398,179,515,ink);
+    const decisions=['Name the canteen lead','Set the pickup window','Book the results review'];
+    decisions.forEach((decision,i)=>{
+      const y=211+i*55;
+      box(398,y+2,32,28,cream);
+      type(String(i+1).padStart(2,'0'),405,y+8,22,16,12,{color:ink,bold:true});
+      type(decision,447,y,459,40,24,{color:ink,bold:true});
+      box(398,y+40,515,1,'AC392A');
+    });
+    box(397,393,516,90,yellow);
+    label('WEEK TWO REVIEW',412,407,484,ink);
+    type('Meals collected, missed pickups, and staff time',412,437,483,35,19,{color:ink,bold:true});
+    label(folio,850,508,63,ink);
+    return {background:coral,shapes,images,items,notes:speakerNotes[index]};
+  }
+
   label(project.name.toUpperCase()+'  /  CAMPUS FOOD RECOVERY',48,27,530);
   label(chapters[index],741,27,171);
   box(48,57,864,1,dark ? blueLine : line);
@@ -124,25 +155,7 @@ export function sampleDesign(project, _slide, index) {
     label('PROPOSED PILOT  /  RESULTS PENDING',48,467,862);
   }
 
-  if (index===5) {
-    serif('Approve a pilot\nat one canteen',47,106,570,172,62);
-    copy('Review meal recovery, missed pickups, and staff time with the canteen lead at the end of week two.',50,308,500,109,24);
-    box(620,109,2,316,ink);
-    label('THREE THINGS TO AGREE',645,118,266,ink);
-    const needs = ['Name a canteen lead','Set a pickup window','Book a results review'];
-    needs.forEach((need,i)=>{
-      const y=166+i*79;
-      box(645,y-9,265,1,'AC392A');
-      label(String(i+1).padStart(2,'0'),646,y+4,36,ink);
-      type(need,686,y+2,223,61,24,{bold:true});
-    });
-    box(49,430,534,1,'AC392A');
-    label('01 CANTEEN',49,448,139,ink);
-    label('02 WEEKS',214,448,139,ink);
-    label('01 REVIEW',374,448,139,ink);
-  }
-
-  const background = dark ? cobalt : index===5 ? coral : index===1 ? 'FBE6DF' : index===3 ? 'F8FFCF' : cream;
+  const background = dark ? cobalt : index===1 ? 'FBE6DF' : index===3 ? 'F8FFCF' : cream;
   return {background,shapes,images,items,notes:speakerNotes[index]};
 }
 
