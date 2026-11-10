@@ -1,7 +1,7 @@
-const CACHE='dayzero-shell-sample-3';
-const SHELL=['/','/index.html','/styles.css','/studio.css','/app.js','/engine.mjs','/deck-design.mjs','/sample-deck.mjs','/reloop-handoff.png','/event-engine.mjs','/event-ui.mjs','/claim-engine.mjs','/preparation.mjs','/preparation-ui.mjs','/template-ui.mjs','/template-bridge.mjs','/community.mjs','/assist-ui.mjs','/assist-model.mjs'];
+const CACHE='dayzero-shell-sample-4';
+const SHELL=['/','/index.html','/styles.css','/studio.css','/app.js','/engine.mjs','/deck-design.mjs','/sample-deck.mjs','/reloop-studio-cover.png','/reloop-canteen-concept.png','/event-engine.mjs','/event-ui.mjs','/claim-engine.mjs','/preparation.mjs','/preparation-ui.mjs','/template-ui.mjs','/template-bridge.mjs','/community.mjs','/assist-ui.mjs','/assist-model.mjs'];
 const VERSIONED=[
- '/app.js?v=sample-3','/deck-design.mjs?v=sample-3','/sample-deck.mjs?v=sample-3','/assist-ui.mjs?v=audit-1','/assist-model.mjs?v=audit-1','/community.mjs?v=exhibit-1','/template-ui.mjs?v=audit-2','/template-bridge.mjs?v=audit-2',
+ '/app.js?v=sample-4','/deck-design.mjs?v=sample-4','/sample-deck.mjs?v=sample-4','/assist-ui.mjs?v=audit-1','/assist-model.mjs?v=audit-1','/community.mjs?v=exhibit-1','/template-ui.mjs?v=audit-2','/template-bridge.mjs?v=audit-2',
  ...SHELL.filter(path=>path.endsWith('.mjs')&&!path.includes('/assist-')&&!path.includes('/community.')&&!path.includes('/template-')&&!path.includes('/deck-design.')&&!path.includes('/sample-deck.')).map(path=>path+'?v=ai-1.0'),
  '/styles.css?v=ai-1.0','/studio.css?v=deck-1'
 ];

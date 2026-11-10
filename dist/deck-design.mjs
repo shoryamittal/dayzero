@@ -94,7 +94,7 @@ export function renderDeckSlide(project, index, designSlide = slideDesign) {
     ${design.items.map(item => {
       const tag = item.role === 'title' ? 'h2' : item.role === 'body' ? 'p' : 'span';
       const font = fit(item).size;
-      return `<${tag} class="designed-slide-layer designed-slide-${item.role || 'label'}" ${item.role==='mark'?'aria-hidden="true"':''} style="${bounds(item.x,item.y,item.width,item.height)};color:#${item.color};font-size:${font/WIDTH*100}cqw;font-weight:${item.bold?700:400};text-align:${item.align}">${escape(item.value)}</${tag}>`;
+      return `<${tag} class="designed-slide-layer designed-slide-${item.role || 'label'}" ${item.role==='mark'?'aria-hidden="true"':''} style="${bounds(item.x,item.y,item.width,item.height)};color:#${item.color};font-size:${font/WIDTH*100}cqw;font-weight:${item.bold?700:400};font-style:${item.italic?'italic':'normal'};font-family:${item.fontFace==='Georgia'?'Georgia,serif':'inherit'};text-align:${item.align}">${escape(item.value)}</${tag}>`;
     }).join('')}
   </article>`;
 }
@@ -133,7 +133,7 @@ export async function makePowerPoint(project, PptxGenJS, designSlide = slideDesi
     for (const item of design.items) {
       page.addText(item.value, {
         x:item.x/72, y:item.y/72, w:item.width/72, h:item.height/72,
-        color:item.color, fontFace:'Arial', fontSize:fit(item).size, bold:item.bold,
+        color:item.color, fontFace:item.fontFace || 'Arial', fontSize:fit(item).size, bold:item.bold, italic:item.italic,
         align:item.align, valign:'top', margin:0, fit:'shrink'
       });
     }
