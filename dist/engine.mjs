@@ -12,9 +12,9 @@ export function normalizePDFText(value){return String(value).replace(/[\u2018\u2
 export function canExportPDF(p){return !/[^\x20-\x7E\n\r\t]/.test(normalizePDFText(slides(p).map(s=>s.text).join('\n')+'\n'+p.name));}
 export function readingTime(value,wpm=130){const words=clean(value,50000).split(/\s+/).filter(Boolean).length;return {words,seconds:Math.ceil(words/Math.max(1,wpm)*60)};}
 export const sample = {
- name:'ReLoop',team:'Team Second Nature',event:'Example Hackathon 2026',plan:'team',template:'botanical',demo:true,
+ name:'Before Close',team:'Team Second Nature',event:'Example Hackathon 2026',plan:'team',template:'blueprint',demo:true,
  problem:'Campus canteens discard surplus meals while students need affordable food.',
- solution:'ReLoop connects campus canteens with students to reserve surplus meals for collection.',
+ solution:'Before Close connects campus canteens with students to reserve surplus meals for collection.',
  proof:'A clickable prototype demonstrates listing, reservation, and pickup. No user interviews or pilot results yet.',
  approach:'Canteens list available meals. Students reserve a meal and collect it using a pickup code.',
  impact:'We want to reduce food waste and make campus meals more accessible. Impact has not been measured.',
