@@ -99,25 +99,23 @@ export function sampleDesign(project, _slide, index) {
   }
 
   if (index===2) {
-    serif('From kitchen\nto counter',46,86,363,134,49);
-    copy('One pickup window, three handoffs.',48,218,333,42,19);
-    photo('/before-close-pickup.png','AI-generated concept photo of a phone and reserved meal at pickup',48,263,266,199.5);
-    label('AI-GENERATED CONCEPT IMAGE',48,470,314);
-    box(420,89,2,363,blueLine);
+    serif('A meal’s path to pickup',46,76,868,73,53);
+    photo('/before-close-pickup.png','AI-generated concept photo of a phone and reserved meal at pickup',48,154,416,312);
+    label('AI-GENERATED CONCEPT IMAGE',48,474,416);
     const steps = [
-      ['01','CANTEEN STAFF','List','Post the available portions and collection time.'],
-      ['02','STUDENT','Reserve','Claim a portion and receive a pickup code.'],
+      ['01','CANTEEN STAFF','List','Post portions and set the pickup window.'],
+      ['02','STUDENT','Reserve','Choose a meal and receive a pickup code.'],
       ['03','COUNTER STAFF','Collect','Check the code and mark the meal collected.']
     ];
-    steps.forEach(([n,owner,title,detail],i)=>{
-      const y=92+i*114;
-      label(n,446,y+7,37,yellow);
-      type(title,490,y,170,55,33,{bold:true});
-      label(owner,491,y+55,170);
-      copy(detail,681,y+12,218,80,19);
-      box(445,y+92,467,1,blueLine);
+    steps.forEach(([number,owner,title,detail],i)=>{
+      const y=158+i*94;
+      label(number,488,y+5,36,yellow);
+      type(title,528,y,207,38,30,{bold:true});
+      label(owner,745,y+9,166);
+      copy(detail,529,y+42,383,42,18);
+      box(488,y+83,424,1,blueLine);
     });
-    label('UNCOLLECTED RESERVATIONS EXPIRE AT CLOSE',446,451,465,yellow);
+    label('UNCOLLECTED RESERVATIONS EXPIRE AT CLOSE',488,449,425,yellow);
   }
 
   if (index===3) {
@@ -132,27 +130,28 @@ export function sampleDesign(project, _slide, index) {
   }
 
   if (index===4) {
-    serif('A two-week field test',47,78,867,81,57);
-    photo('/before-close-log.png','AI-generated concept photo of a staff member logging leftovers',672,156,237,316);
-    label('AI-GENERATED CONCEPT IMAGE',672,475,238);
-    box(48,163,594,103,cobalt);
-    box(344,179,1,69,blueLine);
-    label('WEEK 01  /  BASELINE',63,179,271,yellow);
-    type('Log closing leftovers.',63,213,268,40,20,{color:cream,bold:true});
-    label('WEEK 02  /  LIVE PICKUPS',362,179,266,yellow);
-    type('Run a staffed pickup window.',362,213,269,40,20,{color:cream,bold:true});
+    serif('What changes at closing?',47,76,867,74,54);
+    photo('/before-close-log.png','AI-generated concept photo of a staff member logging leftovers',654,148,237,316);
+    label('AI-GENERATED CONCEPT IMAGE',654,471,258);
+    box(48,149,584,103,cobalt);
+    box(340,168,1,66,blueLine);
+    label('WEEK 01  /  BASELINE',63,164,263,yellow);
+    type('Count leftovers at close.',63,198,259,41,20,{color:cream,bold:true});
+    label('WEEK 02  /  LIVE PICKUPS',355,164,262,yellow);
+    type('Repeat the count after pickup.',355,198,258,44,19,{color:cream,bold:true});
     const measures = [
-      ['Meal recovery','Portions collected / portions listed'],
-      ['Missed pickups','Uncollected / reserved meals'],
-      ['Staff time','Minutes spent on listings and handoffs']
+      ['Leftovers at close','Compare closing counts across both weeks'],
+      ['Meal recovery','Collected portions out of portions listed'],
+      ['Missed pickups','Uncollected reservations out of bookings'],
+      ['Staff time','Minutes spent listing and handing out meals']
     ];
     measures.forEach(([name,detail],i)=>{
-      const y=292+i*55;
-      box(48,y-9,594,1,line);
-      type(name,48,y,202,38,20,{bold:true});
-      copy(detail,252,y,384,40,18);
+      const y=273+i*47;
+      box(48,y-7,584,1,line);
+      type(name,48,y,184,31,18,{bold:true});
+      copy(detail,231,y,401,35,17);
     });
-    label('PROPOSED PILOT  /  RESULTS PENDING',48,467,862);
+    label('PROPOSED PILOT  /  RESULTS PENDING',48,467,584);
   }
 
   const background = dark ? cobalt : index===1 ? 'FBE6DF' : index===3 ? 'F8FFCF' : cream;
@@ -164,6 +163,6 @@ const speakerNotes = [
   'Walk through the meal listing and confirmation. The student shows the code at the counter. The screen, pickup time, and code are illustrative.',
   'Follow one meal through listing, reservation, and collection. At closing, uncollected reservations expire. Ask who should update availability during a rush.',
   'Show the clickable prototype. It demonstrates the screen sequence. The pilot needs to establish whether the handoff works during a real closing shift. The image is a concept illustration.',
-  'Log closing leftovers during the first week. In week two, run a staffed pickup window and track collections, missed pickups, and staff time. Review the numbers alongside staff observations.',
+  'Count leftover portions at closing in week one. Keep counting in week two while running the staffed pickup window. Track meal recovery, missed pickups, and staff time. Compare the closing counts alongside staff observations.',
   'Ask for approval to test at one canteen, a named lead, and a review date. At the review, use the results and staff feedback to decide whether to continue, adjust, or stop.'
 ];
