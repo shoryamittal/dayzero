@@ -1,8 +1,14 @@
 import {assistInput, model, modes, sections, validateAssistResult} from '../dist/assist-model.mjs';
 
 const instructions = {
-  draft: 'Write a six-section pitch draft. Keep all quantities, claims, entities and commitments grounded in the supplied material. Use [ADD DATA] for missing facts. Identify gaps as questions. Do not assume eligibility or rule compliance.',
-  review: 'Review the supplied pitch as practice feedback. Anchor each finding to a short verbatim quote from the named story section. Suggest a concrete improvement. Put missing information in gaps. Do not score the project or predict judging outcomes.',
+  draft: [
+    'Write six editable draft sections for a competition screener. Use the supplied organizer requirements and weights to prioritize what the reader needs to see. Check for a conflicting slide limit, required headings or template and flag it in gaps.',
+    'Give each slide a distinct, specific headline of at most 90 characters on one line. Keep each body under 55 words and 360 characters, in one short paragraph or up to three short lines.',
+    'Show who has the problem, what changes for them, how the solution works, what has been tested, how impact will be measured and what decision or support is needed. Place criteria like market, team and business model in the relevant sections when supplied.',
+    'Use plain verbs and concrete details. Keep facts grounded in the story or evidence. Distinguish observations, targets and plans. Do not invent numbers, quotes, sources, customers, outcomes or commitments.',
+    'When a fact is missing, write the strongest supported version and ask for the missing fact in gaps. Mark a wholly unsupported section [ADD DATA]. Never assume eligibility or predict selection.'
+  ].join(' '),
+  review: 'Review against the supplied organizer requirements, prioritizing higher weights and material submission conflicts. Check each slide for a clear claim, specific support, and gaps in evidence. Anchor each finding to a short verbatim quote from the named story section. Suggest a concrete revision. Put missing criteria and submission conflicts in gaps. Do not score the project or predict judging outcomes.',
   rules: 'Extract requirements from the pasted organizer text. For each finding use section "rules", quote the exact wording and explain what the team needs to do. Put absent or ambiguous rules in gaps. Do not invent deadlines or imply that the source is verified.'
 };
 
@@ -33,8 +39,9 @@ function schema(mode) {
   const gaps = {type: 'ARRAY', items: string};
   if (mode === 'draft') return {type: 'OBJECT', properties: {
     story: {type: 'OBJECT', properties: Object.fromEntries(sections.map(key => [key, string])), required: sections},
+    headlines: {type: 'OBJECT', properties: Object.fromEntries(sections.map(key => [key, string])), required: sections},
     gaps
-  }, required: ['story', 'gaps']};
+  }, required: ['story', 'headlines', 'gaps']};
   return {type: 'OBJECT', properties: {findings: {type: 'ARRAY', items: {type: 'OBJECT', properties: {
     section: {type: 'STRING', enum: mode === 'rules' ? ['rules'] : sections}, quote: string, advice: string
   }, required: ['section', 'quote', 'advice']}}, gaps}, required: ['findings', 'gaps']};
@@ -77,7 +84,7 @@ export async function handleAssist(request, fetcher = fetch) {
     const text = answer.content?.parts?.filter(part => !part.thought).map(part => part.text ?? '').join('');
     return reply({provider: 'Gemini', model, result: validateAssistResult(mode, JSON.parse(text), input)});
   } catch {
-    return reply({error: 'The AI request timed out or returned an invalid result. Your draft is still available.'}, 502);
+    return reply({error: 'Gemini timed out or returned an incomplete draft or review. Your draft is still available.'}, 502);
   }
 }
 
