@@ -38,7 +38,7 @@ export function validateProject(p){
   return isSlideImageData(image?.data)?[[key,{data:image.data,alt:clean(image.alt,160)}]]:[];
  }));
  const evidence=Array.isArray(p.evidence)?p.evidence.slice(0,30).filter(v=>v&&typeof v==='object'&&!Array.isArray(v)).map(v=>({id:clean(v.id,80)||createId(),claim:clean(v.claim,1200),source:clean(v.source,2000),type:['interview','demo','measurement','reference'].includes(v.type)?v.type:'reference',slide:fields.some(([k])=>k===v.slide)?v.slide:'proof'})).filter(v=>v.claim):[];
- const history=Array.isArray(p.history)?p.history.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&v.data&&typeof v.data==='object').map(v=>({at:v.at,data:Object.fromEntries(fields.map(([k])=>[k,clean(v.data[k],6000)]))})):[];
+ const history=Array.isArray(p.history)?p.history.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&v.data&&typeof v.data==='object').map(v=>({at:v.at,data:Object.fromEntries(fields.map(([k])=>[k,clean(v.data[k],6000)])),...(v.slideHeadlines ? {slideHeadlines:Object.fromEntries(fields.map(([key])=>[key,clean(v.slideHeadlines[key],90)]))} : {})})):[];
  const checklist=Object.fromEntries(checklistItems.map(([k])=>[k,p.checklist?.[k]===true]));
  const answers=Array.from({length:6},(_,n)=>clean(p.answers?.[n],3000));
  const rehearsals=Array.isArray(p.rehearsals)?p.rehearsals.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&Number.isFinite(v.seconds)&&v.seconds>=0&&v.seconds<=86400).map(v=>({at:v.at,seconds:v.seconds})):[];

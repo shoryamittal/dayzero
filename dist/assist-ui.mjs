@@ -1,11 +1,12 @@
-import {assistInput, sections, validateAssistResult} from './assist-model.mjs?v=audit-1';
+import {assistInput, sections, validateAssistResult} from './assist-model.mjs?v=pitch-rubric-1';
 import {analyze} from './engine.mjs';
 import {challengeQuestions} from './preparation.mjs';
+import {slideReadability} from './deck-design.mjs?v=pitch-rubric-1';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[character]);
-const labels = {draft: 'Draft six sections', review: 'Review my pitch', rules: 'Extract rule requirements'};
+const labels = {draft: 'Draft a competition pitch', review: 'Review against the rubric', rules: 'Extract rule requirements'};
 let api;
 let output;
 let pending = false;
@@ -19,11 +20,13 @@ function visibleOutput(project) {
   if (!output || output.id !== project.id) return '';
   const {mode, result, input, model} = output;
   const current = JSON.stringify(assistInput(project, mode)) === input;
-  const draft = mode === 'draft' ? sections.map(key => `<article class="requirement-card"><h4>${key}</h4><p>${escape(result.story[key])}</p></article>`).join('') : '';
+  const draft = mode === 'draft' ? sections.map(key => `<article class="requirement-card"><span class="eyebrow">${key}</span><h4>${escape(result.headlines[key])}</h4><p style="white-space:pre-wrap">${escape(result.story[key])}</p></article>`).join('') : '';
+  const fitIssues = mode === 'draft' ? slideReadability({...project, ...result.story, slideHeadlines: result.headlines}) : [];
   const findings = (result.findings || []).map(item => `<article class="requirement-card"><span class="eyebrow">${escape(item.section)}</span><blockquote>${escape(item.quote)}</blockquote><p>${escape(item.advice)}</p></article>`).join('');
   return `<section class="panel"><span class="eyebrow">GEMINI · ${escape(model)}</span><h3>${labels[mode]}</h3>
     <p>Review the wording and the source before using it. ${current ? '' : 'The project changed after this request.'}</p>
     ${draft}${findings || (mode !== 'draft' ? '<p>No findings with matching source quotes were returned.</p>' : '')}
+    ${fitIssues.length ? `<h4>Readability checks</h4><ul>${fitIssues.map(item => `<li><strong>${item.section}</strong> ${item.detail}</li>`).join('')}</ul>` : ''}
     ${result.gaps.length ? `<h4>Information to check</h4><ul>${result.gaps.map(gap => `<li>${escape(gap)}</li>`).join('')}</ul>` : ''}
     <div class="toolbar">${mode === 'draft' && current ? '<button class="btn primary" data-assist-apply>Apply this draft and keep a version of my original</button>' : ''}
     <button class="btn" data-assist-download>Download result ↓</button></div></section>`;
@@ -49,6 +52,38 @@ export function assistStudio(project) {
       </aside></div>${visibleOutput(project)}`;
 }
 
+export async function requestPitchAssist(project, mode, key) {
+  if (pending) return;
+  const input = assistInput(project, mode);
+  const id = project.id;
+  pending = true;
+  output = undefined;
+  message = 'Waiting for Gemini. Your project stays available.';
+  if (document.querySelector('#assist-form')) api.render();
+  try {
+    const response = await fetch('/api/assist', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'x-gemini-key': key},
+      body: JSON.stringify({mode, input}),
+      signal: AbortSignal.timeout(32000)
+    });
+    if (!response.headers.get('content-type')?.includes('application/json')) {
+      throw Error('Open the Vercel site or run the local AI server to use Gemini.');
+    }
+    const data = await response.json();
+    if (!response.ok) throw Error(data.error || 'The request failed.');
+    if (api.project()?.id === id) {
+      output = {id, mode, input: JSON.stringify(input), result: validateAssistResult(mode, data.result, input), model: data.model};
+      message = 'Result ready to review.';
+    }
+  } catch (error) {
+    message = error.name === 'TimeoutError' ? 'The request timed out. Try again or use the local review.' : error.message;
+  } finally {
+    pending = false;
+    if (document.querySelector('#assist-form')) api.render();
+  }
+}
+
 if (typeof document !== 'undefined') {
   document.addEventListener('change', event => {
     if (event.target.id !== 'assist-mode') return;
@@ -68,35 +103,8 @@ if (typeof document !== 'undefined') {
     const mode = fields.get('mode');
     const keyField = form.querySelector('#assist-key');
     const key = keyField.value.trim();
-    const input = assistInput(project, mode);
-    const id = project.id;
     keyField.value = '';
-    pending = true;
-    output = undefined;
-    message = 'Waiting for Gemini. Your project stays available.';
-    api.render();
-    try {
-      const response = await fetch('/api/assist', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json', 'x-gemini-key': key},
-        body: JSON.stringify({mode, input}),
-        signal: AbortSignal.timeout(32000)
-      });
-      if (!response.headers.get('content-type')?.includes('application/json')) {
-        throw Error('Open the Vercel site or run the local AI server to use Gemini.');
-      }
-      const data = await response.json();
-      if (!response.ok) throw Error(data.error || 'The request failed.');
-      if (api.project()?.id === id) {
-        output = {id, mode, input: JSON.stringify(input), result: validateAssistResult(mode, data.result, input), model: data.model};
-        message = 'Result ready to review.';
-      }
-    } catch (error) {
-      message = error.name === 'TimeoutError' ? 'The request timed out. Try again or use the local review.' : error.message;
-    } finally {
-      pending = false;
-      if (document.querySelector('#assist-form')) api.render();
-    }
+    await requestPitchAssist(project, mode, key);
   });
 
   document.addEventListener('click', async event => {
@@ -110,8 +118,15 @@ if (typeof document !== 'undefined') {
       return;
     }
     if (output.mode !== 'draft' || JSON.stringify(assistInput(project, output.mode)) !== output.input) return;
-    project.history = [...project.history, {at: Date.now(), data: Object.fromEntries(sections.map(key => [key, project[key]]))}].slice(-5);
-    for (const key of sections) project[key] = output.result.story[key];
+    project.history = [...project.history, {
+      at: Date.now(),
+      data: Object.fromEntries(sections.map(key => [key, project[key]])),
+      slideHeadlines: {...project.slideHeadlines}
+    }].slice(-5);
+    for (const key of sections) {
+      project[key] = output.result.story[key];
+      project.slideHeadlines[key] = output.result.headlines[key];
+    }
     project.checklist.facts = false;
     project.checklist.files = false;
     output = undefined;

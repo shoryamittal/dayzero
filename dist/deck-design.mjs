@@ -1,4 +1,4 @@
-import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=visual-qa-1';
+import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=pitch-rubric-1';
 
 const WIDTH = 960;
 const HEIGHT = 540;
@@ -30,7 +30,7 @@ function mix(base, other, amount) {
 
 function text(value, box, color, {bold = false, align = 'left', role = ''} = {}) {
   const [x, y, width, height, size] = box;
-  return {value, x, y, width, height, size, color, bold, align, role};
+  return {value, x, y, width, height, size, color, bold, align, role, fontFace:'Arial'};
 }
 
 function measureApprox(value, size) {
@@ -66,7 +66,7 @@ export function slideDesign(project, slide, index) {
   const headline = project.slideHeadlines?.[slide.key];
   const layout = picture
     ? {title:[54,118,466,104,headline?42:52],body:[55,249,463,219,26]}
-    : headline ? {title:[54,89,852,135,52],body:[56,253,848,218,29],rule:[54,232,852,2]}
+    : headline ? {title:[54,101,852,125,48],body:[56,253,848,218,30],rule:[54,232,852,2]}
     : dense ? compact : original;
   const ordinal = String(index + 1).padStart(2, '0');
   const sourceNotes = project.evidence?.filter(note => note.slide === slide.key).length || 0;
@@ -91,6 +91,20 @@ export function slideDesign(project, slide, index) {
 }
 
 const escape = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'}[c]));
+export function slideReadability(project) {
+  return slides(project).flatMap((slide, index) => {
+    const {items} = slideDesign(project, slide, index);
+    return items.filter(item => item.role === 'title' || item.role === 'body').flatMap(item => {
+      const {size, fits} = fit(item);
+      const minimum = item.role === 'title' ? 28 : 18;
+      return !fits || size < minimum ? [{
+        section: slide.title,
+        detail: item.role === 'title' ? 'Shorten the headline so it stays easy to scan.' : 'Move detail to speaker notes to keep the slide readable.'
+      }] : [];
+    });
+  });
+}
+
 const bounds = (x, y, width, height) => 'left:'+x/WIDTH*100+'%;top:'+y/HEIGHT*100+'%;width:'+width/WIDTH*100+'%;height:'+height/HEIGHT*100+'%';
 
 export function renderDeckSlide(project, index, designSlide = slideDesign) {
@@ -102,7 +116,7 @@ export function renderDeckSlide(project, index, designSlide = slideDesign) {
     ${design.items.map(item => {
       const tag = item.role === 'title' ? 'h2' : item.role === 'body' ? 'p' : 'span';
       const font = fit(item).size;
-      return `<${tag} class="designed-slide-layer designed-slide-${item.role || 'label'}" ${item.role==='mark'?'aria-hidden="true"':''} style="${bounds(item.x,item.y,item.width,item.height)};color:#${item.color};font-size:${font/WIDTH*100}cqw;font-weight:${item.bold?700:400};font-style:${item.italic?'italic':'normal'};font-family:${item.fontFace==='Georgia'?'Georgia,serif':'inherit'};text-align:${item.align}">${escape(item.value)}</${tag}>`;
+      return `<${tag} class="designed-slide-layer designed-slide-${item.role || 'label'}" ${item.role==='mark'?'aria-hidden="true"':''} style="${bounds(item.x,item.y,item.width,item.height)};color:#${item.color};font-size:${font/WIDTH*100}cqw;font-weight:${item.bold?700:400};font-style:${item.italic?'italic':'normal'};font-family:${item.fontFace==='Georgia'?'Georgia,serif':item.fontFace==='Arial'?'Arial,sans-serif':'inherit'};text-align:${item.align}">${escape(item.value)}</${tag}>`;
     }).join('')}
   </article>`;
 }

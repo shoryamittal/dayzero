@@ -26,13 +26,20 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     </div>
   </section>
   <section class="launch-lab launch-width" id="try" aria-labelledby="try-title">
-    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">Give your idea <em>a first draft.</em></h2></div><p>Enter a title and one sentence. Your idea takes shape on the board as you type.</p></div>
+    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">Give your idea <em>a first draft.</em></h2></div><p>Give us the essentials in one form. We’ll use your answers to draft the slides.</p></div>
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
-        <div class="field"><label for="launch-idea">What does your idea do?</label><textarea id="launch-idea" name="solution" placeholder="We help campus canteens offer unsold meals for pickup." rows="3" maxlength="260" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 260</small></div>
-        <button type="submit" class="launch-primary">Open my draft ${icons.arrow}</button>
-        <button type="button" class="launch-text-action" data-action="new">Use the guided setup instead</button>
+        <div class="field"><label for="launch-idea">What does your idea do?</label><textarea id="launch-idea" name="solution" placeholder="We help campus canteens offer unsold meals for pickup." rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
+        <div class="field"><label for="launch-problem">Who has this problem, and what happens today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required></textarea></div>
+        <div class="field"><label for="launch-event">Competition or event <small>(optional)</small></label><input id="launch-event" name="event" maxlength="160"></div>
+        <div class="field"><label for="launch-rules">Official rubric and submission rules <small>(optional)</small></label><textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste judging criteria, slide limit, required sections and format."></textarea></div>
+        <div class="field"><label for="launch-proof">What have you tested or learned? <small>(optional)</small></label><textarea id="launch-proof" name="proof" rows="2" maxlength="800" placeholder="Include results, observations or source links you can share."></textarea></div>
+        <div class="field"><label for="launch-ask">What do you want to achieve or ask for? <small>(optional)</small></label><textarea id="launch-ask" name="ask" rows="2" maxlength="600"></textarea></div>
+        <div class="field"><label for="launch-key">Gemini API key</label><input id="launch-key" type="password" autocomplete="off" required minlength="20" maxlength="200" pattern="[A-Za-z0-9_\\-]{20,200}"><span class="hint">Used for this request. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Get a Gemini key</a>.</span></div>
+        <label class="check-label"><input type="checkbox" name="consent" required> Send my pitch answers and event rules to Gemini. Google may use free-tier submissions to improve its products.</label>
+        <button type="submit" class="launch-primary">Generate my pitch ${icons.arrow}</button>
+        <button type="button" class="launch-text-action" data-action="new">Write it myself</button>
       </form>
       <div class="launch-output">
         <div class="launch-output-label"><span><i></i> LIVE DRAFT BOARD</span><span>WORKING DRAFT</span></div>
