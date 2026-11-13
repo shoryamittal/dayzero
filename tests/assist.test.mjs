@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {handleAssist} from '../api/assist.mjs';
+import {assistInput, sections} from '../dist/assist-model.mjs';
 
 const fakeKey = 'test-key-for-mocked-provider-only';
 const input = {problem: 'Students miss submission deadlines.', rules: 'Maximum six slides.', name: 'Private title', team: 'Private team'};
@@ -58,4 +59,22 @@ test('quota errors never expose upstream bodies or credentials', async () => {
   const response = await handleAssist(request({mode: 'review', input}), async () => Response.json({secret: fakeKey}, {status: 429}));
   assert.equal(response.status, 429);
   assert.ok(!(await response.text()).includes(fakeKey));
+});
+
+test('competition drafts use the mapped rubric and return editable headlines', async () => {
+  const requirement = {title:'Feasibility', section:'approach', weight:25, quote:'Explain what you can test this month.', source:'Organizer brief'};
+  const preview = assistInput({...input, preparation:{requirements:[requirement]}}, 'draft');
+  const story = Object.fromEntries(sections.map(section => [section, 'Interview students about submission deadlines.']));
+  const headlines = Object.fromEntries(sections.map(section => [section, 'Test the submission workflow']));
+  const result = {story, headlines, gaps:['Which organizer template is required?']};
+  const response = await handleAssist(request({mode:'draft', input:preview}), async (_url, options) => {
+    const payload = JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);
+    assert.deepEqual(payload.requirements, [requirement]);
+    return upstream(result);
+  });
+  assert.equal(response.status, 200);
+  assert.deepEqual((await response.json()).result, result);
+  const overlong = {...result, story:{...story, problem:'Too much text. '.repeat(40)}};
+  const rejected = await handleAssist(request({mode:'draft', input:preview}), async () => upstream(overlong));
+  assert.equal(rejected.status, 502);
 });
