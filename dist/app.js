@@ -1,6 +1,6 @@
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
 import {launchPage} from './launch.mjs?v=launch-1';
-import {sampleDesign} from './sample-deck.mjs?v=sample-refined-1';
+import {sampleChapters,sampleDesign} from './sample-deck.mjs?v=sample-dusk-1';
 import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=visual-qa-1';
 import {assistStudio,initAssist} from './assist-ui.mjs?v=audit-1';
 import {communityPlans} from './community.mjs?v=launch-1';
@@ -72,9 +72,9 @@ const previewProject = {...sample, evidence: []};
 const previewSlides = slides(previewProject);
 function sampleExhibit(){
  return `<section class="sample-exhibit" id="sample" aria-label="Sample pitch deck">
-  <div class="exhibit-stage-label"><span><b aria-hidden="true"></b> LIVE DECK PREVIEW</span><span>${esc(sample.name.toUpperCase())} / SAMPLE 01</span></div>
+  <div class="exhibit-stage-label"><span><b aria-hidden="true"></b> DESIGNED SAMPLE</span><span>${esc(sample.name.toUpperCase())}</span></div>
   <div class="exhibit-slide" id="sample-slide" aria-live="polite">${renderDeckSlide(previewProject,heroLens,sampleDesign)}</div>
-  <div class="exhibit-control" role="group" aria-label="Choose a sample slide">${previewSlides.map((slide,i)=>`<button type="button" data-lens="${i}" aria-label="Slide ${i+1}: ${slide.title}" aria-pressed="${i===heroLens}"><span>0${i+1}</span><strong>${slide.title}</strong></button>`).join('')}</div>
+  <div class="exhibit-control" role="group" aria-label="Choose a sample slide">${sampleChapters.map((chapter,i)=>`<button type="button" data-lens="${i}" aria-label="Slide ${i+1}: ${chapter}" aria-pressed="${i===heroLens}"><span>0${i+1}</span><strong>${chapter}</strong></button>`).join('')}</div>
   <div class="exhibit-caption"><span>Slide <b id="sample-slide-number">0${heroLens+1}</b> / 06</span><div><button type="button" data-action="show-sample">Present ${icon('play',13)}</button><button type="button" data-action="sample-pptx">Download PowerPoint ${icon('download',13)}</button></div></div>
  </section>`;
 }
@@ -97,7 +97,7 @@ function showSample(){
  modal.className='sample-present-dialog';
 }
 function selectSample(index){
- heroLens=(index+previewSlides.length)%previewSlides.length;
+ heroLens=(index+sampleChapters.length)%sampleChapters.length;
  const slide=renderDeckSlide(previewProject,heroLens,sampleDesign);
  $('#sample-slide').innerHTML=slide;
  $('#sample-slide-number').textContent=String(heroLens+1).padStart(2,'0');
@@ -296,7 +296,18 @@ function method(){showModal('What readiness actually checks.',`<p>We check wheth
 function downloadBlob(blob,name){const a=document.createElement('a'),url=URL.createObjectURL(blob);a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);}
 function exportProject(){if(!project)return toast('Create a project first.');downloadBlob(new Blob([JSON.stringify({format:'dayzero-project',version:1,...project},null,2)],{type:'application/json'}),safeFilename(project.name)+'-project.json');toast('Project backup downloaded. Keep it somewhere safe.');}
 function loadScript(src){return new Promise((resolve,reject)=>{let s=document.querySelector(`script[src="${src}"]`);if(s?.dataset.loaded)return resolve();s=document.createElement('script');s.src=src;s.onload=()=>{s.dataset.loaded='true';resolve()};s.onerror=()=>{s.remove();reject(Error('The export library could not load. Try again while online.'))};document.head.append(s);});}
-async function pptxBlob(p,design){await loadScript('/vendor/pptxgen.bundle.js');return makePowerPoint(p,window.PptxGenJS,design);}
+async function pptxBlob(p,design){
+ await Promise.all([loadScript('/vendor/pptxgen.bundle.js'),loadScript('/vendor/jszip.min.js')]);
+ const original=await makePowerPoint(p,window.PptxGenJS,design);
+ const zip=await window.JSZip.loadAsync(await original.arrayBuffer());
+ const manifest=await zip.file('[Content_Types].xml').async('string');
+ // The bundled exporter lists one slide-master override per slide, even when they share a master.
+ const repaired=manifest.replace(/<Override PartName="\/(ppt\/slideMasters\/slideMaster\d+\.xml)" ContentType="[^"]+"\/>/g,
+  (entry,part)=>zip.file(part)?entry:'');
+ if(repaired===manifest)return original;
+ zip.file('[Content_Types].xml',repaired);
+ return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation',compression:'DEFLATE'});
+}
 async function downloadSample(button){
  const label=button.textContent;
  button.disabled=true;button.textContent='Preparing PowerPoint…';

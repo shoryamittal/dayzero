@@ -113,7 +113,7 @@
 #sample,#try,#workflow {scroll-margin-top:18px}
 
 #modal.sample-present-dialog {width:min(950px,calc(100vw - 30px));max-width:none;background:#281b31;color:#fff6ee;padding:22px}
-#modal.sample-present-dialog h2 {color:inherit;font-size:25px;margin:0 34px 15px 0}
+#modal.sample-present-dialog > #modal-title {color:inherit;font-size:25px;margin:0 34px 15px 0}
 #sample-present-slide {border:1px solid #766582;border-radius:6px;overflow:hidden}
 .sample-present-footer {display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px}
 .sample-present-footer>div {display:flex;gap:7px}
