@@ -1,5 +1,5 @@
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
-import {launchPage} from './launch.mjs?v=launch-1';
+import {launchPage} from './launch.mjs?v=draft-board-1';
 import {sampleChapters,sampleDesign} from './sample-deck.mjs?v=sample-dusk-1';
 import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=visual-qa-1';
 import {assistStudio,initAssist} from './assist-ui.mjs?v=audit-1';
@@ -78,15 +78,30 @@ function sampleExhibit(){
   <div class="exhibit-caption"><span>Slide <b id="sample-slide-number">0${heroLens+1}</b> / 06</span><div><button type="button" data-action="show-sample">Present ${icon('play',13)}</button><button type="button" data-action="sample-pptx">Download PowerPoint ${icon('download',13)}</button></div></div>
  </section>`;
 }
-function draftSlide({name='',solution='',template='electric'}={}){
- return renderDeckSlide({
-  name:name||'Your project',solution:solution||'Describe what your idea does and who it helps.',
-  template,evidence:[]
- },1);
+function draftBoard({name='',solution=''}={}){
+ return `<article class="launch-board">
+  <span class="launch-board-label">PROJECT TITLE</span>
+  <h3>${esc(name||'Your project title')}</h3>
+  <div class="launch-board-note">
+   <span class="launch-board-label">THE IDEA</span>
+   <p>${esc(solution||'Describe what your idea does and who it helps.')}</p>
+  </div>
+ </article>`;
+}
+function choosePitchTheme(pitch){
+ const context=[pitch.event,pitch.rules,pitch.problem,pitch.solution,pitch.approach,pitch.proof,pitch.impact].filter(Boolean).join(' ');
+ const directions=[
+  ['blueprint',/\b(?:engineer\w*|technolog\w*|robot\w*|software|prototype|data|research|algorithm\w*|hackathon)\b/gi],
+  ['botanical',/\b(?:campus|community|climate|food|waste|sustainab\w*|health|accessib\w*|education)\b/gi],
+  ['noir',/\b(?:investor\w*|venture|fundrais\w*|revenue|market|business|enterprise|finance)\b/gi]
+ ];
+ const ranked=directions.map(([theme,pattern])=>({theme,score:new Set(context.toLowerCase().match(pattern)).size}));
+ ranked.sort((a,b)=>b.score-a.score);
+ return ranked[0].score>ranked[1].score?ranked[0].theme:'editorial';
 }
 function home(){
  return launchPage({
-  deck:sampleExhibit(),draft:draftSlide(),hasProjects:library.length>0,
+  deck:sampleExhibit(),draft:draftBoard(),hasProjects:library.length>0,
   icons:Object.fromEntries(['arrow','shield','event','deck','mic'].map(key=>[key,icon(key,18)]))
  });
 }
@@ -110,12 +125,12 @@ function selectSample(index){
 }
 function launchDraftFields(form){
  const fields=new FormData(form);
- return {name:clean(fields.get('name'),80),solution:clean(fields.get('solution'),260),template:fields.get('template')};
+ return {name:clean(fields.get('name'),80),solution:clean(fields.get('solution'),260)};
 }
 document.addEventListener('input',event=>{
  const form=event.target.closest('#launch-draft');
  if(!form)return;
- $('#launch-draft-preview').innerHTML=draftSlide(launchDraftFields(form));
+ $('#launch-draft-preview').innerHTML=draftBoard(launchDraftFields(form));
  $('#launch-count').textContent=form.elements.solution.value.length+' / 260';
 });
 document.addEventListener('submit',async event=>{
@@ -128,7 +143,7 @@ document.addEventListener('submit',async event=>{
  if(submit.disabled)return;
  submit.disabled=true;
  resetRehearsal();
- project=validateProject({...fields,id:createId(),createdAt:Date.now(),updatedAt:Date.now()});
+ project=validateProject({...fields,template:choosePitchTheme(fields),id:createId(),createdAt:Date.now(),updatedAt:Date.now()});
  await save();
  slideIndex=1;tab='story';go('workspace');
 });
@@ -368,7 +383,7 @@ document.addEventListener('click',async e=>{const projectButton=e.target.closest
  const routeEl=e.target.closest('[data-route]');if(routeEl){e.preventDefault();return go(routeEl.dataset.route);}const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;go('workspace');return;}const sl=e.target.closest('[data-slide]');if(sl){slideIndex=Number(sl.dataset.slide);return render();}const te=e.target.closest('[data-template]');if(te){if(!project){toast('Create a project to use this style.');newConfirm();intakeDraft.template=te.dataset.template;return;}project.template=te.dataset.template;project.checklist.files=false;await save();tab='deck';go('workspace');return;}const ex=e.target.closest('[data-export]');if(ex)return exportFiles(ex.dataset.export,ex);const restore=e.target.closest('[data-restore]');if(restore){const v=project.history[Number(restore.dataset.restore)];if(v?.data){for(const [key]of fields)project[key]=clean(v.data[key]);project.checklist.facts=false;project.checklist.files=false;await save();render();toast('Version restored.');}return;}const b=e.target.closest('[data-action]');if(!b)return;const a=b.dataset.action;if(a.startsWith('tab-')){tab=a.slice(4);return go('workspace');}if(a.startsWith('edit-')){slideIndex=Math.max(0,fields.findIndex(([key])=>key===a.slice(5)));tab='story';go('workspace');document.querySelector(`[data-edit="${a.slice(5)}"]`)?.focus();return;}
  const actions={'claim-review':claimReview,'event-desk':openEventDesk,'event-new-project':newEventProject,'cancel-proof-edit':()=>{$('#evidence-form').reset();$('#evidence-id').value='';$('#evidence-submit').innerHTML='Add to proof board '+icon('plus',15);$('#proof-edit-actions').hidden=true;},'remove-proof-note':confirmRemoveProof,'remove-proof-confirm':removeProof,'remove-project':confirmRemoveProject,'remove-project-confirm':removeProject,'project-details':projectDetails,commands:commandPalette,focus:toggleFocus,present:()=>openPresentation(false),'present-notes':()=>openPresentation(true),'present-prev':()=>{slideIndex=(slideIndex+5)%6;presentationMarkup();},'present-next':()=>{slideIndex=(slideIndex+1)%6;presentationMarkup();},'toggle-present-notes':()=>{$('#modal').dataset.notes=String($('#modal').dataset.notes!=='true');presentationMarkup();},skim:skimView,'finish-rehearsal':finishRehearsal,'export-library':exportLibrary,duplicate:duplicateProject,'focus-proof-form':()=>$('#evidence-claim')?.focus(),'story-prev':()=>{slideIndex=(slideIndex+5)%6;render();},'story-next':()=>{if(slideIndex===5){tab='deck';go('workspace');}else{slideIndex++;render();}},new:startNew,'new-confirm':newConfirm,demo:demo,'demo-practice':()=>demo(true),'replace-demo':loadDemo,'open-project':openProject,help,privacy,settings:()=>go('settings'),evidence,method,import:importProject,'export-project':exportProject,'close-modal':()=>{presentationOpen=false;$('#modal').close();},'menu-close':()=>{$('#sidebar').classList.remove('open');syncSidebar();$('.mobile-menu')?.setAttribute('aria-expanded','false');},menu:()=>{const open=$('#sidebar').classList.toggle('open');b.setAttribute('aria-expanded',String(open));syncSidebar();},'prev-slide':()=>{slideIndex=(slideIndex+5)%6;render();},'next-slide':()=>{slideIndex=(slideIndex+1)%6;render();},'sample-pptx':()=>downloadSample(b),'show-sample':showSample,'confirm-rules':async()=>{project.rules=clean($('#event-rules').value,10000);project.confirmed=$('#rules-confirm').checked;if(project.confirmed&&!project.rules){toast('Add the rules before confirming them.');return;}await save();render();toast(project.confirmed?'Your rule confirmation is saved.':'Rules saved. Confirmation is still needed.');},snapshot,'timer':toggleTimer,'timer-reset':()=>{clearInterval(timer);timer=null;running=false;seconds=0;updateClock();$('#timer-button').innerHTML=icon('play',14)+' Start rehearsal';},'intake-back':()=>{if(intakeStep>0){captureIntake();intakeStep--;render();}else go('projects');},'clear':()=>showModal('Clear this workspace?',`<p>This removes all saved projects, proof boards, notes, and version histories from this browser. Export a library backup first to keep your work. Downloaded files are not deleted.</p>`,`<button class="btn" data-action="export-library">Export library backup</button><button class="btn primary" data-action="clear-confirm">Clear all saved projects ${icon('trash',15)}</button>`),'clear-confirm':async()=>{try{await clearStored();project=null;go('home');toast('All saved projects and version histories cleared.');}catch{toast('Could not clear device storage. Try again in browser settings.');}},'download-interview':()=>{downloadBlob(new Blob(['DAY-ZERO / INTERVIEW GUIDE\n\nAsk about real past behaviour. Do not pitch first.\n\n1. When did this problem last happen?\n2. What did you do to work around it?\n3. What was difficult, slow, or costly?\n4. What have you already tried?\n5. Could you show me how you handle it today?\n\nRecord date, participant count, consent, and observations. Do not invent results.\n'],{type:'text/plain'}),'dayzero-interview-guide.txt');toast('Interview guide downloaded.');}};try{await actions[a]?.();}catch{toast('That action could not finish. Your saved project is still available.');}});
 function captureIntake(){const form=$('#intake-form');if(form)for(const [k,v]of new FormData(form))intakeDraft[k]=clean(v,3000);}
-document.addEventListener('submit',async e=>{if(e.target.id!=='intake-form')return;e.preventDefault();clearTimeout(saving);captureIntake();if(!intakeDraft.name){$('#form-error').textContent='Give your project a name to continue.';$('#name')?.focus();return;}project=validateProject(intakeDraft);intakeDraft.id=project.id;await save();if(intakeStep<3){intakeStep++;render();}else{tab='rules';slideIndex=0;go('workspace');toast('Your workspace is ready. Confirm the event rules next.');}});
+document.addEventListener('submit',async e=>{if(e.target.id!=='intake-form')return;e.preventDefault();clearTimeout(saving);captureIntake();if(!intakeDraft.name){$('#form-error').textContent='Give your project a name to continue.';$('#name')?.focus();return;}project=validateProject({...intakeDraft,template:choosePitchTheme(intakeDraft)});intakeDraft.id=project.id;await save();if(intakeStep<3){intakeStep++;render();}else{tab='rules';slideIndex=0;go('workspace');toast('Your workspace is ready. Confirm the event rules next.');}});
 document.addEventListener('input',e=>{if(e.target.matches('[data-edit]')&&project){project[e.target.dataset.edit]=e.target.value;
  const preview=e.target.id==='slide-text'?$('.slide-stage'):$('#story-live-preview');
  if(preview)preview.innerHTML=renderDeckSlide(project,slideIndex);

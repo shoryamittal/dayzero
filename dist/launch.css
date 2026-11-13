@@ -83,7 +83,15 @@
 .launch-output {min-width:0;padding:clamp(14px,1.9vw,25px);background:#ebdfed;border:1px solid #d9cbdb;border-radius:12px}
 .launch-output-label {display:flex;justify-content:space-between;gap:8px;margin-bottom:11px;color:#4e3c59;font:750 10px/1.4 var(--body);letter-spacing:.09em}
 .launch-output-label i {display:inline-block;width:7px;height:7px;margin-right:4px;border-radius:50%;background:#795290}
-#launch-draft-preview {border-radius:5px;overflow:hidden;border:1px solid #b9a2bb}
+.launch-board {
+ min-height:250px;padding:clamp(18px,3vw,35px);border:1px solid #baabba;border-radius:8px;
+ background:#faf6ed radial-gradient(#c9bec9 1px,transparent 1px) 0 0 / 14px 14px;
+ color:var(--stage);overflow-wrap:anywhere;
+}
+.launch-board-label {display:block;font:750 10px/1.4 var(--body);letter-spacing:.1em;color:#604b69}
+.launch-board h3 {margin:6px 0 18px;font:700 clamp(24px,3vw,42px)/1.12 var(--display);letter-spacing:-.035em}
+.launch-board-note {max-width:55ch;background:#fffdf8;border:1px solid #d7c9d7;border-left:3px solid #8c6d99;border-radius:4px;padding:14px 16px;box-shadow:0 3px 8px #38263f0d}
+.launch-board-note p {margin:5px 0 0;font:400 15px/1.5 var(--body);white-space:pre-wrap}
 .launch-output>p {margin:12px 0 0;color:var(--copy);font-size:12px}
 .launch-steps {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
 .launch-steps article {display:flex;flex-direction:column;align-items:start;border-top:2px solid #805f91;background:#f0e7f2;padding:18px 18px 15px;min-height:205px}
@@ -181,17 +189,6 @@
  .launch-header-inner {flex-wrap:wrap;padding:7px 0}
 }
 
-.launch-styles {display:flex;flex-wrap:wrap;gap:6px;margin:0 0 15px;padding:0;border:0;min-width:0}
-.launch-styles legend {padding:0;margin-bottom:7px;font-size:13px;font-weight:650}
-.launch-styles label {position:relative;margin:0}
-.launch-styles input {position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
-.launch-styles label>span {display:flex;align-items:center;gap:6px;min-height:42px;padding:7px 10px;border:1px solid #d7c9d7;border-radius:6px;color:#4e3c59}
-.launch-styles input:checked+span {background:#ede1ef;border-color:#795290;color:#302239}
-.launch-styles input:focus-visible+span {outline:2px solid #795290;outline-offset:2px}
-.launch-styles i {width:13px;height:13px;border-radius:3px}
-.swatch-electric {background:#bca4e3}
-.swatch-noir {background:#2d2730}
-.swatch-signal {background:#ef795e}
 .story-coach .eyebrow {margin-top:13px}
 
 .deck-image-field input[type=file]{width:100%;font-size:12px;padding:8px}

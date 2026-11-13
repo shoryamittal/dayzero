@@ -26,23 +26,18 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     </div>
   </section>
   <section class="launch-lab launch-width" id="try" aria-labelledby="try-title">
-    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> BUILD YOUR FIRST SLIDE</p><h2 id="try-title">Give your idea <em>a first draft.</em></h2></div><p>Enter a title and one sentence. The slide updates as you type, and you can carry it straight into the studio.</p></div>
+    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">Give your idea <em>a first draft.</em></h2></div><p>Enter a title and one sentence. Your idea takes shape on the board as you type.</p></div>
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
         <div class="field"><label for="launch-idea">What does your idea do?</label><textarea id="launch-idea" name="solution" placeholder="We help campus canteens offer unsold meals for pickup." rows="3" maxlength="260" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 260</small></div>
-        <fieldset class="launch-styles"><legend>Choose a look</legend>
-          <label><input type="radio" name="template" value="electric" checked><span><i class="swatch-electric"></i> Electric</span></label>
-          <label><input type="radio" name="template" value="noir"><span><i class="swatch-noir"></i> Noir</span></label>
-          <label><input type="radio" name="template" value="signal"><span><i class="swatch-signal"></i> Signal</span></label>
-        </fieldset>
         <button type="submit" class="launch-primary">Open my draft ${icons.arrow}</button>
         <button type="button" class="launch-text-action" data-action="new">Use the guided setup instead</button>
       </form>
       <div class="launch-output">
-        <div class="launch-output-label"><span><i></i> LIVE SLIDE PREVIEW</span><span>02 / SOLUTION</span></div>
+        <div class="launch-output-label"><span><i></i> LIVE DRAFT BOARD</span><span>WORKING DRAFT</span></div>
         <div id="launch-draft-preview">${draft}</div>
-        <p>Keep editing in the studio. Export when the story is ready.</p>
+        <p>Day-Zero picks a presentation theme from your pitch and event brief. Use the organizer’s template if one is required.</p>
       </div>
     </div>
   </section>
