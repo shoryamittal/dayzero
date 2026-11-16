@@ -1,4 +1,4 @@
-# Day-Zero
+# PitchViva
 
 Event preparation and pitch studio. Browser-local projects, evidence, editable decks, requirement mapping, speaking plans, organizer PPTX text filling, and handoff workbooks.
 
