@@ -1,4 +1,4 @@
-import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=pitch-rubric-1';
+import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=pitchviva-1';
 
 const WIDTH = 960;
 const HEIGHT = 540;
@@ -132,8 +132,8 @@ async function imageData(src) {
 
 export async function makePowerPoint(project, PptxGenJS, designSlide = slideDesign) {
   const deck = new PptxGenJS();
-  deck.defineLayout({name: 'Day-Zero Wide', width: WIDTH / 72, height: HEIGHT / 72});
-  deck.layout = 'Day-Zero Wide';
+  deck.defineLayout({name: 'PitchViva Wide', width: WIDTH / 72, height: HEIGHT / 72});
+  deck.layout = 'PitchViva Wide';
   deck.author = '';
   deck.subject = project.demo ? 'Fictional sample pitch' : 'Pitch draft for review';
   deck.title = project.name;

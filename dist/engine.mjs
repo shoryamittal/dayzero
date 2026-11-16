@@ -1,5 +1,5 @@
 import {isSlideImageData} from './slide-images.mjs?v=visual-qa-1';
-import {normalizePreparation} from './preparation.mjs?v=ai-1.0';
+import {normalizePreparation} from './preparation.mjs?v=pitchviva-1';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
 import {normalizeEvent,eventChecks} from './event-engine.mjs?v=ai-1.0';
 export const VERSION = 1;
@@ -26,7 +26,7 @@ export const sample = {
 export const fields=[['problem','The problem','Who has this problem, and what happens today?'],['solution','Your solution','What does it do, and what makes it useful?'],['approach','How it works','Explain the steps, technology, or prototype.'],['proof','What you can prove','Share real interviews, results, or a demo. It is okay to have none yet.'],['impact','The impact','What change do you aim to make? Separate goals from measured results.'],['ask','Your next step','What help, funding, or permission do you need?']];
 export function clean(value,max=6000){return String(value??'').replace(/\u0000/g,'').slice(0,max).trim();}
 export function validateProject(p){
- if(!p||typeof p!=='object'||Array.isArray(p))throw Error('This is not a Day-Zero project.');
+ if(!p||typeof p!=='object'||Array.isArray(p))throw Error('This is not a PitchViva project.');
  const result={};
  for(const key of ['name','team','event','problem','solution','approach','proof','impact','ask','deadline','rules'])result[key]=clean(p[key],key==='rules'?10000:6000);
  result.name=result.name.slice(0,80);result.team=result.team.slice(0,100);result.event=result.event.slice(0,160);

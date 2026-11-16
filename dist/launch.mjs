@@ -6,7 +6,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
   ];
   const questions = [
     ['What do I get?','An editable PowerPoint with six sections and speaker notes, plus a PDF preview where the text is supported. The export kit also includes your report and a project backup.'],
-    ['Where is my draft saved?','In this browser. Drafts expire 24 hours after the last edit, checked when you reopen Day-Zero. Export a project backup to keep it or move it to another device.'],
+    ['Where is my draft saved?','In this browser. Drafts expire 24 hours after the last edit, checked when you reopen PitchViva. Export a project backup to keep it or move it to another device.'],
     ['Can I use my organizer’s template?','Yes, if it is a supported PPTX. Use Official template to map your text into the organizer’s slides. Check the rules and review the exported layout before submitting.'],
     ['Do I need an account or an API key?','You can build and export a pitch without an account or key. The optional Gemini tools require your own API key and ask before sending project text.']
   ];
@@ -30,13 +30,16 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
-        <div class="field"><label for="launch-idea">What does your idea do?</label><textarea id="launch-idea" name="solution" placeholder="We help campus canteens offer unsold meals for pickup." rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
-        <div class="field"><label for="launch-problem">Who has this problem, and what happens today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required></textarea></div>
-        <div class="field"><label for="launch-event">Competition or event <small>(optional)</small></label><input id="launch-event" name="event" maxlength="160"></div>
-        <div class="field"><label for="launch-rules">Official rubric and submission rules <small>(optional)</small></label><textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste judging criteria, slide limit, required sections and format."></textarea></div>
-        <div class="field"><label for="launch-proof">What have you tested or learned? <small>(optional)</small></label><textarea id="launch-proof" name="proof" rows="2" maxlength="800" placeholder="Include results, observations or source links you can share."></textarea></div>
-        <div class="field"><label for="launch-ask">What do you want to achieve or ask for? <small>(optional)</small></label><textarea id="launch-ask" name="ask" rows="2" maxlength="600"></textarea></div>
-        <div class="field"><label for="launch-key">Gemini API key</label><input id="launch-key" type="password" autocomplete="off" required minlength="20" maxlength="200" pattern="[A-Za-z0-9_\\-]{20,200}"><span class="hint">Used for this request. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Get a Gemini key</a>.</span></div>
+        <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
+        <div class="field"><label for="launch-idea">What does your solution do?</label><textarea id="launch-idea" name="solution" placeholder="Describe what someone does with it and what changes for them." rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
+        <div class="field"><label for="launch-approach">How does it work, and what can your team build? (optional)</label><textarea id="launch-approach" name="approach" rows="3" maxlength="1200" placeholder="Walk through two or three steps. Add what works today, what still needs building, and how you would deliver it."></textarea></div>
+        <div class="field"><label for="launch-proof">What have you tested or learned? (optional)</label><textarea id="launch-proof" name="proof" rows="2" maxlength="800" placeholder="Add an observation, interview or test result. Include how many people or trials it covers, if known."></textarea></div>
+        <div class="field"><label for="launch-source">Evidence source link (optional)</label><input id="launch-source" name="evidenceSource" type="url" maxlength="400" placeholder="https://…"></div>
+        <div class="field"><label for="launch-impact">What result would show it works? (optional)</label><textarea id="launch-impact" name="impact" rows="2" maxlength="800" placeholder="Name what you would measure, what you would compare it with, and your target if you have one."></textarea></div>
+        <div class="field"><label for="launch-ask">What decision or support do you need next? (optional)</label><textarea id="launch-ask" name="ask" rows="2" maxlength="600" placeholder="For example, permission to run a pilot, a partner, or funding for a specific next step."></textarea></div>
+        <div class="field"><label for="launch-event">Competition or event (optional)</label><input id="launch-event" name="event" maxlength="160" autocomplete="off" placeholder="Try Smart India Hackathon or SIH"><div class="event-intake-matches" aria-live="polite"></div></div>
+        <div class="field"><label for="launch-rules">Official rubric and submission rules (optional)</label><textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste the track, judging criteria and weights, required sections, slide limit, format, and template link if available."></textarea></div>
+        <div class="field"><label for="launch-key">Gemini API key</label><input id="launch-key" type="password" autocomplete="off" required minlength="20" maxlength="200" pattern="[A-Za-z0-9_\\-]{20,200}"><span class="hint">Required for AI generation. Used for this request. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Get a Gemini key</a>.</span></div>
         <label class="check-label"><input type="checkbox" name="consent" required> Send my pitch answers and event rules to Gemini. Google may use free-tier submissions to improve its products.</label>
         <button type="submit" class="launch-primary">Generate my pitch ${icons.arrow}</button>
         <button type="button" class="launch-text-action" data-action="new">Write it myself</button>
@@ -44,7 +47,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
       <div class="launch-output">
         <div class="launch-output-label"><span><i></i> LIVE DRAFT BOARD</span><span>WORKING DRAFT</span></div>
         <div id="launch-draft-preview">${draft}</div>
-        <p>Day-Zero picks a presentation theme from your pitch and event brief. Use the organizer’s template if one is required.</p>
+        <p>Your answers shape the story, the evidence you can show, and the next step you ask for. Add the current rubric so the draft can address what judges look for.</p>
       </div>
     </div>
   </section>
@@ -56,5 +59,5 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     <div><p class="launch-kicker"><span></span> BEFORE YOU START</p><h2 id="faq-title">Know what<br>you’re <em>getting.</em></h2></div>
     <div class="launch-answers">${questions.map(([question,answer])=>`<details><summary>${question}<span aria-hidden="true">+</span></summary><p>${answer}</p></details>`).join('')}</div>
   </section>
-  <section class="launch-end launch-width"><div><h2>Bring the idea.<br><em>Build the pitch.</em></h2><p>Your first draft can be one sentence.</p></div><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a>${hasProjects?'<button class="launch-secondary" data-route="projects">Open my projects</button>':''}</section>`;
+  <section class="launch-end launch-width"><div><h2>Bring the idea.<br><em>Build the pitch.</em></h2><p>Start with the problem and what your solution changes.</p></div><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a>${hasProjects?'<button class="launch-secondary" data-route="projects">Open my projects</button>':''}</section>`;
 }

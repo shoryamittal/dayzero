@@ -1,4 +1,4 @@
-# Day-Zero: final business direction
+# PitchViva: final business direction
 
 Decision: a community-led competition preparation service, supported by a free software workspace. Verified event information is an operating asset. Standalone Data as a Service is a later hypothesis, not a second product being launched now.
 

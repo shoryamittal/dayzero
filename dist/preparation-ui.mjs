@@ -1,4 +1,4 @@
-import {normalizePreparation,preparationSummary,requirementState,requirementSignature,runOfShow,challengeQuestions,preparationReport,sectionNames} from './preparation.mjs?v=ai-1.0';
+import {normalizePreparation,preparationSummary,requirementState,requirementSignature,runOfShow,challengeQuestions,preparationReport,sectionNames} from './preparation.mjs?v=pitchviva-1';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let api={},view='map';
 export function initPreparation(options){api=options;}
