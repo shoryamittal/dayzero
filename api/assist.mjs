@@ -2,7 +2,7 @@ import {assistInput, model, modes, sections, validateAssistResult} from '../dist
 
 const instructions = {
   draft: [
-    'Write six editable draft sections for a competition screener. Use the supplied organizer requirements and weights to prioritize what the reader needs to see. Check for a conflicting slide limit, required headings or template and flag it in gaps.',
+    'Write six editable draft sections for a competition screener. Use the supplied organizer requirements and weights for the named round or track. When the supplied rules cover several rounds and the applicable round is unclear, flag that in gaps. Check for a conflicting slide limit, required headings or template and flag it in gaps.',
     'Give each slide a distinct, specific headline of at most 90 characters on one line. Keep each body under 55 words and 360 characters, in one short paragraph or up to three short lines.',
     'Show who has the problem, what changes for them, how the solution works, what has been tested, how impact will be measured and what decision or support is needed. Place criteria like market, team and business model in the relevant sections when supplied.',
     'Use plain verbs and concrete details. Keep facts grounded in the story or evidence. Distinguish observations, targets and plans. Do not invent numbers, quotes, sources, customers, outcomes or commitments.',
