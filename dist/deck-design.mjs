@@ -1,4 +1,4 @@
-import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=pitchviva-1';
+import {normalizePDFText, questions, slides, themes, wrapText} from './engine.mjs?v=competition-round-1';
 
 const WIDTH = 960;
 const HEIGHT = 540;

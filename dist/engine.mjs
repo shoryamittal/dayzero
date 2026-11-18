@@ -28,8 +28,8 @@ export function clean(value,max=6000){return String(value??'').replace(/\u0000/g
 export function validateProject(p){
  if(!p||typeof p!=='object'||Array.isArray(p))throw Error('This is not a PitchViva project.');
  const result={};
- for(const key of ['name','team','event','problem','solution','approach','proof','impact','ask','deadline','rules'])result[key]=clean(p[key],key==='rules'?10000:6000);
- result.name=result.name.slice(0,80);result.team=result.team.slice(0,100);result.event=result.event.slice(0,160);
+ for(const key of ['name','team','event','eventRound','problem','solution','approach','proof','impact','ask','deadline','rules'])result[key]=clean(p[key],key==='rules'?10000:6000);
+ result.name=result.name.slice(0,80);result.team=result.team.slice(0,100);result.event=result.event.slice(0,160);result.eventRound=result.eventRound.slice(0,160);
  if(!result.name)throw Error('Add a project name first.');
  const notes=Object.fromEntries(fields.map(([k])=>[k,clean(p.notes?.[k],3000)]));
  const slideHeadlines=Object.fromEntries(fields.map(([key])=>[key,clean(p.slideHeadlines?.[key],90)]));
@@ -51,11 +51,23 @@ export function normalizeWorkspace(raw,now=Date.now()){
  return {version:2,projects,activeId:projects.some(p=>p.id===raw?.activeId)?raw.activeId:projects[0]?.id||null};
 }
 export function slides(p){return fields.map(([key,label])=>({key,title:({problem:'Problem',solution:'Solution',approach:'Approach',proof:'Evidence',impact:'Impact',ask:'Ask'})[key],text:clean(p[key])||`[ADD DATA: ${label.toLowerCase()}]`,source:p.demo?'Fictional demo project':'Student supplied · not independently verified'}));}
+function detectSlideLimit(rules){
+ const text=String(rules||'');
+ const patterns=[
+  /\b(?:max(?:imum)?\.?|no more than|up to|at most|limited to)\s*[:=–—-]?\s*(\d{1,2})\s*[-‑–]?\s*slides?\b/gi,
+  /\b(\d{1,2})\s*[-‑–]?\s*slides?\s*\(?(?:max(?:imum)?\b|or fewer\b)/gi,
+  /\b(?:slide limit|max(?:imum)?\s+(?:number of\s+)?slides?)\s*[:=–—-]\s*(\d{1,2})\b/gi,
+  /\b(?:submit|upload)\s+(?:a\s+)?(\d{1,2})\s*[-‑–]\s*slides?\s+(?:pitch\s+)?(?:deck|presentation|pdf)\b/gi
+ ];
+ const limits=patterns.flatMap(pattern=>[...text.matchAll(pattern)].map(match=>Number(match[1]))).filter(limit=>limit>0);
+ return limits.length?Math.min(...limits):null;
+}
 export function analyze(p){
  const deck=slides(p);const issues=[];
  for(const s of deck){if(!clean(p[s.key]))issues.push({id:s.key,kind:'missing',title:`Add ${s.title.toLowerCase()}`,detail:'This section needs your own information. We have kept an [ADD DATA] placeholder.',slide:deck.indexOf(s)+1});if(s.text.split(/\s+/).length>80)issues.push({id:s.key+'-length',kind:'length',title:`Shorten ${s.title.toLowerCase()}`,detail:'This section exceeds the preview’s 80-word readability target. Your event may have a different limit.',slide:deck.indexOf(s)+1});if(/(?:\b(?:best|guaranteed|revolutionary|first ever)\b|100%)/i.test(s.text))issues.push({id:s.key+'-claim',kind:'claim',title:'Review an absolute claim',detail:'Support this wording with a source or use a specific description without a superlative.',slide:deck.indexOf(s)+1});}
  for(const c of reviewClaims(p).filter(c=>c.status==='needs-source'))issues.push({id:c.key+'-number',kind:'number',title:'Add a source for a numerical claim',detail:'“'+c.quote+'” — add a source note with this exact sentence on the same slide, or label a proposed target as a goal.',slide:fields.findIndex(([k])=>k===c.key)+1});
- const countRule=String(p.rules||'').match(/(?:maximum|max(?:imum)?\.?|no more than|up to)\s*(\d{1,2})\s*slides?/i);if(countRule&&Number(countRule[1])<6)issues.push({id:'slide-limit',kind:'rule',title:'Your slide limit conflicts with this export',detail:'Your saved rules specify at most '+countRule[1]+' slides. This preview exports six. Adapt the content in the official template before submitting.',slide:0});
+ const countRule=detectSlideLimit(p.rules);
+ if(countRule!==null&&countRule<deck.length)issues.push({id:'slide-limit',kind:'rule',title:'Your slide limit conflicts with this export',detail:'The rules include a '+countRule+'-slide requirement. Confirm whether it applies to your round. This workspace exports '+deck.length+' slides, so adapt the deck if that requirement applies.',slide:0});
  if(!p.confirmed)issues.unshift({id:'rules',kind:'rule',title:'Confirm your event rules',detail:'Check the slide limit, required headings, accepted formats, and AI policy before submitting.',slide:0});
  if(!p.proof||/no user|no interview|not yet|none yet|no .*results/i.test(p.proof))issues.push({id:'evidence',kind:'proof',title:'Give the story real-world proof',detail:'Run a small interview or prototype test. Record what happened and its source; do not invent results.',slide:4});
  const blockers=issues.filter(i=>['missing','rule','claim','number'].includes(i.kind));

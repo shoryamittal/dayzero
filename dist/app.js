@@ -1,8 +1,8 @@
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
-import {launchPage} from './launch.mjs?v=pitchviva-1';
+import {launchPage} from './launch.mjs?v=competition-round-1';
 import {sampleChapters,sampleDesign} from './sample-deck.mjs?v=sample-dusk-1';
-import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=pitchviva-1';
-import {assistStudio,initAssist,requestPitchAssist} from './assist-ui.mjs?v=pitchviva-1';
+import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=competition-round-1';
+import {assistStudio,initAssist,requestPitchAssist} from './assist-ui.mjs?v=competition-round-1';
 import {communityPlans} from './community.mjs?v=launch-1';
 import {templateBridge,initTemplate} from './template-ui.mjs?v=audit-2';
 import {preparationHub,initPreparation} from './preparation-ui.mjs?v=ai-1.0';
@@ -10,7 +10,7 @@ import {preparationReport} from './preparation.mjs?v=pitchviva-1';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
 import {eventDesk,initEvents,selectAttachedEvent,lookupEvent} from './event-ui.mjs?v=pitchviva-1';
 import {normalizeEvent,eventChecks,eventBriefText,eventCatalog,searchEventRecords} from './event-engine.mjs?v=pitchviva-1';
-import {sample,fields,slides,analyze,validateProject,clean,daysLeft,isExpired,safeFilename,questions,TTL,createId,normalizeWorkspace,MAX_PROJECTS,themes,safeURL,readingTime,checklistItems,canExportPDF} from './engine.mjs?v=pitchviva-1';
+import {sample,fields,slides,analyze,validateProject,clean,daysLeft,isExpired,safeFilename,questions,TTL,createId,normalizeWorkspace,MAX_PROJECTS,themes,safeURL,readingTime,checklistItems,canExportPDF} from './engine.mjs?v=competition-round-1';
 const $=s=>document.querySelector(s), app=$('#app');
 const icons={home:'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z',deck:'M4 4h16v12H4z M8 21l4-5 4 5 M8 8h8 M8 11h5',event:'M5 5h14v16H5z M8 2v6 M16 2v6 M5 10h14 M9 14h2 M14 14h2 M9 17h2',grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',mic:'M9 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0z M5 10v2a7 7 0 0 0 14 0v-2 M12 19v3 M8 22h8',arrow:'M5 12h14 M13 6l6 6-6 6',plus:'M12 5v14 M5 12h14',check:'m5 12 4 4L19 6',chevron:'m9 5 7 7-7 7',shield:'M12 3 3 7v6c0 4 9 8 9 8s9-4 9-8V7z m-5 9 3 3 5-5',help:'M9 9a3 3 0 1 1 4 3v3 M12 18h.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',bolt:'m13 2-9 12h7l-1 8 10-13h-7z',clock:'M12 7v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',file:'M5 2h9l5 5v15H5z M14 2v6h5 M8 12h8 M8 16h8',download:'M12 3v12 m-5-5 5 5 5-5 M4 16v5h16v-5',upload:'M12 16V4 m-5 5 5-5 5 5 M4 16v5h16v-5',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M9 3h6l1 4 4 1v8l-4 1-1 4H9l-1-4-4-1V8l4-1z',leaf:'M20 3C5 2 2 10 7 16s14 2 13-13Z M5 21 16 9',spark:'m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z',menu:'M4 6h16 M4 12h16 M4 18h16',close:'m6 6 12 12 M6 18 18 6',trash:'M3 6h18 M8 6V3h8v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7',back:'M19 12H5 m6-6-6 6 6 6',play:'m8 4 12 8-12 8z',pause:'M8 4v16 M16 4v16',external:'M14 3h7v7 M21 3 11 13 M10 4H4v16h16v-6',info:'M12 11v6 M12 7h.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',refresh:'M20 7V2l-3 3a8 8 0 1 0 3 10 M20 7h-5',wallet:'M3 6h17v15H3z M3 6V3h14v3 M15 11h6v5h-6z'};
 const icon=(name,size=18)=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${icons[name]||icons.spark}"/></svg>`;
@@ -176,7 +176,7 @@ document.addEventListener('submit',async event=>{
  const form=event.target;
  const fields=launchDraftFields(form);
  const answers=new FormData(form);
- for(const [field, limit] of [['problem',700],['event',160],['rules',10000],['approach',1200],['proof',800],['impact',800],['ask',600]]) {
+ for(const [field, limit] of [['problem',700],['event',160],['eventRound',160],['rules',10000],['approach',1200],['proof',800],['impact',800],['ask',600]]) {
   fields[field]=clean(answers.get(field),limit);
  }
  if(!fields.name||!fields.problem||!fields.solution)return toast('Enter your project title, problem and solution.');

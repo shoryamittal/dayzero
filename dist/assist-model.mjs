@@ -11,6 +11,7 @@ export function assistInput(project, mode) {
   if (mode === "rules") return context;
   return {
     ...context,
+    eventRound: bounded(project.eventRound, 160),
     requirements: (Array.isArray(project.requirements) ? project.requirements :
       Array.isArray(project.preparation?.requirements) ? project.preparation.requirements : [])
       .slice(0, 20).filter(item => item?.quote).map(item => ({

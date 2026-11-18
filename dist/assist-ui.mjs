@@ -1,7 +1,7 @@
-import {assistInput, sections, validateAssistResult} from './assist-model.mjs?v=pitch-rubric-1';
+import {assistInput, sections, validateAssistResult} from './assist-model.mjs?v=competition-round-1';
 import {analyze} from './engine.mjs';
 import {challengeQuestions} from './preparation.mjs';
-import {slideReadability} from './deck-design.mjs?v=pitchviva-1';
+import {slideReadability} from './deck-design.mjs?v=competition-round-1';
 
 const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
