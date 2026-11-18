@@ -63,13 +63,14 @@ test('quota errors never expose upstream bodies or credentials', async () => {
 
 test('competition drafts use the mapped rubric and return editable headlines', async () => {
   const requirement = {title:'Feasibility', section:'approach', weight:25, quote:'Explain what you can test this month.', source:'Organizer brief'};
-  const preview = assistInput({...input, preparation:{requirements:[requirement]}}, 'draft');
+  const preview = assistInput({...input, eventRound:'Qualifying round', preparation:{requirements:[requirement]}}, 'draft');
   const story = Object.fromEntries(sections.map(section => [section, 'Interview students about submission deadlines.']));
   const headlines = Object.fromEntries(sections.map(section => [section, 'Test the submission workflow']));
   const result = {story, headlines, gaps:['Which organizer template is required?']};
   const response = await handleAssist(request({mode:'draft', input:preview}), async (_url, options) => {
     const payload = JSON.parse(JSON.parse(options.body).contents[0].parts[0].text);
     assert.deepEqual(payload.requirements, [requirement]);
+    assert.equal(payload.eventRound, 'Qualifying round');
     return upstream(result);
   });
   assert.equal(response.status, 200);

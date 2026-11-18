@@ -15,6 +15,13 @@ test('a numerical claim cannot be cleared by an unrelated source or by the same 
 test('matching source notes must belong to the same slide and have a source',()=>{const p={...sample,impact:'We reduced waste by 34.5%.',evidence:[{slide:'proof',claim:'We reduced waste by 34.5%.',source:'https://example.com/'}]};assert.equal(reviewClaims(p).find(c=>c.key==='impact').status,'needs-source');p.evidence[0].slide='impact';p.evidence[0].source='';assert.equal(reviewClaims(p).find(c=>c.key==='impact').status,'needs-source');});
 test('goals are explicitly distinct from measured claims, with decimal values preserved',()=>{const claims=reviewClaims({...sample,impact:'Our goal is to reduce waste by 34.5%. We have 250 users.'});assert.equal(claims[0].status,'goal');assert.match(claims[0].quote,/34\.5%/);assert.equal(claims[1].status,'needs-source');});
 test('conflicting slide limits produce a blocking warning instead of a false readiness pass',()=>{const p={...sample,confirmed:true,rules:'Maximum 4 slides.'};assert.ok(analyze(p).blockers.some(i=>i.id==='slide-limit'));});
+test('submission reviews catch compact deck requirements written in different formats',()=>{
+ const conflicts=rules=>analyze({...sample,confirmed:true,rules}).blockers.some(issue=>issue.id==='slide-limit');
+ for(const rules of ['Submit a 3-slide pitch deck in PDF.','Slide limit: 5','4 slides max','Maximum: 3 slides']) {
+  assert.equal(conflicts(rules),true,rules);
+ }
+ assert.equal(conflicts('At least 3 slides. Maximum 8 slides.'),false);
+});
 
 test('event aliases match even when an edition year is included',()=>{
  assert.equal(catalogSearch('SIH 2026')[0]?.id,'sih');
