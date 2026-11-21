@@ -204,8 +204,14 @@
 .pv-middle{background:linear-gradient(132deg,#d5fd76,#adc253);transform:translate(3%,-5%) rotate(2deg)}
 .pv-front{overflow:hidden;background:radial-gradient(ellipse at 80% 0,#84549b,transparent 70%),linear-gradient(145deg,#402649,#170c26);border:1px solid #c9a0d3;transform:rotate(-7deg);color:#faf1ff}
 .pv-front:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#dfb4ef12 1px,transparent 1px),linear-gradient(90deg,#dfb4ef12 1px,transparent 1px);background-size:8% 13%}
-.pv-sculpture{position:absolute;inset:0;transform:rotate(-18deg)}
-.pv-sculpture i{position:absolute;left:calc(21% + var(--i)*1.35%);top:14%;width:25%;height:72%;border-radius:50%;transform:rotate(calc(-40deg + var(--i)*3deg));background:linear-gradient(123deg,#faf4ff 0%,#ba8bd1 22%,#694980 48%,#2c173d 72%,#bc86d6);border:1px solid #d1b0df;box-shadow:inset 2px 2px 4px #fff4,2px 1px 5px #26152e55}
 .pv-brand{position:absolute;left:5%;top:5%;font:bold italic 3.8cqw Georgia;color:#edff92}
 .pv-rules{position:absolute;bottom:8%;left:6%;height:2px;width:18%;background:#dbf882;box-shadow:0 5px #cab7d177}
 @media(max-width:800px){.launch-hero-inner:has(.pv-art){grid-template-columns:1fr}.pv-art{width:min(100%,470px);justify-self:center;aspect-ratio:1.63}.pv-sheet{top:15%}}
+
+.pv-art{perspective:1050px}
+.pv-sheet{transform-origin:center;transition:transform 180ms ease-out}
+.pv-back{transform:rotateX(calc(15deg + var(--pitch,0deg))) rotateY(calc(-18deg + var(--yaw,0deg))) translate3d(6%,-17%,-45px) rotate(10deg)}
+.pv-middle{transform:rotateX(calc(15deg + var(--pitch,0deg))) rotateY(calc(-18deg + var(--yaw,0deg))) translate3d(2%,-7%,-18px) rotate(2deg)}
+.pv-front{transform:rotateX(calc(15deg + var(--pitch,0deg))) rotateY(calc(-18deg + var(--yaw,0deg))) translateZ(12px) rotate(-7deg);box-shadow:1px 2px #a18bad,2px 4px #806885,3px 6px #5b4964,0 25px 36px -15px #140b1bd9}
+pitch-sculpture,pitch-sculpture canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+@media(prefers-reduced-motion:reduce){.pv-sheet{transition:none}}
