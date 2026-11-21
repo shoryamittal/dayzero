@@ -81,15 +81,43 @@ export function assessRule(rule,slides){
  if(min){
   const limit=Number(min[1]), hits=slides.flatMap(s=>s.runs.filter(r=>r.size&&r.size<limit).map(r=>'Slide '+s.index+' · '+r.size+' pt · “'+r.text+'”'));
   const unknown=slides.reduce((n,s)=>n+s.runs.filter(r=>!r.size).length,0);
-  return {state:hits.length?'Below minimum':'Inspect inherited styles',detail:(hits.length?hits.length+' text runs below '+limit+' pt. '+hits.slice(0,4).join(' / '):'No explicitly sized text below '+limit+' pt found.')+' '+unknown+' runs have inherited sizes. Check the final rendered slides.'};
+  return {state:hits.length?'Below minimum':unknown||slides.some(s=>!s.runs.length)?'Inspect inherited styles':'Within limit',detail:(hits.length?hits.length+' text runs below '+limit+' pt. '+hits.slice(0,4).join(' / '):'No explicitly sized text below '+limit+' pt found.')+' '+unknown+' runs have inherited sizes. Check the final rendered slides.'};
+ }
+ if(/\b(?:max(?:imum)?|min(?:imum)?|at (?:least|most)|no more than|exactly|limit|up to)\b/i.test(rule)&&/\d/.test(rule)){
+  return {state:'Needs manual review',detail:'This numeric requirement has wording or exceptions the reviewer cannot measure reliably. Check the organizer’s counting method before submission.'};
  }
  const terms=[...new Set(words(rule).filter(t=>t.length>2&&!stop.has(t)&&!/^[0-9]+$/.test(t)))];
- const matches=slides.flatMap(s=>s.paragraphs.map(line=>{const tokens=new Set(words(line));return {index:s.index,line,score:terms.filter(t=>related(t).some(w=>tokens.has(w))).length};})).filter(m=>m.score).sort((a,b)=>b.score-a.score);
- return {state:matches.length?'Candidate evidence':'Needs manual review',detail:matches.length?matches.slice(0,2).map(m=>'Slide '+m.index+' · “'+m.line+'”').join(' / '):'No corresponding wording found in editable text. Check diagrams and terminology, or add a slide that directly addresses this requirement.'};
+ const matches=[];
+ for(const slide of slides.filter(s=>!s.hidden)){
+  for(const line of slide.paragraphs){
+   const tokens=new Set(words(line));
+   const hits=terms.filter(t=>related(t).some(w=>tokens.has(w))).length;
+   if(!hits)continue;
+   const planned=/\b(we will|we aim|will (?:be|test|build|conduct)|plan(?:s|ned)? to|next steps?|future work|not yet|haven['’]t|have not|no (?:tests?|prototype|interviews?))\b/i.test(line);
+   const heading=words(line).length<4;
+   matches.push({index:slide.index,line,hits,planned,heading});
+  }
+ }
+ matches.sort((a,b)=>Number(a.planned||a.heading)-Number(b.planned||b.heading)||b.hits-a.hits);
+ if(!matches.length)return {state:'Needs manual review',detail:'No corresponding wording found in visible slide text. Check diagrams and terminology, or add a slide that directly addresses this requirement.'};
+ const best=matches[0];
+ return {state:best.planned?'Plan mentioned':best.heading?'Topic mentioned':'Candidate evidence',
+  detail:matches.slice(0,2).map(m=>'Slide '+m.index+' · “'+m.line+'”'+(m.planned?' (planned or incomplete)':m.heading?' (short label)':'')).join(' / '),
+  slide:best.index};
 }
 
 function row(label,quote,action=''){return '<div class="row"><b>'+esc(label)+'</b><p>'+esc(quote)+'</p>'+(action?'<p class="sub">'+esc(action)+'</p>':'')+'</div>';}
-function showReport(file,event,rules,slides){
+
+function roundReview(stage,slides){
+ const visible=slides.filter(s=>!s.hidden);
+ if(!visible.length)return row('No visible slides','Every slide is hidden. Check the slideshow before presenting.');
+ const lines=visible.slice(0,3).map(s=>'<li><a href="#review-slide-'+s.index+'">Slide '+s.index+'</a> · '+esc(s.title)+'</li>').join('');
+ if(stage!=='demo')return '<p>Read these opening lines in sequence, as a reviewer skimming your submission might.</p><ol>'+lines+'</ol>'+row('First-read test','Who has the problem, what do they do today, and what changes with your idea?','Ask a teammate to answer from these slides alone. If they need your narration, put the missing detail in the slide headline.');
+ const cue=visible.flatMap(s=>s.paragraphs.map(line=>({s,line}))).find(({line})=>/\b(demo|prototype|walkthrough|screen recording|working build)\b/i.test(line));
+ return (cue?row('Demo cue · slide '+cue.s.index,cue.line,'Show one action and its visible result here. Confirm the demo is accessible on the judging device.'):row('Locate the demonstration','No demo cue found in editable slide text. An image or embedded video may already show it.','Identify the slide where you switch from explaining the problem to showing the working build.'))+row('Rehearse the handoff','Start from the same input each time. Show the result, then explain what your team actually built.','Keep a screenshot sequence or a local recording ready for a failed connection. Check whether your organizer permits recordings.');
+}
+
+function showReport(file,event,rules,slides,stage,embeddedFonts){
  const issues=slides.flatMap(auditSlide);
  const priorities=['Unfinished text','Evidence','Submission','Object bounds','Projection','Visual review','Wording','Reading load','Image accessibility','Typography','Long passage'];
  issues.sort((a,b)=>priorities.indexOf(a.topic)-priorities.indexOf(b.topic));
@@ -100,7 +128,7 @@ function showReport(file,event,rules,slides){
  const slideHTML=slides.map(s=>{
   const list=issues.filter(i=>i.index===s.index);
   const samples=s.runs.map(r=>'<tr><td>'+esc(r.text)+'</td><td>'+esc(r.font)+'</td><td>'+(r.size?r.size+' pt':'Inherited')+'</td></tr>').join('');
-  return '<details class="slide"><summary>Slide '+s.index+' · '+esc(s.title)+'</summary><p class="sub">'+s.count+' words · '+s.pictures+' pictures · '+list.length+' observations</p>'+list.map(i=>row(i.topic,i.quote,i.action)).join('')+'<details><summary>Inspect wording and typography</summary><table><thead><tr><th>Slide text</th><th>Latin font</th><th>Size</th></tr></thead><tbody>'+samples+'</tbody></table></details></details>';
+  return '<details class="slide" id="review-slide-'+s.index+'"><summary>Slide '+s.index+' · '+esc(s.title)+'</summary><p class="sub">'+s.count+' words · '+s.pictures+' pictures · '+list.length+' observations</p>'+list.map(i=>row(i.topic,i.quote,i.action)).join('')+'<details><summary>Inspect wording and typography</summary><table><thead><tr><th>Slide text</th><th>Latin font</th><th>Size</th></tr></thead><tbody>'+samples+'</tbody></table></details></details>';
  }).join('');
  const families=new Map();
  for(const slide of slides){
@@ -110,12 +138,16 @@ function showReport(file,event,rules,slides){
    family.locations.add(slide.index);family.sizes.add(run.size);family.count++;
   }
  }
- const typeSummary=[...families].map(([name,f])=>row(name,'Slides '+[...f.locations].join(', '),f.count+' text runs · '+[...f.sizes].sort((a,b)=>a-b).map(n=>n?n+' pt':'Inherited size').join(', '))).join('');
- const questions=checks.filter(c=>c.state==='Candidate evidence'||c.state==='Needs manual review').slice(0,3).map(c=>row('Judge’s question','How does your team demonstrate “'+c.rule+'”?',c.detail));
+ const typeSummary=[...families].map(([name,f])=>row(name,'Slides '+[...f.locations].join(', '),(name==='Inherited'||name.startsWith('+')?'Resolve this style in PowerPoint. ':embeddedFonts.has(name.toLowerCase())?'Embedding declared in this deck. ':'No embedding declaration found for this family. ') + f.count+' text runs · '+[...f.sizes].sort((a,b)=>a-b).map(n=>n?n+' pt':'Inherited size').join(', '))).join('');
+ const questions=checks.filter(c=>['Candidate evidence','Needs manual review','Plan mentioned','Topic mentioned'].includes(c.state)).slice(0,3).map(c=>row('Judge’s question','How does your team demonstrate “'+c.rule+'”?',c.detail));
  const claim=issues.find(i=>i.topic==='Evidence');
  if(claim)questions.push(row('Slide '+claim.index+' · defend the number','How did you measure “'+claim.quote+'”?','Prepare the baseline, sample, time period and calculation.'));
- const report=$('report');report.innerHTML='<h2>'+esc(event||'Your deck')+' review</h2><p class="sub">'+esc(file.name)+'</p><div class="metrics">'+[[slides.length,'Slides inspected'],[total,'Words inspected'],[issues.length,'Slide observations'],[breaches.length,'Measured rule breaches']].map(([n,t])=>'<span><b>'+n+'</b>'+t+'</span>').join('')+'</div><h3>Fix first</h3><div class="panel">'+(first.join('')||'No priority issues surfaced in the automated checks. Review the slide details against your brief.')+'</div><h3>Competition requirements</h3><div class="panel">'+(checks.map(c=>row(c.state+' · '+c.rule,c.detail)).join('')||'No rules supplied. Paste the organizer’s requirements above and run the review again.')+'</div><h3>Slide by slide</h3>'+slideHTML+'<h3>Font inventory</h3><div class="panel">'+(typeSummary||'No editable text runs.')+'</div>'+(questions.length?'<h3>Prepare for judging</h3><div class="panel">'+questions.join('')+'</div>':'')+'<h3>Review coverage</h3><p class="sub">Findings use editable slide text, local Latin font settings and picture metadata. Candidate evidence uses word matching and needs a judge’s interpretation. Verify inherited fonts, chart values, images, contrast, reading order and overflow in PowerPoint. This report does not predict selection.</p><div class="actions"><button id="print">Print or save PDF</button><a class="cta" href="/#try">Build a new pitch →</a></div>';
+ const report=$('report');report.innerHTML='<h2>'+esc(event||'Your deck')+' review</h2><p class="sub">'+esc(file.name)+'</p><div class="metrics">'+[[slides.length,'Slides inspected'],[total,'Words inspected'],[issues.length,'Slide observations'],[breaches.length,'Measured rule breaches']].map(([n,t])=>'<span><b>'+n+'</b>'+t+'</span>').join('')+'</div><h3>Fix first</h3><div class="panel">'+(first.join('')||'No priority issues surfaced in the automated checks. Review the slide details against your brief.')+'</div><h3>'+(stage==='demo'?'Live demo handoff':'Screening round first read')+'</h3><div class="panel">'+roundReview(stage,slides)+'</div><h3>Competition requirements</h3><div class="panel">'+(checks.map(c=>row(c.state+' · '+c.rule,c.detail)+(c.slide?'<a href="#review-slide-'+c.slide+'">Inspect slide '+c.slide+' →</a>':'')).join('')||'No rules supplied. Paste the organizer’s requirements above and run the review again.')+'</div><h3>Slide by slide</h3>'+slideHTML+'<h3>Font inventory</h3><div class="panel">'+(typeSummary||'No editable text runs.')+'<p class="sub">Before submitting, open the exported PDF or deck on the judging device and compare line breaks on the listed slides. A font declaration alone cannot verify rendering.</p></div>'+(questions.length?'<h3>Prepare for judging</h3><div class="panel">'+questions.join('')+'</div>':'')+'<h3>Review coverage</h3><p class="sub">Findings use editable slide text, local Latin font settings and picture metadata. Candidate evidence uses word matching and needs a judge’s interpretation. Verify inherited fonts, chart values, images, contrast, reading order and overflow in PowerPoint. This report does not predict selection.</p><div class="actions"><button id="print">Print or save PDF</button><a class="cta" href="/#try">Build a new pitch →</a></div>';
  report.hidden=false;report.focus();report.scrollIntoView();
+ report.onclick=e=>{
+  const link=e.target.closest('a[href^="#review-slide-"]');
+  if(link){const slide=document.getElementById(link.hash.slice(1));if(slide){e.preventDefault();slide.open=true;slide.querySelector('summary').focus();slide.scrollIntoView();}}
+ };
  $('print').onclick=()=>window.print();
 }
 let opened=[];
@@ -130,8 +162,8 @@ $('intake').addEventListener('submit',async e=>{
   if(!file||!file.name.toLowerCase().endsWith('.pptx'))throw Error('Choose a .pptx file. Save older .ppt files as .pptx in PowerPoint.');
   if(file.size>8*1024*1024)throw Error('Choose a deck up to 8 MB.');
   $('status').textContent='Reading slides in presentation order…';
-  const slides=[];await readTemplate(new Uint8Array(await file.arrayBuffer()),window.JSZip,(doc,index,canvas)=>slides.push(inspectSlide(doc,index,canvas)));
-  showReport(file,event,rules,slides);$('status').textContent='Report ready.';
+  const slides=[];const template=await readTemplate(new Uint8Array(await file.arrayBuffer()),window.JSZip,(doc,index,canvas)=>slides.push(inspectSlide(doc,index,canvas)));
+  showReport(file,event,rules,slides,$('round')?.value||'screening',new Set(template.embeddedFonts||[]));$('status').textContent='Report ready.';
  }catch(error){$('status').textContent=error.message||'Could not read this deck. Open it in PowerPoint and save a fresh copy.';}
  finally{fields.forEach(f=>f.disabled=false);}
 });
