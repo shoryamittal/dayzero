@@ -53,8 +53,8 @@ const btn=(label,action,style='primary',i='arrow')=>`<button class="btn ${style}
 function shell(body){
  if(route==='home')return `<div class="launch-site">
   <header class="launch-header"><div class="launch-width launch-header-inner"><a href="#home" class="launch-brand" data-route="home" aria-label="PitchViva home"><span>pv</span><strong>PitchViva</strong></a>
-   <nav aria-label="Website navigation"><a href="#workflow">How it works</a><button data-route="projects">My projects</button></nav>
-   <a class="launch-primary" href="#try">Start building ${icon('arrow',16)}</a>
+   <nav aria-label="Website navigation"><a href="/review.html">Review my deck</a><a href="#workflow">How it works</a><button data-route="projects">My projects</button></nav>
+   <a class="launch-primary" href="#try">Make a pitch ${icon('arrow',16)}</a>
   </div></header>
   <main class="route-home" id="main" tabindex="-1">${body}</main>
   <footer class="launch-footer launch-width"><span>PitchViva <b>✳</b></span><div><button data-action="privacy">Privacy</button><button data-action="help">Help</button><button data-route="plans">Community pilot</button></div><small>Independent of event organizers</small></footer>
