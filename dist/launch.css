@@ -215,3 +215,17 @@
 .pv-front{transform:rotateX(calc(15deg + var(--pitch,0deg))) rotateY(calc(-18deg + var(--yaw,0deg))) translateZ(12px) rotate(-7deg);box-shadow:1px 2px #a18bad,2px 4px #806885,3px 6px #5b4964,0 25px 36px -15px #140b1bd9}
 pitch-sculpture,pitch-sculpture canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
 @media(prefers-reduced-motion:reduce){.pv-sheet{transition:none}}
+
+.launch-form{border-radius:18px;box-shadow:0 14px 44px -34px #39264088}
+.launch-form details{margin:.65rem 0;border:1px solid #d9ccdf;border-radius:10px;background:#fcf8fc;padding:0 .9rem}
+.launch-form details summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:.7rem;min-height:48px;font-weight:650;color:#49374e;font-size:.92rem}
+.launch-form summary::-webkit-details-marker{display:none}
+.launch-form summary:after{content:'+';font-size:1.3rem;line-height:1;color:#764e86}
+.launch-form details[open] summary:after{content:'−'}
+.launch-form details[open] summary{border-bottom:1px solid #e7ddea;margin-bottom:.85rem}
+.launch-form details .field{margin-bottom:1rem}
+.launch-form :is(input,textarea,summary):focus-visible{outline:2px solid #895798;outline-offset:3px}
+.launch-form .launch-primary{margin-top:1rem}
+.launch-output{align-self:start;border-radius:18px}
+@media(min-width:960px) and (min-height:760px){.launch-output{position:sticky;top:6rem}}
+@media(max-width:600px){.launch-form .launch-primary{width:100%}.launch-lab-grid{gap:1rem}}
