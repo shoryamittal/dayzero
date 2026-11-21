@@ -1,5 +1,6 @@
 /* PitchViva's public studio and the shared project controls. */
 .launch-site {
+ --launch-header-height:72px;
  --stage:#211729;
  --stage-deep:#17111d;
  --orchid:#eadcf0;
@@ -13,7 +14,7 @@
 }
 .launch-width {width:min(100% - 88px, 1320px);margin-inline:auto}
 .launch-header {background:var(--stage-deep);color:#fdf5ef;border-bottom:1px solid #514255}
-.launch-header-inner {min-height:72px;display:flex;align-items:center;justify-content:space-between;gap:18px}
+.launch-header-inner {min-height:var(--launch-header-height);display:flex;align-items:center;justify-content:space-between;gap:18px}
 .launch-brand {display:inline-flex;align-items:center;gap:10px;color:#fff4f3;text-decoration:none;white-space:nowrap}
 .launch-brand span {display:grid;place-items:center;width:34px;height:34px;border-radius:8px;background:var(--orchid);color:var(--stage);font:750 18px/1 var(--display);letter-spacing:-.09em}
 .launch-brand strong {font:750 25px/1 var(--display);letter-spacing:-.075em}
@@ -32,11 +33,16 @@
 .launch-secondary:hover {background:#b99bc41f}
 .launch-primary:focus-visible,.launch-secondary:focus-visible,.launch-header a:focus-visible,.launch-header button:focus-visible,.launch-footer button:focus-visible,.launch-text-action:focus-visible,.launch-answers summary:focus-visible {outline:3px solid #9270ac;outline-offset:3px}
 .launch-hero {
+ display:flex;
+ flex-direction:column;
+ min-height:calc(100vh - var(--launch-header-height) - 1px);
+ min-height:calc(100dvh - var(--launch-header-height) - 1px);
+ box-sizing:border-box;
  color:#fff6ee;
  background:radial-gradient(ellipse at 84% 29%,#57385c 0%,#322237 33%,transparent 67%),var(--stage-deep);
  padding:clamp(45px,6.5vw,105px) 0 0;
 }
-.launch-hero-inner {display:grid;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:clamp(24px,4vw,72px);align-items:center}
+.launch-hero-inner {flex:1 0 auto;display:grid;grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr);gap:clamp(24px,4vw,72px);align-items:center}
 .launch-copy {min-width:0}
 .launch-kicker {display:flex;align-items:center;gap:9px;margin:0 0 16px;color:#655270;font:750 10px/1.4 var(--body);letter-spacing:.16em}
 .launch-kicker>span {width:8px;height:8px;background:#9675a6;border-radius:50%}
@@ -157,7 +163,8 @@
 }
 @media(max-width:760px){
  .launch-width {width:calc(100% - 32px)}
- .launch-header-inner {min-height:61px;gap:9px}
+ .launch-site {--launch-header-height:61px}
+ .launch-header-inner {gap:9px}
  .launch-header nav {gap:12px}
  .launch-header nav a {display:none}
  .launch-header nav button {font-size:12px}
@@ -248,6 +255,12 @@
 @media(max-width:720px){
  .launch-hero::before{background:linear-gradient(0deg,#19121f 2%,transparent 22%,transparent 54%,#19121f 89%),url('/pitch-stage.webp') 80% 65%/auto 100% no-repeat;top:auto;height:255px;bottom:56px}
  .launch-hero-inner{padding-bottom:165px}
+}
+
+@media(max-width:720px) and (max-height:650px){
+ .launch-hero {padding-top:22px}
+ .launch-hero-inner {padding-bottom:40px}
+ .launch-hero::before {height:175px;opacity:.46}
 }
 
 /* A writing desk between the hero and the pitch workspace. */
