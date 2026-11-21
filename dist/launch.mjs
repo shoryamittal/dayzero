@@ -2,7 +2,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
   const steps = [
     ['01','event','Set the context','Find your event and keep the organizer’s requirements beside your draft.','Explore events','events'],
     ['02','deck','Shape the story','Turn a rough idea into six sections. Attach source notes to the claims you’ll make.','Start a draft','try'],
-    ['03','mic','Prepare to present','Rehearse with a timer, then download an editable PowerPoint and your submission checklist.','Open the sample','sample']
+    ['03','mic','Prepare to present','Rehearse with a timer, then download an editable PowerPoint and your submission checklist.','Start a draft','try']
   ];
   const questions = [
     ['What do I get?','An editable PowerPoint with six sections and speaker notes, plus a PDF preview where the text is supported. The export kit also includes your report and a project backup.'],
@@ -11,39 +11,40 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     ['Do I need an account or an API key?','You can build and export a pitch without an account or key. The optional Gemini tools require your own API key and ask before sending project text.']
   ];
   return `<section class="launch-hero">
-    <div class="launch-hero-inner launch-width">
+    <div class="launch-hero-inner launch-width" style="grid-template-columns:minmax(0,1fr)">
       <div class="launch-copy">
         <p class="launch-kicker"><span></span> THE PITCH STUDIO</p>
         <h1>Build a pitch<br>worth <em>presenting.</em></h1>
         <p class="launch-lede">Take a rough idea to an editable PowerPoint. Shape the story, back it with evidence, and rehearse before you walk into the room.</p>
-        <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a><a class="launch-secondary" href="#sample">See the sample</a></div>
+        <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a></div>
         <p class="launch-meta">${icons.shield} Free to start. Your draft stays in this browser.</p>
       </div>
-      ${deck}
+
     </div>
     <div class="launch-strip launch-width" aria-label="What the studio makes">
       <span><b>01</b> Editable PowerPoint</span><span><b>02</b> Evidence &amp; event rules</span><span><b>03</b> Rehearsal &amp; export kit</span>
     </div>
   </section>
   <section class="launch-lab launch-width" id="try" aria-labelledby="try-title">
-    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">Give your idea <em>a first draft.</em></h2></div><p>Give us the essentials in one form. We’ll use your answers to draft the slides.</p></div>
+    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">Give your idea <em>a first draft.</em></h2></div><p>Start with your title, problem and solution. Add competition details if you have them.</p></div>
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
         <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
         <div class="field"><label for="launch-idea">What does your solution do?</label><textarea id="launch-idea" name="solution" placeholder="Describe what someone does with it and what changes for them." rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
+        <details><summary>Competition and judging rules (optional)</summary>
+        <div class="field"><label for="launch-event">Competition or event (optional)</label><input id="launch-event" name="event" maxlength="160" autocomplete="off" placeholder="Search by name, or enter your own event"><div class="event-intake-matches" aria-live="polite"></div></div>
+        <div class="field"><label for="launch-round">Round or track (optional)</label><input id="launch-round" name="eventRound" maxlength="160" placeholder="For example, qualifying round, finals, or social impact track"></div>
+        <div class="field"><label for="launch-rules">Official rubric and submission rules (optional)</label><textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste the track, judging criteria and weights, required sections, slide limit, format, and template link if available."></textarea></div>
+        </details>
+        <details><summary>Prototype, evidence and next steps (optional)</summary>
         <div class="field"><label for="launch-approach">How does it work, and what can your team build? (optional)</label><textarea id="launch-approach" name="approach" rows="3" maxlength="1200" placeholder="Walk through two or three steps. Add what works today, what still needs building, and how you would deliver it."></textarea></div>
         <div class="field"><label for="launch-proof">What have you tested or learned? (optional)</label><textarea id="launch-proof" name="proof" rows="2" maxlength="800" placeholder="Add an observation, interview or test result. Include how many people or trials it covers, if known."></textarea></div>
         <div class="field"><label for="launch-source">Evidence source link (optional)</label><input id="launch-source" name="evidenceSource" type="url" maxlength="400" placeholder="https://…"></div>
         <div class="field"><label for="launch-impact">What result would show it works? (optional)</label><textarea id="launch-impact" name="impact" rows="2" maxlength="800" placeholder="Name what you would measure, what you would compare it with, and your target if you have one."></textarea></div>
         <div class="field"><label for="launch-ask">What decision or support do you need next? (optional)</label><textarea id="launch-ask" name="ask" rows="2" maxlength="600" placeholder="For example, permission to run a pilot, a partner, or funding for a specific next step."></textarea></div>
-        <div class="field"><label for="launch-event">Competition or event (optional)</label><input id="launch-event" name="event" maxlength="160" autocomplete="off" placeholder="Search by name, or enter your own event"><div class="event-intake-matches" aria-live="polite"></div></div>
-        <div class="field"><label for="launch-round">Round or track (optional)</label><input id="launch-round" name="eventRound" maxlength="160" placeholder="For example, qualifying round, finals, or social impact track"></div>
-        <div class="field"><label for="launch-rules">Official rubric and submission rules (optional)</label><textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste the track, judging criteria and weights, required sections, slide limit, format, and template link if available."></textarea></div>
-        <div class="field"><label for="launch-key">Gemini API key</label><input id="launch-key" type="password" autocomplete="off" required minlength="20" maxlength="200" pattern="[A-Za-z0-9_\\-]{20,200}"><span class="hint">Required for AI generation. Used for this request. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Get a Gemini key</a>.</span></div>
-        <label class="check-label"><input type="checkbox" name="consent" required> Send my pitch answers and event rules to Gemini. Google may use free-tier submissions to improve its products.</label>
-        <button type="submit" class="launch-primary">Generate my pitch ${icons.arrow}</button>
-        <button type="button" class="launch-text-action" data-action="new">Write it myself</button>
+        </details>
+        <button type="submit" class="launch-primary">Create editable deck ${icons.arrow}</button>
       </form>
       <div class="launch-output">
         <div class="launch-output-label"><span><i></i> LIVE DRAFT BOARD</span><span>WORKING DRAFT</span></div>

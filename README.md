@@ -36,3 +36,22 @@ The homepage and Community pilot page describe a proposed four-week preparation 
 Open a project and choose AI Studio. Use a Gemini key from a free-tier Google AI Studio project. Review the outbound text before sending. A key is used for one request and is never included in project storage or exports. Google may use free-tier submissions to improve its products.
 
 The Vercel deployment runs /api/assist. For local development, run npm run dev and open http://127.0.0.1:4176/. Render continues serving the static workspace. AI Studio there links to Vercel.
+
+## Archived sampler - Before Close
+
+Before Close is the fictional six-slide campus food-recovery pitch previously featured on the homepage. Students reserve an unsold meal and staff verify pickup at the counter.
+
+[Download the editable six-slide sample](archive/Before_Close_Sample.pptx).
+
+| Slide | Purpose |
+| --- | --- |
+| Opening | Introduce the reservation and verified pickup. |
+| Reservation | Show how one code connects the booking to the portion. |
+| Workflow | Follow a portion from listing through pickup or expiry. |
+| Handoff | Separate the clickable walkthrough from the on-shift test. |
+| Pilot | Compare leftovers on matching weekdays. |
+| Decision | Request one canteen for a two-week pilot. |
+
+The [original sample design](dist/sample-deck.mjs) and [project data](dist/engine.mjs) remain in the repository. The [historical homepage](https://github.com/shoryamittal/dayzero/tree/7c6a94bd2c49e04c4eb4852d082f124010aed410/dist) preserves the interactive implementation.
+
+
