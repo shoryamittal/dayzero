@@ -235,3 +235,16 @@
  #try .launch-form,#try .launch-output {width:100%}
  #try .launch-section-heading h2 {max-width:none}
 }
+
+/* Carry the stage background across the full width of the draft section. */
+#try {
+  background: #19121f;
+  box-shadow: 0 0 0 100vmax #19121f;
+  clip-path: inset(0 -100vmax);
+  border-bottom-color: #44334d;
+}
+#try .launch-section-heading h2 { color: #fff5ef; }
+#try .launch-section-heading h2 em { color: #e1c3ed; }
+#try .launch-section-heading > p,
+#try .launch-kicker { color: #d9cadd; }
+#try .launch-kicker > span { background: var(--accent); }
