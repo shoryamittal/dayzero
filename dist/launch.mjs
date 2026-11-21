@@ -11,7 +11,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     ['Do I need an account or an API key?','You can build and export a pitch without an account or key. The optional Gemini tools require your own API key and ask before sending project text.']
   ];
   return `<section class="launch-hero">
-    <div class="launch-hero-inner launch-width" style="grid-template-columns:minmax(0,1fr)">
+    <div class="launch-hero-inner launch-width">
       <div class="launch-copy">
         <p class="launch-kicker"><span></span> THE PITCH STUDIO</p>
         <h1>Build a pitch<br>worth <em>presenting.</em></h1>
@@ -19,7 +19,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
         <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a></div>
         <p class="launch-meta">${icons.shield} Free to start. Your draft stays in this browser.</p>
       </div>
-
+      <div class="pv-art" aria-hidden="true"><div class="pv-sheet pv-back"></div><div class="pv-sheet pv-middle"></div><div class="pv-sheet pv-front"><div class="pv-sculpture">${Array.from({length:29},(_,i)=>'<i style="--i:'+i+'"></i>').join('')}</div><span class="pv-brand">pv</span><span class="pv-rules"></span></div></div>
     </div>
     <div class="launch-strip launch-width" aria-label="What the studio makes">
       <span><b>01</b> Editable PowerPoint</span><span><b>02</b> Evidence &amp; event rules</span><span><b>03</b> Rehearsal &amp; export kit</span>
