@@ -292,3 +292,12 @@
 #try .launch-section-heading > p,
 #try .launch-kicker { color: #d9cadd; }
 #try .launch-kicker > span { background: var(--accent); }
+
+@media(max-width:760px){
+ .launch-header-inner{display:grid;grid-template-columns:1fr auto;gap:0 12px;padding:5px 0}
+ .launch-header-inner nav{grid-column:1/-1;grid-row:2;justify-content:space-between}
+ .launch-header-inner nav a{display:inline-flex;align-items:center;padding:5px 0}
+ .launch-header-inner nav button{padding:5px 0}
+ .launch-header-inner>.launch-primary{grid-column:2;grid-row:1}
+ .launch-site{--launch-header-height:88px}
+}
