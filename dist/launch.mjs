@@ -20,7 +20,6 @@ export function launchPage({deck, draft, icons, hasProjects}) {
         <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a></div>
         <p class="launch-meta">${icons.shield} Free to start. Your draft stays in this browser.</p>
       </div>
-      <figure class="cue"><input type="checkbox" id="cue-flip" aria-label="Show rough idea"><div class="ticket"><div class="ticket-copy"><small>PITCHVIVA &nbsp;/&nbsp; IDEA STUDIO</small><div class="polished"><strong>One campus.<br><em>One ride home.</em></strong><p>Match students leaving campus with verified classmates on the same route.</p></div><div class="rough"><strong>Ride sharing<br><em>for students?</em></strong><p>Maybe people going the same way after class could travel together.</p></div></div><div class="stub" aria-hidden="true"><b>pv</b><i></i><span>FIELD NOTE</span></div></div><figcaption><label for="cue-flip"><span class="polished">View rough idea</span><span class="rough">View pitch slide</span> ↻</label></figcaption></figure>
     </div>
     <div class="launch-strip launch-width" aria-label="What the studio makes">
       <span><b>01</b> Editable PowerPoint</span><span><b>02</b> Evidence &amp; event rules</span><span><b>03</b> Rehearsal &amp; export kit</span>
