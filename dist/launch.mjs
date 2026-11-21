@@ -26,12 +26,12 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     </div>
   </section>
   <section class="launch-lab launch-width" id="try" aria-labelledby="try-title">
-    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">Give your idea <em>a first draft.</em></h2></div><p>Start with your title, problem and solution. Add competition details if you have them.</p></div>
+    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">What are you <em>building?</em></h2></div><p>Start with the idea you’d explain to a teammate. Your slide preview takes shape as you write.</p></div>
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
-        <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
+        <div class="field"><label for="launch-idea">Your idea</label><textarea id="launch-idea" name="solution" placeholder="We’re building a way for…" rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
         <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
-        <div class="field"><label for="launch-idea">What does your solution do?</label><textarea id="launch-idea" name="solution" placeholder="Describe what someone does with it and what changes for them." rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
+        <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
         <details><summary>Competition and judging rules (optional)</summary>
         <div class="field"><label for="launch-event">Competition or event (optional)</label><input id="launch-event" name="event" maxlength="160" autocomplete="off" placeholder="Search by name, or enter your own event"><div class="event-intake-matches" aria-live="polite"></div></div>
         <div class="field"><label for="launch-round">Round or track (optional)</label><input id="launch-round" name="eventRound" maxlength="160" placeholder="For example, qualifying round, finals, or social impact track"></div>
