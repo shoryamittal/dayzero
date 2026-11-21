@@ -8,7 +8,7 @@ const stop = new Set('a an the for with must include demonstrate show should our
 const groups = ['testing test tested interviews interview surveyed survey validation feedback','prototype prototype demo demonstration mvp','impact outcomes outcome benefit benefits','users user users customer customers audience','feasibility feasible implementation implement technical architecture','cost costs budget pricing price','innovation novelty novel innovative differentiation','metrics results measured measurement benchmark','market competitors competition alternatives competitor','privacy consent confidential data-protection'].map(group=>group.split(' '));
 function related(term){return groups.find(g=>g.includes(term)) || [term];}
 
-export function inspectSlide(doc, index){
+export function inspectSlide(doc, index, canvas){
  const paragraphs=[], runs=[], pictures=nodes(doc,'pic');
  for(const p of nodes(doc,'p')){
    const defaults=nodes(p,'pPr')[0]?.getElementsByTagNameNS('*','defRPr')[0];
@@ -25,15 +25,28 @@ export function inspectSlide(doc, index){
    }
    const line=parts.join('').trim();if(line)paragraphs.push(line);
  }
+ const outside=[];
+ if(canvas){
+  const width=Number(canvas.getAttribute('cx')), height=Number(canvas.getAttribute('cy'));
+  const tree=nodes(doc,'spTree')[0];
+  for(const shape of tree?.children||[]){
+   if(!['sp','pic','graphicFrame'].includes(shape.localName))continue;
+   const transform=nodes(shape,'xfrm')[0];if(!transform)continue;
+   const offset=nodes(transform,'off')[0], extent=nodes(transform,'ext')[0];if(!offset||!extent)continue;
+   const x=Number(offset.getAttribute('x')),y=Number(offset.getAttribute('y'));
+   if(width&&height&&(x<0||y<0||x+Number(extent.getAttribute('cx'))>width+1000||y+Number(extent.getAttribute('cy'))>height+1000))outside.push(nodes(shape,'cNvPr')[0]?.getAttribute('name')||'Unnamed object');
+  }
+ }
  const text=paragraphs.join(' '), titleShape=nodes(doc,'sp').find(shape=>['title','ctrTitle'].includes(nodes(shape,'ph')[0]?.getAttribute('type')));
  const title=titleShape?nodes(titleShape,'t').map(t=>t.textContent).join('').trim():'';
- return {index,title:title||paragraphs[0]?.slice(0,90)||'Visual slide',paragraphs,runs,text,count:words(text).length,pictures:pictures.length,missingAlt:pictures.filter(pic=>!nodes(pic,'cNvPr')[0]?.getAttribute('descr')?.trim()).length,hidden:doc.documentElement.getAttribute('show')==='0'};
+ return {index,outside,title:title||paragraphs[0]?.slice(0,90)||'Visual slide',paragraphs,runs,text,count:words(text).length,pictures:pictures.length,missingAlt:pictures.filter(pic=>!nodes(pic,'cNvPr')[0]?.getAttribute('descr')?.trim()).length,hidden:doc.documentElement.getAttribute('show')==='0'};
 }
 
 function auditSlide(slide){
  const findings=[];
  function add(topic,quote,action){findings.push({topic,quote,action,index:slide.index});}
  if(!slide.count)add('Visual review','No editable slide text found','Open the slide and verify the message in images, charts or diagrams.');
+ if(slide.outside.length)add('Object bounds',slide.outside.join(', '),'Check these objects in slideshow view. Their stored bounds cross the canvas edge. Cropping may be intentional.');
  if(slide.hidden)add('Submission','Slide is marked hidden','Confirm whether judges should see it and whether it counts toward the slide limit.');
  if(slide.count>65)add('Reading load',slide.count+' words','Keep the main takeaway and move supporting detail into speaker notes.');
  const fonts=new Set(slide.runs.map(r=>r.font).filter(x=>x!=='Inherited'));
@@ -52,6 +65,16 @@ function auditSlide(slide){
 }
 
 export function assessRule(rule,slides){
+ const wordLimit=rule.match(/^(?:max(?:imum)?(?: of)?|up to|no more than)\s+(\d+)\s+words\s+(?:per|on each)\s+slide[.!]?$/i);
+ if(wordLimit){
+  const over=slides.filter(s=>s.count>Number(wordLimit[1]));
+  return {state:over.length?'Over limit':'Within limit',detail:over.length?over.map(s=>'Slide '+s.index+' · '+s.count+' editable words').join(' / '):'Every slide is within the supplied editable-word limit.'};
+ }
+ const family=rule.match(/^(?:required (?:font|typeface)|font family)\s*:\s*([\p{L}\d][\p{L}\d -]{0,55})$/iu);
+ if(family){
+  const exceptions=slides.filter(s=>s.runs.some(r=>r.font!=='Inherited'&&!r.font.startsWith('+')&&r.font.toLowerCase()!==family[1].trim().toLowerCase()));
+  return {state:exceptions.length?'Font mismatch':'Inspect inherited styles',detail:(exceptions.length?'Explicit Latin font differs on slides '+exceptions.map(s=>s.index).join(', ')+'.':'No explicit Latin font conflicts found.')+' Verify inherited and theme fonts in PowerPoint.'};
+ }
  const max=/\bslides?\b/i.test(rule) && rule.match(/^(?:max(?:imum)?\.?\s*(?:of\s*)?(?:slide(?:s)?(?:\s+limit)?\s*)?[:=]?\s*(\d+)\s*(?:slides?)?|(?:up to|no more than)\s+(\d+)\s+slides?|(\d+)[- ]slide limit)\s*[.!]?$/i);
  if(max){const limit=Number(max[1]||max[2]||max[3]);return {state:slides.length<=limit?'Within limit':'Over limit',detail:slides.length+' slides in the file, including hidden slides. Limit '+limit+'.'};}
  const min=rule.match(/^(?:min(?:imum)?\.?\s*(?:font(?:\s+size)?\s*)?[:=]?\s*)(\d+(?:\.\d+)?)\s*(?:pt|points?)\s*[.!]?$/i);
@@ -68,10 +91,10 @@ export function assessRule(rule,slides){
 function row(label,quote,action=''){return '<div class="row"><b>'+esc(label)+'</b><p>'+esc(quote)+'</p>'+(action?'<p class="sub">'+esc(action)+'</p>':'')+'</div>';}
 function showReport(file,event,rules,slides){
  const issues=slides.flatMap(auditSlide);
- const priorities=['Unfinished text','Evidence','Submission','Projection','Visual review','Wording','Reading load','Image accessibility','Typography','Long passage'];
+ const priorities=['Unfinished text','Evidence','Submission','Object bounds','Projection','Visual review','Wording','Reading load','Image accessibility','Typography','Long passage'];
  issues.sort((a,b)=>priorities.indexOf(a.topic)-priorities.indexOf(b.topic));
  const checks=rules.split(/\r?\n/).map(s=>s.replace(/^\s*[-•]\s*/,'').trim()).filter(Boolean).map(rule=>({rule,...assessRule(rule,slides)}));
- const breaches=checks.filter(c=>['Over limit','Below minimum'].includes(c.state));
+ const breaches=checks.filter(c=>['Over limit','Below minimum','Font mismatch'].includes(c.state));
  const first=[...breaches.map(c=>row(c.state,c.rule,c.detail)),...issues.map(i=>row('Slide '+i.index+' · '+i.topic,i.quote,i.action))].slice(0,3);
  const total=slides.reduce((n,s)=>n+s.count,0);
  const slideHTML=slides.map(s=>{
@@ -107,7 +130,7 @@ $('intake').addEventListener('submit',async e=>{
   if(!file||!file.name.toLowerCase().endsWith('.pptx'))throw Error('Choose a .pptx file. Save older .ppt files as .pptx in PowerPoint.');
   if(file.size>8*1024*1024)throw Error('Choose a deck up to 8 MB.');
   $('status').textContent='Reading slides in presentation order…';
-  const slides=[];await readTemplate(new Uint8Array(await file.arrayBuffer()),window.JSZip,(doc,index)=>slides.push(inspectSlide(doc,index)));
+  const slides=[];await readTemplate(new Uint8Array(await file.arrayBuffer()),window.JSZip,(doc,index,canvas)=>slides.push(inspectSlide(doc,index,canvas)));
   showReport(file,event,rules,slides);$('status').textContent='Report ready.';
  }catch(error){$('status').textContent=error.message||'Could not read this deck. Open it in PowerPoint and save a fresh copy.';}
  finally{fields.forEach(f=>f.disabled=false);}
