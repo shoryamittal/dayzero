@@ -213,7 +213,15 @@
 .launch-hero{position:relative;isolation:isolate;background:#19121f;overflow:hidden}
 .launch-hero::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,#19121ff5 0%,#19121fce 35%,#19121f35 61%,transparent 80%),linear-gradient(0deg,#19121fdd,transparent 24%),url('/pitch-stage.webp') 65% 45%/cover no-repeat}
 .launch-hero-inner{grid-template-columns:minmax(0,1fr)}
-.launch-copy{max-width:750px}
+.launch-copy{max-width:750px;text-align:left}
+.launch-copy h1 {line-height:1.04;text-wrap:balance}
+.launch-copy .launch-lede {max-width:45ch;text-wrap:balance;line-height:1.5}
+@media(min-width:801px){
+ .launch-hero {padding-top:clamp(54px,5vw,82px)}
+ .launch-copy h1 {font-size:clamp(56px,5.2vw,80px)}
+ .launch-copy .launch-actions {margin-top:21px}
+ .launch-strip {margin-top:clamp(38px,4vw,62px)}
+}
 @media(max-width:720px){
  .launch-hero::before{background:linear-gradient(0deg,#19121f 2%,transparent 22%,transparent 54%,#19121f 89%),url('/pitch-stage.webp') 80% 65%/auto 100% no-repeat;top:auto;height:255px;bottom:56px}
  .launch-hero-inner{padding-bottom:165px}
