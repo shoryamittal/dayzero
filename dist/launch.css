@@ -245,6 +245,8 @@
  #try {padding-top:clamp(44px,4vw,68px)}
 }
 @media(min-width:801px){
+ .launch-copy .launch-lede {font-size:20px}
+ .launch-copy .launch-meta {font-size:14px}
  .launch-hero {padding-top:clamp(56px,5.5vw,88px)}
  .launch-copy h1 {font-size:clamp(54px,5.4vw,84px)}
 }
