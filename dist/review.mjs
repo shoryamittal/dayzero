@@ -153,8 +153,9 @@ function showReport(file,event,rules,slides,stage,embeddedFonts){
 let opened=[];
 window.addEventListener('beforeprint',()=>{opened=Array.from(document.querySelectorAll('#report details:not([open])'));opened.forEach(d=>d.open=true);});
 window.addEventListener('afterprint',()=>{opened.forEach(d=>d.open=false);opened=[];});
-$('intake').addEventListener('input',()=>{$('report').hidden=true;$('status').textContent='';});
-$('intake').addEventListener('submit',async e=>{
+document.addEventListener('input',e=>{if(!e.target.closest('form#intake'))return;$('report').hidden=true;$('status').textContent='';});
+document.addEventListener('submit',async e=>{
+ if(!e.target.matches('form#intake'))return;
  e.preventDefault();const file=$('file').files[0],event=$('event').value.trim(),rules=$('rules').value;
  $('report').hidden=true;
  const fields=Array.from(e.target.elements);fields.forEach(f=>f.disabled=true);
@@ -162,6 +163,7 @@ $('intake').addEventListener('submit',async e=>{
   if(!file||!file.name.toLowerCase().endsWith('.pptx'))throw Error('Choose a .pptx file. Save older .ppt files as .pptx in PowerPoint.');
   if(file.size>8*1024*1024)throw Error('Choose a deck up to 8 MB.');
   $('status').textContent='Reading slides in presentation order…';
+  if(!window.JSZip)await import("./vendor/jszip.min.js");
   const slides=[];const template=await readTemplate(new Uint8Array(await file.arrayBuffer()),window.JSZip,(doc,index,canvas)=>slides.push(inspectSlide(doc,index,canvas)),{reviewOnly:true});
   showReport(file,event,rules,slides,$('round')?.value||'screening',new Set(template.embeddedFonts||[]));$('status').textContent='Report ready.';if(template.embeddedCount){const note=document.createElement('p');note.className='sub';note.textContent=template.embeddedCount+' embedded attachment(s) skipped. Check any chart values against the original workbook.';$('report').querySelector('h2').after(note);}
  }catch(error){$('status').textContent=error.message||'Could not read this deck. Open it in PowerPoint and save a fresh copy.';}
