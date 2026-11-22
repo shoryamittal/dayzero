@@ -322,3 +322,27 @@
 #deck-review summary{cursor:pointer}
 #deck-review .actions{display:flex;gap:20px;align-items:center}
 @media print{body:has(#deck-review #report:not([hidden])) :is(.launch-header,.launch-footer,.launch-hero,#deck-review>form,#deck-review>.launch-section-heading,#deck-review~section,#deck-review .actions){display:none}#deck-review{display:block;width:100%;clip-path:none;box-shadow:none}#deck-review #report{color:black}#deck-review #report *{background:white;color:black}}
+
+/* Idea editor */
+#try idea-editor {display:block;color:#32253d}
+#try idea-editor [hidden] {display:none!important}
+#try .idea-heading,#try .idea-tools {display:flex;align-items:center;justify-content:space-between;gap:12px}
+#try .idea-heading {margin-bottom:9px}
+#try .idea-heading label {margin:0;font-weight:700;font-size:1.05rem}
+#try idea-editor button {font:600 .88rem/1.2 var(--body,sans-serif);cursor:pointer;border:0;border-radius:8px;color:#563769;background:transparent;padding:9px 12px;min-height:38px}
+#try idea-editor button:focus-visible {outline:2px solid #825598;outline-offset:2px}
+#try idea-editor [data-import] {background:#f4edf7;border:1px solid #dfd0e5}
+#try .idea-paper {overflow:hidden;border:1px solid #bfa8c7;border-radius:12px;background:#fff}
+#try .idea-paper:focus-within {border-color:#825598;box-shadow:0 0 0 2px #9669aa28}
+#try .idea-paper #launch-idea {display:block;margin:0;min-height:108px;width:100%;border:0;border-radius:0;background:transparent;box-shadow:none;outline:none;padding:15px 16px 6px;resize:vertical}
+#try .idea-tools {padding:4px 14px 10px}
+#try idea-editor [data-refine] {background:#eee4f2}
+#try idea-editor [data-refine]:disabled {color:#716977;background:#f5f2f5;cursor:default}
+#try .idea-tools #launch-count {margin:0;font-size:.8rem;color:#6a5c70;font-variant-numeric:tabular-nums}
+#try #idea-formats {display:block;margin:7px 2px 0;font-size:.76rem;color:#69596f;line-height:1.5}
+#try .idea-proposal {margin-top:12px;padding:15px;background:#f6eff8;border-radius:10px}
+#try .idea-proposal p {color:#3e3046;white-space:pre-wrap;overflow-wrap:anywhere;margin:6px 0 10px}
+#try idea-editor [data-use] {background:#50345f;color:white}
+#try .idea-feedback {font-size:.86rem;color:#60486a}
+#try .idea-feedback span:not(:empty) {display:inline-block;margin-top:8px}
+#try idea-editor [data-undo] {text-decoration:underline}
