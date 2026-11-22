@@ -15,7 +15,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     <div class="launch-hero-inner launch-width">
       <div class="launch-copy">
         <p class="launch-kicker"><span></span> THE HACKATHON PITCH STUDIO</p>
-        <h1>Build your<br> <em>hackathon deck.</em></h1>
+        <h1>Build a pitch<br> worth <em>presenting.</em></h1>
         <p class="launch-lede">Turn your project into an editable PowerPoint. Shape each slide around what your judges are looking for.</p>
         <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a></div>
         <p class="launch-meta">${icons.shield} Free to start. Your draft stays in this browser.</p>
