@@ -34,7 +34,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
         <details><summary>Competition and judging rules (optional)</summary>
         <div class="field"><label for="launch-event">Competition or event (optional)</label><input id="launch-event" name="event" maxlength="160" autocomplete="off" placeholder="Search by name, or enter your own event"><div class="event-intake-matches" aria-live="polite"></div></div>
-        <div class="field"><label for="launch-round">Round or track (optional)</label><input id="launch-round" name="eventRound" maxlength="160" placeholder="For example, qualifying round, finals, or social impact track"></div>
+        <div class="field"><label for="launch-deadline">Submission date (optional)</label><input type="date" id="launch-deadline" name="deadline"></div><div class="field"><label for="launch-round">Round or track (optional)</label><input id="launch-round" name="eventRound" maxlength="160" placeholder="For example, qualifying round, finals, or social impact track"></div>
         <div class="field"><label for="launch-rules">Official rubric and submission rules (optional)</label><textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste the track, judging criteria and weights, required sections, slide limit, format, and template link if available."></textarea></div>
         </details>
         <details><summary>Prototype, evidence and next steps (optional)</summary>
