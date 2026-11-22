@@ -346,3 +346,19 @@
 #try .idea-feedback {font-size:.86rem;color:#60486a}
 #try .idea-feedback span:not(:empty) {display:inline-block;margin-top:8px}
 #try idea-editor [data-undo] {text-decoration:underline}
+
+#try competition-picker{display:block;padding-bottom:4px}
+#try competition-picker .field{margin:0}
+#try competition-picker details{background:transparent;border:0;border-radius:0;padding:0;margin:4px 0}
+#try competition-picker summary{min-height:36px;font-size:.86rem;justify-content:flex-start;border:0;margin:0}
+#try competition-picker button{font:inherit;color:#51345f;border:1px solid #dacdde;background:#fffafc;border-radius:8px;padding:8px 12px;cursor:pointer;text-align:left}
+#try .competition-results{display:grid;gap:5px;max-height:12rem;overflow:auto}
+#try .competition-results button{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:3px 10px}
+#try .competition-results small,#try .competition-status,#try .pitch-guidance{font-size:.82rem;line-height:1.5;color:#62536a}
+#try .competition-status:empty,#try .pitch-guidance:empty{display:none}
+#try .competition-context{background:#f3edf6;border-radius:10px;padding:12px}
+#try .competition-context a{display:inline-block;color:#654173;font-size:.84rem;margin-bottom:8px}
+#try .competition-context select{width:100%;min-height:42px;background:#fff;color:#36243e;border:1px solid #cbb7d2;border-radius:7px;padding:8px}
+#try .pitch-guidance{margin:8px 0 0}
+#try competition-picker [hidden]{display:none!important}
+#try .reference-link button{margin-top:6px}

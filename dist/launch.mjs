@@ -1,3 +1,4 @@
+import './competition-picker.mjs';
 
 export function launchPage({deck, draft, icons, hasProjects}) {
   const steps = [
@@ -33,15 +34,13 @@ export function launchPage({deck, draft, icons, hasProjects}) {
         <idea-editor class="field"></idea-editor>
         <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
-        <details><summary>Competition and judging rules (optional)</summary>
-        <div class="field"><label for="launch-event">Competition or event (optional)</label><input id="launch-event" name="event" maxlength="160" autocomplete="off" placeholder="Search by name, or enter your own event"><div class="event-intake-matches" aria-live="polite"></div></div>
-        <div class="field"><label for="launch-deadline">Submission date (optional)</label><input type="date" id="launch-deadline" name="deadline"></div><div class="field"><label for="launch-round">Round or track (optional)</label><input id="launch-round" name="eventRound" maxlength="160" placeholder="For example, qualifying round, finals, or social impact track"></div>
-        <div class="field"><label for="launch-rules">Official rubric and submission rules (optional)</label><textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste the track, judging criteria and weights, required sections, slide limit, format, and template link if available."></textarea></div>
-        </details>
-        <details><summary>Prototype, evidence and next steps (optional)</summary>
+        <details name="pitch-details"><summary>Competition &amp; judging</summary><competition-picker></competition-picker></details>
+        <details name="pitch-details"><summary>Prototype &amp; evidence</summary>
         <div class="field"><label for="launch-approach">How does it work, and what can your team build? (optional)</label><textarea id="launch-approach" name="approach" rows="3" maxlength="1200" placeholder="Walk through two or three steps. Add what works today, what still needs building, and how you would deliver it."></textarea></div>
         <div class="field"><label for="launch-proof">What have you tested or learned? (optional)</label><textarea id="launch-proof" name="proof" rows="2" maxlength="800" placeholder="Add an observation, interview or test result. Include how many people or trials it covers, if known."></textarea></div>
         <div class="field"><label for="launch-source">Evidence source link (optional)</label><input id="launch-source" name="evidenceSource" type="url" maxlength="400" placeholder="https://…"></div>
+        </details>
+        <details name="pitch-details"><summary>Impact &amp; next steps</summary>
         <div class="field"><label for="launch-impact">What result would show it works? (optional)</label><textarea id="launch-impact" name="impact" rows="2" maxlength="800" placeholder="Name what you would measure, what you would compare it with, and your target if you have one."></textarea></div>
         <div class="field"><label for="launch-ask">What decision or support do you need next? (optional)</label><textarea id="launch-ask" name="ask" rows="2" maxlength="600" placeholder="For example, permission to run a pilot, a partner, or funding for a specific next step."></textarea></div>
         </details>
