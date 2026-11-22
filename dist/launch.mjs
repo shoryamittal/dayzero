@@ -30,7 +30,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">What are you <em>building?</em></h2></div><p>Start with the idea you’d explain to a teammate. Your slide preview takes shape as you write.</p></div>
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
-        <div class="field"><label for="launch-idea">Your idea</label><textarea id="launch-idea" name="solution" placeholder="We’re building a way for…" rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
+        <div class="field"><label for="launch-idea">Your idea</label><textarea id="launch-idea" name="solution" placeholder="We’re building a way for…" rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small><idea-polish></idea-polish></div>
         <idea-import></idea-import>
         <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
@@ -132,7 +132,7 @@ if (typeof customElements !== 'undefined' && !customElements.get('idea-import'))
   customElements.define('idea-import', class extends HTMLElement {
     connectedCallback() {
       if (this.childElementCount) return;
-      this.innerHTML = '<details><summary>Draft from a document</summary><div class="field"><label>Choose a project brief<input type="file" accept=".docx,.pptx,.odt,.md,.txt"></label><small>Word (.docx), PowerPoint (.pptx), ODT, Markdown or TXT · up to 8 MB. Read in your browser.</small><small role="status"></small><div hidden><label>Suggested idea<textarea rows="4" maxlength="600"></textarea></label><button type="button" class="launch-primary">Use this idea</button></div></div></details>';
+      this.innerHTML = '<details><summary>Bring in my notes</summary><div class="field"><label>Choose your notes or slide deck<input type="file" accept=".docx,.pptx,.odt,.md,.txt"></label><small>Word (.docx), PowerPoint (.pptx), ODT, Markdown or TXT · up to 8 MB. Read in your browser.</small><p role="status"></p><div hidden><label>Suggested idea<textarea rows="4" maxlength="600"></textarea></label><button type="button" class="launch-primary">Use this idea</button></div></div></details>';
       const fileInput = this.querySelector('input');
       const preview = this.querySelector('textarea');
       const panel = preview.closest('div');
@@ -165,6 +165,60 @@ if (typeof customElements !== 'undefined' && !customElements.get('idea-import'))
         this.querySelector('details').open = false;
         idea.focus();
       };
+    }
+  });
+}
+
+export function refineIdea(value) {
+  const seen = new Set();
+  return value.trim().split(/\n+|(?<=[!?])\s+|(?<=\.)\s+(?=[A-Z])/u).map(line => {
+    let s = line.trim().replace(/^[-*•]\s+/, '').replace(/\s+/g, ' ')
+      .replace(/\bin order to\b/gi, 'to')
+      .replace(/\bhas the ability to\b/gi, 'can')
+      .replace(/\bdue to the fact that\b/gi, 'because')
+      .replace(/\bat the present time\b/gi, 'now')
+      .replace(/\bwe are planning to\b/gi, 'we plan to')
+      .replace(/^our idea is (?:that )?we\b/i, 'We');
+    return s.replace(/^[a-z]/, c => c.toUpperCase());
+  }).filter(s => {
+    const key = s.toLowerCase().replace(/[.!?]+$/, '');
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).join('\n');
+}
+
+if (typeof customElements !== 'undefined' && !customElements.get('idea-polish')) {
+  customElements.define('idea-polish', class extends HTMLElement {
+    connectedCallback() {
+      if (this.childElementCount) return;
+      this.innerHTML = '<button class="launch-text-action" type="button" aria-expanded="false" aria-controls="idea-polish-panel">Polish my idea</button><div id="idea-polish-panel" hidden><label for="idea-polished">Your polished idea</label><textarea id="idea-polished" rows="3" maxlength="600"></textarea><p role="status"></p><button type="button" class="launch-primary">Use this version</button> <button type="button" class="launch-text-action">Cancel</button></div>';
+      const [open, apply, cancel] = this.querySelectorAll('button');
+      const panel = this.querySelector('div');
+      const editor = this.querySelector('textarea');
+      const hint = this.querySelector('[role=status]');
+      const idea = this.closest('form').elements.solution;
+      const close = () => { panel.hidden = true; open.setAttribute('aria-expanded','false'); };
+      idea.addEventListener('input', close);
+      open.onclick = () => {
+        if (!panel.hidden) { close(); return; }
+        const original = idea.value.trim();
+        editor.value = refineIdea(original);
+        const guidance = !original ? 'Who is it for, and what will they be able to do? Write a first sentence here.'
+          : !/\b(?:for|helps?|lets?|enables?)\b/i.test(original) ? 'Make it specific. Who will use this, and what task will it help them finish?'
+          : 'Can you add one concrete detail about how it works or what your team has tested?';
+        hint.textContent = (original && original !== editor.value ? 'Wording tightened. ' : '') + guidance;
+        panel.hidden = false;
+        open.setAttribute('aria-expanded','true');
+        editor.focus();
+      };
+      apply.onclick = () => {
+        if (!editor.value.trim()) { editor.focus(); return; }
+        idea.value = editor.value.trim();
+        idea.dispatchEvent(new Event('input', {bubbles:true}));
+        idea.focus();
+      };
+      cancel.onclick = () => { close(); open.focus(); };
     }
   });
 }
