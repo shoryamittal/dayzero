@@ -30,8 +30,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">What are you <em>building?</em></h2></div><p>Start with the idea you’d explain to a teammate. Your slide preview takes shape as you write.</p></div>
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
-        <div class="field"><label for="launch-idea">Your idea</label><textarea id="launch-idea" name="solution" placeholder="We’re building a way for…" rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small><idea-polish></idea-polish></div>
-        <idea-import></idea-import>
+        <idea-editor class="field"></idea-editor>
         <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
         <details><summary>Competition and judging rules (optional)</summary>
@@ -128,47 +127,6 @@ export function draftFromText(text) {
   return draft;
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get('idea-import')) {
-  customElements.define('idea-import', class extends HTMLElement {
-    connectedCallback() {
-      if (this.childElementCount) return;
-      this.innerHTML = '<details><summary>Bring in my notes</summary><div class="field"><label>Choose your notes or slide deck<input type="file" accept=".docx,.pptx,.odt,.md,.txt"></label><small>Word (.docx), PowerPoint (.pptx), ODT, Markdown or TXT · up to 8 MB. Read in your browser.</small><p role="status"></p><div hidden><label>Suggested idea<textarea rows="4" maxlength="600"></textarea></label><button type="button" class="launch-primary">Use this idea</button></div></div></details>';
-      const fileInput = this.querySelector('input');
-      const preview = this.querySelector('textarea');
-      const panel = preview.closest('div');
-      const status = this.querySelector('[role=status]');
-      const idea = this.closest('form').querySelector('[name=solution]');
-      const apply = this.querySelector('button');
-      let revision = 0;
-      fileInput.onchange = async () => {
-        const current = ++revision;
-        panel.hidden = true;
-        const file = fileInput.files[0];
-        status.textContent = file ? 'Reading your document…' : '';
-        if (!file) return;
-        try {
-          const draft = draftFromText(await readBrief(file));
-          if (current !== revision) return;
-          if (!draft) throw new Error('No usable project text found. Choose a document with selectable text or type your idea.');
-          preview.value = draft;
-          apply.textContent = idea.value.trim() ? 'Replace my idea with this draft' : 'Use this idea';
-          panel.hidden = false;
-          status.textContent = 'Review and edit the suggested wording before applying it.';
-        } catch (err) {
-          if (current === revision) status.textContent = /^(Choose|This document|No usable|The document)/.test(err.message) ? err.message : 'Could not read this file. Try an unencrypted document or paste the project text.';
-        }
-      };
-      apply.onclick = () => {
-        if (!preview.value.trim()) { preview.focus(); return; }
-        idea.value = preview.value.trim();
-        idea.dispatchEvent(new Event('input', {bubbles:true}));
-        this.querySelector('details').open = false;
-        idea.focus();
-      };
-    }
-  });
-}
-
 export function refineIdea(value) {
   const seen = new Set();
   return value.trim().split(/\n+|(?<=[!?])\s+|(?<=\.)\s+(?=[A-Z])/u).map(line => {
@@ -188,37 +146,100 @@ export function refineIdea(value) {
   }).join('\n');
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get('idea-polish')) {
-  customElements.define('idea-polish', class extends HTMLElement {
+
+if (typeof customElements !== 'undefined' && !customElements.get('idea-editor')) {
+  customElements.define('idea-editor', class extends HTMLElement {
     connectedCallback() {
       if (this.childElementCount) return;
-      this.innerHTML = '<button class="launch-text-action" type="button" aria-expanded="false" aria-controls="idea-polish-panel">Polish my idea</button><div id="idea-polish-panel" hidden><label for="idea-polished">Your polished idea</label><textarea id="idea-polished" rows="3" maxlength="600"></textarea><p role="status"></p><button type="button" class="launch-primary">Use this version</button> <button type="button" class="launch-text-action">Cancel</button></div>';
-      const [open, apply, cancel] = this.querySelectorAll('button');
-      const panel = this.querySelector('div');
-      const editor = this.querySelector('textarea');
-      const hint = this.querySelector('[role=status]');
-      const idea = this.closest('form').elements.solution;
-      const close = () => { panel.hidden = true; open.setAttribute('aria-expanded','false'); };
-      idea.addEventListener('input', close);
-      open.onclick = () => {
-        if (!panel.hidden) { close(); return; }
-        const original = idea.value.trim();
-        editor.value = refineIdea(original);
-        const guidance = !original ? 'Who is it for, and what will they be able to do? Write a first sentence here.'
-          : !/\b(?:for|helps?|lets?|enables?)\b/i.test(original) ? 'Make it specific. Who will use this, and what task will it help them finish?'
-          : 'Can you add one concrete detail about how it works or what your team has tested?';
-        hint.textContent = (original && original !== editor.value ? 'Wording tightened. ' : '') + guidance;
-        panel.hidden = false;
-        open.setAttribute('aria-expanded','true');
-        editor.focus();
-      };
-      apply.onclick = () => {
-        if (!editor.value.trim()) { editor.focus(); return; }
-        idea.value = editor.value.trim();
+      this.innerHTML = `
+        <div class="idea-heading">
+          <label for="launch-idea">Your idea</label>
+          <button type="button" data-import aria-describedby="idea-formats">Import notes</button>
+          <input type="file" hidden accept=".docx,.pptx,.odt,.md,.txt">
+        </div>
+        <div class="idea-paper">
+          <textarea id="launch-idea" name="solution" required maxlength="600" rows="3"
+            placeholder="What are you building, and who will it help?" aria-describedby="launch-count"></textarea>
+          <div class="idea-tools">
+            <button type="button" data-refine disabled>Refine wording</button>
+            <small id="launch-count">0 / 600</small>
+          </div>
+        </div>
+        <small id="idea-formats">Import DOCX, PPTX, ODT, MD or TXT · 8 MB max · Private to this browser</small>
+        <div class="idea-proposal" hidden>
+          <strong></strong><p></p>
+          <button type="button" data-use>Use suggestion</button>
+          <button type="button" data-keep>Keep original</button>
+        </div>
+        <div class="idea-feedback"><span role="status"></span> <button hidden type="button" data-undo>Undo</button></div>`;
+      const find = selector => this.querySelector(selector);
+      const idea = find('textarea');
+      const file = find('input');
+      const proposal = find('.idea-proposal');
+      const status = find('[role=status]');
+      const undo = find('[data-undo]');
+      const refine = find('[data-refine]');
+      let revision = 0;
+      let previous = '';
+      let suggestion = '';
+      let origin = refine;
+      function reset() {
+        revision++;
+        proposal.hidden = true;
+        undo.hidden = true;
+        status.textContent = '';
+        refine.disabled = !idea.value.trim();
+      }
+      function apply(value, message) {
+        previous = idea.value;
+        idea.value = value;
         idea.dispatchEvent(new Event('input', {bubbles:true}));
+        status.textContent = message;
+        undo.hidden = false;
+        idea.focus();
+      }
+      function suggest(text, title, trigger) {
+        suggestion = text;
+        origin = trigger;
+        proposal.querySelector('strong').textContent = title;
+        proposal.querySelector('p').textContent = text;
+        proposal.hidden = false;
+        status.textContent = 'Suggestion ready to review.';
+        find('[data-use]').focus();
+      }
+      idea.addEventListener('input',reset);
+      refine.onclick = () => {
+        reset();
+        const text = refineIdea(idea.value);
+        if (text && text !== idea.value) suggest(text, 'Suggested wording', refine);
+        else status.textContent = 'Your wording is already concise. Could you add who will use it or what your team has tested?';
+      };
+      find('[data-import]').onclick = () => file.click();
+      file.onchange = async () => {
+        const chosen = file.files[0];
+        if (!chosen) return;
+        file.value = '';
+        reset();
+        const current = revision;
+        status.textContent = 'Reading your notes…';
+        try {
+          const text = draftFromText(await readBrief(chosen));
+          if (current !== revision || !this.isConnected) return;
+          if (!text) throw new Error('No usable text found. Choose a file with selectable text.');
+          if (!idea.value.trim()) apply(text, 'Notes added. You can edit them above.');
+          else suggest(text, 'Idea from your notes', find('[data-import]'));
+        } catch (error) {
+          if (current === revision) status.textContent = /^(Choose|This document|No usable|The document)/.test(error.message) ? error.message : 'Could not read this file. Choose another file or paste your notes.';
+        }
+      };
+      find('[data-use]').onclick = () => apply(suggestion, 'Suggestion applied.');
+      find('[data-keep]').onclick = () => { reset(); origin.focus(); };
+      undo.onclick = () => {
+        idea.value = previous;
+        idea.dispatchEvent(new Event('input', {bubbles:true}));
+        status.textContent = 'Original text restored.';
         idea.focus();
       };
-      cancel.onclick = () => { close(); open.focus(); };
     }
   });
 }
