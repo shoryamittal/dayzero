@@ -31,6 +31,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     <div class="launch-lab-grid">
       <form id="launch-draft" class="launch-form">
         <div class="field"><label for="launch-idea">Your idea</label><textarea id="launch-idea" name="solution" placeholder="We’re building a way for…" rows="3" required maxlength="600" aria-describedby="launch-count"></textarea><small id="launch-count">0 / 600</small></div>
+        <idea-import></idea-import>
         <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
         <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
         <details><summary>Competition and judging rules (optional)</summary>
@@ -63,4 +64,107 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     <div class="launch-answers">${questions.map(([question,answer])=>`<details><summary>${question}<span aria-hidden="true">+</span></summary><p>${answer}</p></details>`).join('')}</div>
   </section>
   <section class="launch-end launch-width"><div><h2>Bring the idea.<br><em>Build the pitch.</em></h2><p>Start with the problem and what your solution changes.</p></div><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a>${hasProjects?'<button class="launch-secondary" data-route="projects">Open my projects</button>':''}</section>`;
+}
+
+const formats = ['txt', 'md', 'docx', 'pptx', 'odt'];
+
+async function readPart(entry, budget) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    const stream = entry.internalStream('uint8array');
+    stream.on('data', chunk => {
+      budget.left -= chunk.length;
+      if (budget.left < 0) {
+        stream.pause();
+        reject(new Error('This document contains too much text. Upload a shorter brief.'));
+      } else chunks.push(chunk);
+    });
+    stream.on('error', reject);
+    stream.on('end', () => resolve(new Blob(chunks).text()));
+    stream.resume();
+  });
+}
+
+async function readBrief(file) {
+  if (file.size > 8 * 1024 * 1024) throw new Error('Choose a file under 8 MB.');
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!formats.includes(ext)) throw new Error('Choose a Word, PowerPoint, OpenDocument text, Markdown or plain text file.');
+  if (ext === 'txt' || ext === 'md') return file.text();
+  if (!window.JSZip) await import('./vendor/jszip.min.js');
+  const zip = await window.JSZip.loadAsync(file);
+  const parts = ext === 'pptx'
+    ? zip.file(/^ppt\/slides\/slide\d+\.xml$/).sort((a,b) => a.name.localeCompare(b.name, 'en', {numeric:true}))
+    : [zip.file(ext === 'docx' ? 'word/document.xml' : 'content.xml')].filter(Boolean);
+  if (!parts.length || parts.length > 100) throw new Error('Choose a readable document with up to 100 slides.');
+  const budget = {left: 5 * 1024 * 1024};
+  const lines = [];
+  for (const part of parts) {
+    const xml = new DOMParser().parseFromString(await readPart(part, budget), 'application/xml');
+    if (xml.querySelector('parsererror')) throw new Error('The document text could not be read.');
+    const paragraphs = Array.from(xml.getElementsByTagNameNS('*', 'p'));
+    for (const p of paragraphs) {
+      lines.push(ext === 'odt' ? p.textContent : Array.from(p.getElementsByTagNameNS('*', 't'), t => t.textContent).join(''));
+    }
+  }
+  return lines.join('\n');
+}
+
+export function draftFromText(text) {
+  const sentences = text.slice(0, 250000).split(/\r?\n|(?<=[.!?])\s+(?=[A-Z])/u)
+    .map(s => s.replace(/^[#>*•\s-]+/, '').replace(/\s+/g,' ').trim())
+    .filter(s => s.length >= 15 && !/^(?:https?:\/\/|table of contents|copyright\b)/i.test(s));
+  const unique = Array.from(new Set(sentences));
+  const signals = [
+    /\b(solution|we (?:are building|built|propose|developed)|our (?:app|platform|project)|helps?|enables?)\b/i,
+    /\b(problem|struggle|lack|cannot|difficulty|challenge|workaround)\b/i,
+    /\b(prototype|tested|pilot|interviewed|measured|surveyed)\b/i
+  ];
+  const ranked = [...new Set([...signals.map(re => unique.find(s => re.test(s))).filter(Boolean), ...unique])];
+  let draft = '';
+  for (const sentence of ranked) {
+    if (!draft && sentence.length > 600) return sentence.slice(0,599).replace(/\s+\S*$/, '') + '…';
+    if ((draft + ' ' + sentence).trim().length <= 600) draft = (draft + ' ' + sentence).trim();
+  }
+  return draft;
+}
+
+if (typeof customElements !== 'undefined' && !customElements.get('idea-import')) {
+  customElements.define('idea-import', class extends HTMLElement {
+    connectedCallback() {
+      if (this.childElementCount) return;
+      this.innerHTML = '<details><summary>Draft from a document</summary><div class="field"><label>Choose a project brief<input type="file" accept=".docx,.pptx,.odt,.md,.txt"></label><small>Word (.docx), PowerPoint (.pptx), ODT, Markdown or TXT · up to 8 MB. Read in your browser.</small><small role="status"></small><div hidden><label>Suggested idea<textarea rows="4" maxlength="600"></textarea></label><button type="button" class="launch-primary">Use this idea</button></div></div></details>';
+      const fileInput = this.querySelector('input');
+      const preview = this.querySelector('textarea');
+      const panel = preview.closest('div');
+      const status = this.querySelector('[role=status]');
+      const idea = this.closest('form').querySelector('[name=solution]');
+      const apply = this.querySelector('button');
+      let revision = 0;
+      fileInput.onchange = async () => {
+        const current = ++revision;
+        panel.hidden = true;
+        const file = fileInput.files[0];
+        status.textContent = file ? 'Reading your document…' : '';
+        if (!file) return;
+        try {
+          const draft = draftFromText(await readBrief(file));
+          if (current !== revision) return;
+          if (!draft) throw new Error('No usable project text found. Choose a document with selectable text or type your idea.');
+          preview.value = draft;
+          apply.textContent = idea.value.trim() ? 'Replace my idea with this draft' : 'Use this idea';
+          panel.hidden = false;
+          status.textContent = 'Review and edit the suggested wording before applying it.';
+        } catch (err) {
+          if (current === revision) status.textContent = /^(Choose|This document|No usable|The document)/.test(err.message) ? err.message : 'Could not read this file. Try an unencrypted document or paste the project text.';
+        }
+      };
+      apply.onclick = () => {
+        if (!preview.value.trim()) { preview.focus(); return; }
+        idea.value = preview.value.trim();
+        idea.dispatchEvent(new Event('input', {bubbles:true}));
+        this.querySelector('details').open = false;
+        idea.focus();
+      };
+    }
+  });
 }
