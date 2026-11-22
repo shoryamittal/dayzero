@@ -1,3 +1,4 @@
+import './review.mjs?v=home-review';
 import './competition-lookup.mjs';
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
 import {launchPage} from './launch.mjs?v=competition-round-1';
