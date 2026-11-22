@@ -1,3 +1,4 @@
+import './competition-lookup.mjs';
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
 import {launchPage} from './launch.mjs?v=competition-round-1';
 import {sampleChapters,sampleDesign} from './sample-deck.mjs?v=sample-dusk-1';
@@ -176,7 +177,7 @@ document.addEventListener('submit',async event=>{
  const form=event.target;
  const fields=launchDraftFields(form);
  const answers=new FormData(form);
- for(const [field, limit] of [['problem',700],['event',160],['eventRound',160],['rules',10000],['approach',1200],['proof',800],['impact',800],['ask',600]]) {
+ for(const [field, limit] of [['problem',700],['event',160],['eventRound',160],['deadline',10],['rules',10000],['approach',1200],['proof',800],['impact',800],['ask',600]]) {
   fields[field]=clean(answers.get(field),limit);
  }
  if(!fields.name||!fields.problem||!fields.solution)return toast('Enter your project title, problem and solution.');
