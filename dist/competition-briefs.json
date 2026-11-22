@@ -1,0 +1,35 @@
+[
+  {
+    "name": "Central India Hackathon 4.0",
+    "alias": "CIH",
+    "date": "2026-11-30",
+    "schedule": "Registration and PPT submission close 30 Nov 2026. No time specified.",
+    "round": "PPT submission",
+    "rules": "Use the official CIH template and enter as a team of four.",
+    "tip": "Show how your solution can scale beyond a single demonstration.",
+    "url": "https://centralindiahackathon.com/",
+    "checked": "2026-11-22"
+  },
+  {
+    "name": "Imagine Cup 2027",
+    "alias": "Microsoft Imagine Cup",
+    "date": "2027-02-28",
+    "schedule": "Application deadline: 28 Feb 2027 at 11:59 pm CST.",
+    "round": "Application screening",
+    "rules": "Submit a pitch deck, a 2–3 minute product demo, an Azure technical overview or architecture diagram, and written responses.",
+    "tip": "Connect the customer problem to the Azure service that makes the solution possible.",
+    "url": "https://imaginecup.microsoft.com/en-us/support/faq",
+    "checked": "2026-11-22"
+  },
+  {
+    "name": "Campus to Cloud Hackathon 2026",
+    "alias": "Techfest AWS",
+    "date": "2026-11-30",
+    "schedule": "Registration and first-round submission close 30 Nov 2026 at 11:59 pm IST.",
+    "round": "Round 1",
+    "rules": "Address a real problem in India using AWS technologies.",
+    "tip": "Show one user completing a task and identify the AWS component behind it.",
+    "url": "https://techfest.org/competitions/aws",
+    "checked": "2026-11-22"
+  }
+]
