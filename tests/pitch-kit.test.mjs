@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {pitchKitFiles} from '../dist/pitch-kit.mjs';
+import {pitchKitFiles, slideReviewed, slideReviewSignature} from '../dist/pitch-kit.mjs';
 
 test('a pitch kit follows the project and flags where the team needs proof', () => {
   const project = {
@@ -32,4 +32,14 @@ test('a pitch kit follows the project and flags where the team needs proof', () 
   assert.match(practice, /Show pilot evidence/);
   assert.match(practice, /Add proof or remove the unsupported number/);
   assert.match(practice, /\[Name the outcome, baseline and measurement plan\.\]/);
+});
+
+test('review status belongs to the exact slide version', () => {
+  const project = {name:'Campus Meals', template:'botanical', proof:'Prototype is ready.', notes:{proof:'Show the mockup.'}};
+  project.slideReviews = {proof:slideReviewSignature(project,'proof')};
+  assert.equal(slideReviewed(project,'proof'), true);
+  project.solution = 'Revision on another slide.';
+  assert.equal(slideReviewed(project,'proof'), true);
+  project.notes.proof = 'Show the working prototype.';
+  assert.equal(slideReviewed(project,'proof'), false);
 });

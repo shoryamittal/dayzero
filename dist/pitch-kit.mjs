@@ -1,6 +1,6 @@
 import {analyze, clean, questions, slides, themes} from './engine.mjs?v=competition-round-1';
 import {slideReadability} from './deck-design.mjs?v=competition-round-1';
-import {challengeQuestions, normalizePreparation, requirementState, runOfShow} from './preparation.mjs?v=pitchviva-1';
+import {challengeQuestions, normalizePreparation, requirementState, runOfShow, signature} from './preparation.mjs?v=pitchviva-1';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
 
 const slidePurpose = [
@@ -51,6 +51,7 @@ function buildReport(p) {
     const notes = (p.evidence || []).filter(note => note.slide === slide.key);
     return [
       'Slide ' + (index + 1) + ' / ' + (p.slideHeadlines?.[slide.key] || slide.title),
+      'Team review — ' + (slideReviewed(p, slide.key) ? 'Reviewed' : 'Review pending'),
       'Why this slide is here — ' + slidePurpose[index],
       p.slideImages?.[slide.key] ? 'Design choice — The text and supplied visual sit side by side.' :
         'Design choice — The ' + theme.name + ' palette is applied to the built-in layout.',
@@ -128,4 +129,16 @@ export function pitchKitFiles(project) {
     'speaker-script.txt': speakerScript(project),
     'jury-questions-and-answers.txt': juryPractice(project)
   };
+}
+
+export function slideReviewSignature(project, key) {
+  return signature(JSON.stringify([
+    project.name, project.template, project[key] || '',
+    project.slideHeadlines?.[key] || '', project.notes?.[key] || '',
+    project.slideImages?.[key] || null
+  ]));
+}
+
+export function slideReviewed(project, key) {
+  return Boolean(project.slideReviews?.[key] && project.slideReviews[key] === slideReviewSignature(project, key));
 }
