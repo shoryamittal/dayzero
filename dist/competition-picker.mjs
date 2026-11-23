@@ -86,6 +86,32 @@ async function pageGuide(href,signal) {
   return {title,choices};
 }
 
+const winnerExamples = {
+  "sih": [
+    2024,
+    "Team Anurved",
+    "Software finale at IIT Gandhinagar",
+    "The team described a mapping tool that assigns tasks across government departments.",
+    "Show one task moving between two real users in your prototype.",
+    "https://news.iitgn.ac.in/iitgn-celebrates-the-winners-of-smart-india-hackathon-sih-2024/"
+  ],
+  "imagine": [
+    2025,
+    "Argus",
+    "World Champion",
+    "The team built a wearable assistant for people with low vision.",
+    "Walk through one task your target user can complete with the prototype.",
+    "https://techcommunity.microsoft.com/blog/StudentDeveloperBlog/announcing-the-2025-imagine-cup-world-champion/4414342"
+  ],
+  "hult": [
+    2024,
+    "Korion Health",
+    "Global Finals winner",
+    "The team paired an electronic stethoscope with a guided interface for home use.",
+    "Show how a user completes one difficult step and how you would measure the benefit.",
+    "https://www.hultprize.org/hult-prize-winners/2024/korion-health"
+  ]
+};
 const cached = new Map();
 const hostOf = link => new URL(link).hostname.replace(/^www\./,'');
 const option = (label,value) => new Option(label,value);
@@ -103,7 +129,7 @@ customElements.define('competition-picker',class extends HTMLElement {
       <div class="competition-context" hidden><a target="_blank" rel="noopener noreferrer"></a>
         <label for="competition-options">Round or track</label><select id="competition-options"></select>
         <input aria-label="Your round or track" maxlength="160" placeholder="Enter your round or track" hidden>
-        <input type="hidden" name="eventRound"><p class="pitch-guidance"></p></div>
+        <input type="hidden" name="eventRound"><p class="pitch-guidance"></p><details data-winners><summary>Learn from a past winner</summary><p data-example></p><a data-story target="_blank" rel="noopener noreferrer">Read the winner profile ↗</a><label for="winner-source">Add a winner reference (optional)</label><input type="url" id="winner-source" placeholder="https://…"><label for="winner-lesson">What would you apply to your pitch?</label><input id="winner-lesson" maxlength="300" placeholder="For example, show one complete user workflow"></details></div>
       <details><summary>Add judging rules</summary><label for="launch-rules">Organizer’s rubric or instructions</label>
       <textarea id="launch-rules" name="rules" rows="3" maxlength="10000" placeholder="Paste any judging criteria, slide limit or template requirements."></textarea></details>`;
     const q = s => this.querySelector(s);
@@ -118,6 +144,22 @@ customElements.define('competition-picker',class extends HTMLElement {
       round.value=custom.hidden?select.value:custom.value.trim();
       this.pitchTip=guide?.choices[select.value] || this.record?.angles?.[0] || '';
       guideText.textContent=this.pitchTip?'Deck tip · '+this.pitchTip:'';
+      const example=winnerExamples[this.record?.id];
+      const year=Number(typedYear)||new Date().getFullYear();
+      const applicable=example && example[0]<=year && !(this.record.id==='sih' && select.value==='Hardware');
+      const link=q('[data-story]');
+      link.hidden=!applicable;
+      const lessons=[this.pitchTip];
+      if(applicable){
+        const [edition,team,award,description,lesson,url]=example;
+        link.href=url;
+        q('[data-example]').textContent=team+' · '+edition+' · '+award+'. '+description+' PitchViva suggestion: '+lesson;
+        lessons.push('Preparation idea from '+team+' ('+edition+', '+award+'): '+lesson+' Source: '+url);
+      }else q('[data-example]').textContent='Add a winner announcement or published pitch from this competition to your preparation notes.';
+      const extra=validSource(q('#winner-source').value.trim());
+      if(extra)lessons.push('Team-supplied winner reference: '+extra+' '+q('#winner-lesson').value.trim());
+      this.pitchTip=lessons.filter(Boolean).join('\n');
+
     };
     function merge(local,remote) {
       const names=new Set(local.map(e=>e.name.toLowerCase()));
@@ -166,6 +208,7 @@ customElements.define('competition-picker',class extends HTMLElement {
       }
     };
     const search=()=>{
+      q('#winner-source').value='';q('#winner-lesson').value='';q('[data-winners]').open=false;
       stop();this.record=null;this.pitchTip='';context.hidden=true;round.value='';custom.value='';
       const query=name.value.trim();
       typedYear=query.match(/\b20\d{2}\b/)?.[0]||'';
@@ -194,6 +237,8 @@ customElements.define('competition-picker',class extends HTMLElement {
       },350);
     };
     name.oninput=()=>{pageController?.abort();linkedGuide=null;if(this.record){reference='';link.value='';}search();};
+    q('#winner-source').oninput=updateRound;
+    q('#winner-lesson').oninput=updateRound;
     select.onchange=()=>{updateRound();if(!custom.hidden)custom.focus();};
     custom.oninput=updateRound;
     const attach=async()=>{
