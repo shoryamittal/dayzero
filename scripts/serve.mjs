@@ -4,6 +4,8 @@ import {readFile} from 'node:fs/promises';
 import {extname, resolve, sep} from 'node:path';
 import {handleAssist} from '../api/assist.mjs';
 
+import generate from '../api/pptx.mjs';
+
 const host = '127.0.0.1';
 const port = Number(process.env.DAYZERO_PORT || 4176);
 const base = 'http://' + host + ':' + port;
@@ -13,6 +15,7 @@ const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.
 createServer(async (incoming, outgoing) => {
   try {
     const url = new URL(incoming.url, base);
+    if (url.pathname === '/api/pptx') return await generate(incoming, outgoing);
     if (url.pathname === '/api/assist') {
       const method = incoming.method;
       const request = new Request(url, {method, headers: incoming.headers,

@@ -55,3 +55,17 @@ Before Close is the fictional six-slide campus food-recovery pitch previously fe
 The [original sample design](dist/sample-deck.mjs) and [project data](dist/engine.mjs) remain in the repository. The [historical homepage](https://github.com/shoryamittal/dayzero/tree/7c6a94bd2c49e04c4eb4852d082f124010aed410/dist) preserves the interactive implementation.
 
 
+
+## PowerPoint generation backend
+
+Run `npm start` with Node 22+ to start the export service on port 4177. Set `PORT` on a host. `npm run dev` also serves the export route alongside the local website. The existing website export stays on-device.
+
+`GET /health` reports readiness. Send JSON to `POST /api/pptx` and save the binary response as a .pptx file. Supply a project name and one or more of problem, solution, approach, proof, impact and ask. Other workspace fields such as slideHeadlines, slideImages, evidence, template and notes follow the browser project format. Missing sections receive editable placeholders. This endpoint assembles supplied content using the existing six-slide renderer. It needs no model key, database or file storage.
+
+    curl -X POST http://localhost:4177/api/pptx -H "Content-Type: application/json" --data-binary @project.json -o pitch.pptx
+
+Example project.json:
+
+    {"name":"Campus Food","problem":"Cafeterias discard surplus meals.","solution":"Students reserve surplus portions before closing."}
+
+Requests are limited to 4 MiB, with two concurrent exports per process. Responses use no-store. The service processes project data in memory. Authentication, billing and model-based drafting are outside this endpoint.

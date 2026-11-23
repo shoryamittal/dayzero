@@ -1,3 +1,4 @@
+import {repairSlideMasters} from './pptx-package.mjs';
 import {designGrid} from './design-reference-grid.mjs';
 import './review.mjs?v=home-review';
 import './competition-lookup.mjs';
@@ -368,14 +369,7 @@ function loadScript(src){return new Promise((resolve,reject)=>{let s=document.qu
 async function pptxBlob(p,design){
  await Promise.all([loadScript('/vendor/pptxgen.bundle.js'),loadScript('/vendor/jszip.min.js')]);
  const original=await makePowerPoint(p,window.PptxGenJS,design);
- const zip=await window.JSZip.loadAsync(await original.arrayBuffer());
- const manifest=await zip.file('[Content_Types].xml').async('string');
- // The bundled exporter lists one slide-master override per slide, even when they share a master.
- const repaired=manifest.replace(/<Override PartName="\/(ppt\/slideMasters\/slideMaster\d+\.xml)" ContentType="[^"]+"\/>/g,
-  (entry,part)=>zip.file(part)?entry:'');
- if(repaired===manifest)return original;
- zip.file('[Content_Types].xml',repaired);
- return zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation',compression:'DEFLATE'});
+ return repairSlideMasters(original,window.JSZip);
 }
 async function downloadSample(button){
  const label=button.textContent;
