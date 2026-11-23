@@ -1,0 +1,15 @@
+{
+ "recipe":"short-case","system":"folio","palette":"Atlantic","typography":"Editorial",
+ "slides":[
+  {"title":"The lunch queue peaked during one short window","section":"Campus canteen pilot","source":"Illustrative dataset for this example. Queue times and operating assumptions are fictional.","blocks":[
+    {"label":"Median wait by arrival window","chart":{"type":"bar","labels":["11:45","12:15","12:45"],"series":{"Wait (minutes)":[4,12,7]}}},
+    {"label":"What to investigate","text":"The 12:15 group waited longest in the example. A queue alone cannot tell us whether payment, preparation, or pickup caused the delay."}]},
+  {"title":"Test a separate pickup line at 12:15","section":"Recommendation","source":"Illustrative operating proposal. The effect remains unmeasured.","blocks":[
+    {"label":"Proposed change","text":"Take preorders for one set meal and hand them out at a marked pickup point. Keep the usual counter open for walk-ins."},
+    {"label":"Why start here","text":"One time window, one meal and one pickup point give staff a small change they can reverse. Measure both queues so a shorter pickup line cannot hide longer waits elsewhere."}]},
+  {"title":"Decide after ten comparable lunch periods","section":"Feasibility","source":"Illustrative pilot plan. Thresholds are decision criteria, not observed results.","blocks":[
+    {"label":"Run the pilot","text":"Use five baseline lunch periods and five pilot periods. The shift lead records queue entry and handoff times."},
+    {"label":"Protect comparability","text":"Record transactions per period and staffing levels. Flag special events or menu changes before comparing waits."},
+    {"label":"Decision rule","text":"Expand only if the pickup median falls below eight minutes and the walk-in median stays at or below its own baseline."}]}
+ ]
+}
