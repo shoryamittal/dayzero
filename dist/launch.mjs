@@ -1,3 +1,4 @@
+import {reviewIntake} from './review-shell.mjs';
 import './competition-picker.mjs';
 
 export function launchPage({deck, draft, icons, hasProjects}) {
@@ -18,7 +19,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
         <p class="launch-kicker"><span></span> THE HACKATHON PITCH STUDIO</p>
         <h1>Build a pitch<br> worth <em>presenting.</em></h1>
         <p class="launch-lede">Turn your project into an editable PowerPoint. Shape each slide around what your judges are looking for.</p>
-        <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a><a class="hero-review-link" href="#deck-review">Review my deck</a></div>
+        <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a><a class="hero-review-link" href="/review.html">Review my deck</a></div>
         <p class="launch-meta">${icons.shield} Free to start. Your draft stays in this browser.</p>
       </div>
     </div>
@@ -26,7 +27,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
       <span><b>01</b> Editable PowerPoint</span><span><b>02</b> Evidence &amp; event rules</span><span><b>03</b> Rehearsal &amp; export kit</span>
     </div>
   </section>
-  <section id="deck-review" class="launch-lab launch-width" aria-labelledby="deck-review-title"><div class="launch-section-heading"><div><p class="launch-kicker"><span></span> REVIEW YOUR DECK</p><h2 id="deck-review-title">Review your <em>hackathon deck.</em></h2></div><p>Upload your PowerPoint to check your slides against the judging criteria and see what to fix first.</p></div><form id="intake" class="launch-form home-review-form"><label for="file">Your PowerPoint</label><input type="file" id="file" accept=".pptx" required><small>1–40 slides · up to 8 MB · processed in your browser</small><label for="event">Competition name <small>(optional)</small></label><input id="event" maxlength="160" placeholder="Your hackathon or track"><label for="round">Which round are you preparing for?</label><select id="round"><option value="screening">Idea screening · judges read the deck</option><option value="demo">Live demo · team presents to judges</option></select><label for="rules">Judging criteria and submission rules</label><textarea id="rules" maxlength="6000" rows="4" placeholder="One requirement per line, for example:&#10;Maximum 8 slides&#10;Minimum font size 18 pt&#10;Show evidence of user testing"></textarea><small>Leave blank for a general review. Use English for wording and rule matching.</small><button id="submit" class="launch-primary">Analyze my deck →</button><p role="status" id="status"></p></form><section id="report" tabindex="-1" hidden></section></section>
+  <section id="deck-review" class="rv-studio launch-width" aria-labelledby="deck-review-title">${reviewIntake()}</section>
   <section class="launch-lab launch-width" id="try" aria-labelledby="try-title">
     <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">What are you <em>building?</em></h2></div><p>Start with the idea you’d explain to a teammate. Your slide preview takes shape as you write.</p></div>
     <div class="launch-lab-grid">

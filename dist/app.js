@@ -2,7 +2,7 @@ import {projectBriefHandoff} from './backend-handoff.mjs';
 import {pitchKitFiles, slideReviewSignature, slideReviewed} from './pitch-kit.mjs';
 import {repairSlideMasters} from './pptx-package.mjs';
 import {designGrid} from './design-reference-grid.mjs';
-import './review.mjs?v=home-review';
+import './review.mjs?v=studio-2';
 import './competition-lookup.mjs';
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
 import {launchPage} from './launch.mjs?v=competition-round-1';
@@ -59,7 +59,7 @@ const btn=(label,action,style='primary',i='arrow')=>`<button class="btn ${style}
 function shell(body){
  if(route==='home')return `<div class="launch-site">
   <header class="launch-header"><div class="launch-width launch-header-inner"><a href="#home" class="launch-brand" data-route="home" aria-label="PitchViva home"><span>pv</span><strong>PitchViva</strong></a>
-   <nav aria-label="Website navigation"><a href="#deck-review">Review my deck</a><a href="#workflow">How it works</a><a href="/deck-workspace.html">Generate PowerPoint</a><button data-route="projects">My projects</button></nav>
+   <nav aria-label="Website navigation"><a href="/review.html">Review my deck</a><a href="#workflow">How it works</a><a href="/deck-workspace.html">Generate PowerPoint</a><button data-route="projects">My projects</button></nav>
    <a class="launch-primary" href="#try">Make a pitch ${icon('arrow',16)}</a>
   </div></header>
   <main class="route-home" id="main" tabindex="-1">${body}</main>

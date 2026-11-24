@@ -7,7 +7,9 @@ import {handleAssist} from '../api/assist.mjs';
 import generate from '../api/pptx.mjs';
 
 const host = '127.0.0.1';
-const port = Number(process.env.DAYZERO_PORT || 4176);
+const portArgument = process.argv.indexOf('--port');
+const port = Number(portArgument >= 0 ? process.argv[portArgument + 1] : process.env.DAYZERO_PORT || 4176);
+if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Choose a port between 1 and 65535.');
 const base = 'http://' + host + ':' + port;
 const root = resolve('dist');
 const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.md': 'text/plain; charset=utf-8', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8'};

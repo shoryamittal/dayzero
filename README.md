@@ -19,6 +19,12 @@ Use Node 22 or later. The local workspace runs without package dependencies or A
 Render: Static Site, branch main, build npm run build, publish dist.
 Vercel: import this repository; settings are included.
 
+## Review Studio
+
+Open `/review.html` for the dedicated deck review workspace, or use the shared review section on the homepage. A browser-local PPTX review provides an overview, slide text outlines with highlighted findings, supplied-rule checks and a revision checklist. The fictional example uses the same checks as uploaded slide data. Review marks last for the current session; download the Markdown report or use the print action to retain them. Marking an item addressed is a user acknowledgement, not automatic verification of an edited deck.
+
+The reader supports 1–40 slides and files up to 8 MB. Text outlines do not reproduce original visual layouts. Checks use editable text and stored metadata; inherited styles, image/chart content, factual accuracy and final organiser compliance require manual inspection. No model API, quality score or selection prediction is used by this feature.
+
 ## Storage and service boundaries
 
 Export a library backup before switching hosts, then unzip it and import each project JSON on the new host. Browser storage is isolated by origin. Drafts expire 24 hours after last edit, checked on opening. Export backups for durable storage.
