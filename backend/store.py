@@ -62,6 +62,8 @@ def init():
             with sqlite3.connect(f'file:{ROOT}/catalog.sqlite?mode=ro',uri=True) as seed: seed.backup(db)
         db.execute('PRAGMA journal_mode=WAL')
         db.executescript(DDL)
+        if 'competition_track' not in {r[1] for r in db.execute('PRAGMA table_info(editions)')}:
+            db.execute("ALTER TABLE editions ADD COLUMN competition_track TEXT NOT NULL DEFAULT ''")
         from job_schema import JOB_SCHEMA
         db.executescript(JOB_SCHEMA)
         from catalog_plus import initialize

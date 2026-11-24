@@ -25,6 +25,7 @@ class Competition(BaseModel):
     organizer:Name
     year:int=Field(ge=1990,le=2100)
     round:Name
+    track:str=Field(default="",max_length=160)
 class SuppliedRule(BaseModel):
     kind:Literal['exact_slides','min_slides','max_slides','required_template','exclusions','ai_policy','criteria','required_sections','design_requirement','format','duration','anonymity']
     value:Annotated[str,StringConstraints(strip_whitespace=True,min_length=1,max_length=900)]
@@ -62,6 +63,8 @@ def job(db,id,workspace):
     return row
 def local_profile(db,e,supplied=()):
     profile=combined(e,'local_snapshot',get_snapshot(db,e['id']))
+    from competition_catalog import source_status
+    profile['verification']=source_status(dict(name=e['name'],organizer=e['organizer'],year=e['year'],round=e['round'],track=e.get('competition_track','')))
     profile['rules'].extend(dict(r,status='user_supplied') for r in supplied)
     return profile
 def option_for(j,option_id):
@@ -80,7 +83,7 @@ def state(j):
 @router.post('',status_code=201)
 def create(value:LocalBrief,x_workspace:Workspace,idempotency_key:Annotated[str|None,Header(max_length=160)]=None):
     brief=encode(value.model_dump());fingerprint=hashlib.sha256(brief.encode()).hexdigest()
-    e=resolve(value.competition.name,value.competition.organizer,value.competition.year,value.competition.round)
+    e=resolve(value.competition.name,value.competition.organizer,value.competition.year,value.competition.round,value.competition.track)
     with connection() as db:
         db.execute('BEGIN IMMEDIATE')
         if idempotency_key:

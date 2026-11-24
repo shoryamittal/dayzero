@@ -1,3 +1,15 @@
+## V4.1 website workflow, 24 November 2026
+
+The website navigation opens `/deck-workspace.html`. An existing project's export screen can hand its brief to that workspace on the same origin. Importing a brief stays in the browser; creating or saving a draft sends it to the backend. The access token is never saved in session storage or a draft backup.
+
+The workspace shows queued, rendering, failure and ready states, resumes monitoring after reload, and retries interrupted requests against the saved job. Creation uses an idempotency key. A timed-out generation response is recovered by fetching the same job before submitting another render. Retry saves pending local edits before generating a review-state draft. JSON draft backups support recovery after Render's ephemeral server storage resets.
+
+`GET /competitions/catalog` returns six reviewed edition/round/track records with source URLs, field-level verification, checked dates and registration status. This is a curated dated catalog; external discovery remains disabled. Manual identity changes clear source verification. `POST /competitions/resolve` and deck creation accept `track`; unsupported tracks do not inherit another track's seed rules or winner references. A sourced identity does not establish complete submission compliance.
+
+This remains a token-protected owner preview. Public user accounts, per-user authenticated storage and durable cloud drafts are separate release work. Render free service restarts can remove server drafts; preserve browser drafts and download backups/files.
+
+Verification: `npm run build` covers the website and recovery tests; `cd backend && python -m unittest -q` covers API, worker, rendered export, track isolation and source provenance. Recovery fixtures explicitly simulate a committed request whose response is lost and a save failure before generation.
+
 ## V4 offline backend
 
 Start with [BACKEND.md](BACKEND.md) for the generation job, worker, review, rendered QA and downloads. Run `python local_server.py` after installing the prerequisites. The API integrations below are deferred.

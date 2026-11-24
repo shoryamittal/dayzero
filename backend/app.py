@@ -19,7 +19,7 @@ def backend(authorization: str=Header(default='')):
 def tenant(x_workspace: str=Header(min_length=1,max_length=128)):
     return x_workspace
 
-app=FastAPI(title='PPTGenerator catalog and matching',version='4.0',dependencies=[Depends(backend)])
+app=FastAPI(title='PPTGenerator catalog and matching',version='4.1',dependencies=[Depends(backend)])
 class Select(BaseModel):
     name: str=Field(min_length=2,max_length=160)
     year: int|None=Field(default=None,ge=1990,le=2100)
@@ -27,6 +27,7 @@ class Edition(Select):
     organizer: str=Field(min_length=1,max_length=160)
     year: int=Field(ge=1990,le=2100)
     round: str=Field(min_length=1,max_length=160)
+    track: str=Field(default='',max_length=160)
     @field_validator('name','organizer','round')
     @classmethod
     def nonblank(cls,v):
@@ -76,7 +77,7 @@ def select(value:Select):
     return {'status':'choose_edition_and_round' if found else 'need_event_details','matches':found}
 @app.post('/competitions/resolve')
 def profile(value:Edition):
-    return lookup(resolve(value.name,value.organizer,value.year,value.round))
+    return lookup(resolve(value.name,value.organizer,value.year,value.round,value.track))
 @app.get('/catalog')
 def catalog():
     with connection() as db:
@@ -149,3 +150,6 @@ app.include_router(catalog_router)
 
 from deck_jobs import router as jobs_router
 app.include_router(jobs_router)
+
+from competition_catalog import router as competition_router
+app.include_router(competition_router)

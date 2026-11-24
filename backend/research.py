@@ -11,8 +11,9 @@ series=[
  ('CFA Institute Research Challenge','CFA Institute',['CFA Research Challenge'],['global final','global finals'],'Global final','cfainstitute.org',None,'CFA Institute Research Challenge'),
  ('CBS Case Competition','CBS Case Competition',[],['invitational'],'Invitational','casecompetition.com',None,'CBS Case Competition'),
  ('CBS Case Competition','CBS Case Competition',[],['global'],'GLOBAL','casecompetition.com',None,'CBS Case Competition')]
-def resolve(name,org,year,stage):
+def resolve(name,org,year,stage,competition_track=""):
     name,org,stage=[x.strip() for x in (name,org,stage)]
+    competition_track=competition_track.strip()
     domain=rule=comp=track=None
     for title,host,aliases,stages,round_name,site,rule_id,ref in series:
         if norm(name) not in map(norm,[title,*aliases]) or norm(stage) not in map(norm,stages):continue
@@ -23,9 +24,13 @@ def resolve(name,org,year,stage):
         rule=rule_id if year==2026 else None
         comp,track=ref,round_name if ref else None
         break
-    eid=key(norm(name),norm(org),year,norm(stage))
+    eid=key(norm(name),norm(org),year,norm(stage),norm(competition_track)) if competition_track else key(norm(name),norm(org),year,norm(stage))
     with connection() as db:
-        db.execute('INSERT OR IGNORE INTO editions VALUES(?,?,?,?,?,?,?,?,?)',(eid,name,org,year,stage,domain,rule,comp,track))
+        # An unrecognized track must not inherit another track's rules or references.
+        supported={'Case Buster 2.0':{''},'Smart India Hackathon':{''},'CFA Institute Research Challenge':{''},'CBS Case Competition':{'',stage}}
+        if norm(competition_track) not in {norm(value) for value in supported.get(name,{''})}:
+            rule=comp=track=None
+        db.execute('INSERT OR IGNORE INTO editions(id,name,organizer,year,round,domain,seed_rule_id,seed_competition,seed_track,competition_track) VALUES(?,?,?,?,?,?,?,?,?,?)',(eid,name,org,year,stage,domain,rule,comp,track,competition_track))
         return dict(db.execute('SELECT * FROM editions WHERE id=?',(eid,)).fetchone())
 def seed(e):
     claims=[]
@@ -45,7 +50,7 @@ def combined(e,status,snap=None,error=None):
         ident=(it['kind'],it['value'],it['source'],it['year'],it.get('deck_url'))
         if ident not in seen:unique.append(it);seen.add(ident)
     winners=[dict(i,edition_match='requested_edition' if i['year']==e['year'] else 'prior_edition') for i in unique if i['kind']=='winner']
-    return {'edition':{k:e[k] for k in ('id','name','organizer','year','round')},'lookup_status':status,'checked_at_unix':snap['checked'] if snap else None,'rules':[i for i in unique if i['kind']!='winner'],'winner_references':winners,'provider_message':error}
+    return {'edition':{k:e[k] for k in ('id','name','organizer','year','round','competition_track')},'lookup_status':status,'checked_at_unix':snap['checked'] if snap else None,'rules':[i for i in unique if i['kind']!='winner'],'winner_references':winners,'provider_message':error}
 def get_snapshot(db,eid):
     return db.execute('SELECT * FROM snapshots WHERE edition_id=?',(eid,)).fetchone()
 def lookup(e):
