@@ -4,6 +4,22 @@ const stop = new Set('a an the for with must include demonstrate show should our
 const groups = ['testing test tested interviews interview surveyed survey validation feedback','prototype prototype demo demonstration mvp','impact outcomes outcome benefit benefits','users user users customer customers audience','feasibility feasible implementation implement technical architecture','cost costs budget pricing price','innovation novelty novel innovative differentiation','metrics results measured measurement benchmark','market competitors competition alternatives competitor','privacy consent confidential data-protection'].map(group=>group.split(' '));
 function related(term){return groups.find(g=>g.includes(term)) || [term];}
 
+// Prefer PowerPoint's title placeholder. For free-form decks, use the most
+// prominent explicitly sized text box, retaining file order for ties.
+function outlineTitle(doc, fallback) {
+ let best = '', bestSize = 0;
+ for (const shape of nodes(doc,'sp')) {
+  const text = nodes(shape,'p').map(p=>nodes(p,'t').map(t=>t.textContent).join('')).join(' ').trim();
+  if(!text)continue;
+  const type = nodes(shape,'ph')[0]?.getAttribute('type');
+  if(type==='title'||type==='ctrTitle')return text;
+  if(['sldNum','dt','ftr','hdr'].includes(type))continue;
+  const size = [...nodes(shape,'rPr'),...nodes(shape,'defRPr')].reduce((max,prop)=>Math.max(max,Number(prop.getAttribute('sz'))||0),0);
+  if(size>bestSize){bestSize=size;best=text;}
+ }
+ return (best||fallback||'Visual slide').slice(0,90);
+}
+
 export function inspectSlide(doc, index, canvas){
  const paragraphs=[], runs=[], pictures=nodes(doc,'pic');
  for(const p of nodes(doc,'p')){
@@ -33,14 +49,13 @@ export function inspectSlide(doc, index, canvas){
    if(width&&height&&(x<0||y<0||x+Number(extent.getAttribute('cx'))>width+1000||y+Number(extent.getAttribute('cy'))>height+1000))outside.push(nodes(shape,'cNvPr')[0]?.getAttribute('name')||'Unnamed object');
   }
  }
- const text=paragraphs.join(' '), titleShape=nodes(doc,'sp').find(shape=>['title','ctrTitle'].includes(nodes(shape,'ph')[0]?.getAttribute('type')));
- const title=titleShape?nodes(titleShape,'t').map(t=>t.textContent).join('').trim():'';
- return {index,outside,title:title||paragraphs[0]?.slice(0,90)||'Visual slide',paragraphs,runs,text,count:words(text).length,pictures:pictures.length,missingAlt:pictures.filter(pic=>!nodes(pic,'cNvPr')[0]?.getAttribute('descr')?.trim()).length,hidden:doc.documentElement.getAttribute('show')==='0'};
+ const text=paragraphs.join(' '),title=outlineTitle(doc,paragraphs[0]);
+ return {index,outside,title,paragraphs,runs,text,count:words(text).length,pictures:pictures.length,missingAlt:pictures.filter(pic=>!nodes(pic,'cNvPr')[0]?.getAttribute('descr')?.trim()).length,hidden:doc.documentElement.getAttribute('show')==='0'};
 }
 
 export function auditSlide(slide){
  const findings=[];
- function add(topic,quote,action){findings.push({topic,quote,action,index:slide.index});}
+ function add(topic,quote,action,passage=quote){findings.push({topic,quote,action,passage,index:slide.index});}
  if(!slide.count)add('Visual review','No editable slide text found','Open the slide and verify the message in images, charts or diagrams.');
  if(slide.outside.length)add('Object bounds',slide.outside.join(', '),'Check these objects in slideshow view. Their stored bounds cross the canvas edge. Cropping may be intentional.');
  if(slide.hidden)add('Submission','Slide is marked hidden','Confirm whether judges should see it and whether it counts toward the slide limit.');
@@ -48,7 +63,7 @@ export function auditSlide(slide){
  const fonts=new Set(slide.runs.map(r=>r.font).filter(x=>x!=='Inherited'));
  if(fonts.size>2)add('Typography',[...fonts].join(', '),'Check whether each family serves a distinct role. Consolidate accidental substitutions.');
  const tiny=slide.runs.filter(r=>r.size&&r.size<18).sort((a,b)=>a.size-b.size);
- if(tiny.length)add('Projection',tiny[0].size+' pt · '+tiny[0].text,'Inspect this passage at presentation size. 18 pt is a review guideline unless your event sets a minimum.');
+ if(tiny.length)add('Projection',tiny[0].size+' pt · '+tiny[0].text,'Inspect this passage at presentation size. 18 pt is a review guideline unless your event sets a minimum.',tiny[0].text);
  if(slide.missingAlt)add('Image accessibility',slide.missingAlt+' picture(s) without a stored description','Describe informative pictures and check decorative status for the rest.');
  for(const line of slide.paragraphs){
    const vague=line.match(/\b(revolutionary|game[- ]changing|cutting[- ]edge|seamless|best[- ]in[- ]class|state[- ]of[- ]the[- ]art)\b/i);
@@ -112,9 +127,29 @@ export function buildReview(slides, rules='') {
  return {slides,issues,checks,breaches,findings,totalWords:slides.reduce((n,s)=>n+s.count,0),affected:slides.filter(s=>issues.some(i=>i.index===s.index)).length,priority:findings.filter(i=>i.severity==='priority').length};
 }
 
-export function reviewMarkdown(model, {name='Deck review',event='',demo=false,stage='screening',addressed=new Set()}={}) {
+export function groupOpenFindings(findings, addressed) {
+ const groups = new Map();
+ for (const item of findings) {
+  if (addressed.has(item.id)) continue;
+  const key = item.index ? JSON.stringify([item.topic, item.quote, item.action]) : item.id;
+  if (!groups.has(key)) groups.set(key, []);
+  groups.get(key).push(item);
+ }
+ return [...groups.values()];
+}
+
+export function compareReviews(previous, current) {
+ const counts = model => [model.slides.length, model.priority, model.breaches.length, model.findings.length];
+ const before = counts(previous), after = counts(current);
+ return ['Slides', 'Priority actions', 'Measured rule breaches', 'All findings'].map((label, index) => ({
+  label, before:before[index], after:after[index]
+ }));
+}
+
+export function reviewMarkdown(model, {name='Deck review',event='',demo=false,stage='screening',addressed=new Set(),comparison=null}={}) {
  const out=['# '+name,event?'Competition: '+event:'General review',demo?'FICTIONAL EXAMPLE — not a review of your deck.':'',
  `${model.slides.length} slides; ${model.totalWords} editable words; ${model.issues.length} slide observations; ${model.breaches.length} measured rule breaches.`,
+ ...(comparison ? ['\n## Draft comparison', 'Previous file: '+comparison.name, ...comparison.rows.map(r=>r.label+': '+r.before+' → '+r.after)] : []),
  '\n## Action plan',...model.findings.map(i=>`- [${addressed.has(i.id)?'x':' '}] ${i.index?'Slide '+i.index+' — ':''}${i.topic}: ${i.quote}\n  ${i.action}`),
  '\n## Supplied rules',...(model.checks.length?model.checks.map(c=>`- ${c.rule}\n  ${c.state}: ${c.detail}`):['No organiser rules supplied.']),
  '\n## Slide text',...model.slides.map(s=>`### Slide ${s.index}: ${s.title}\n${s.paragraphs.join('\n\n')}`),

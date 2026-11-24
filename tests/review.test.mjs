@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {assessRule,buildReview,reviewMarkdown} from '../dist/review-engine.mjs';
+import {assessRule,buildReview,reviewMarkdown,groupOpenFindings,compareReviews} from '../dist/review-engine.mjs';
 import {demoSlides,demoRules} from '../dist/review-demo.mjs';
 
 const slide=(text,extra={})=>({index:1,title:'Test slide',paragraphs:[text],text,count:text.split(/\s+/).length,runs:[{text,font:'Aptos',size:24}],pictures:0,missingAlt:0,hidden:false,outside:[],...extra});
@@ -41,4 +41,23 @@ test('checklist export preserves supplied facts, manual scope and addressed stat
 test('duplicate wording findings have distinct checklist identifiers',()=>{
  const s=slide('We are revolutionary. Our game-changing platform.',{paragraphs:['We are revolutionary.','Our game-changing platform.']});
  const m=buildReview([s]);assert.equal(new Set(m.findings.map(i=>i.id)).size,m.findings.length);
+});
+
+test('overview groups identical advice across slides while retaining each open occurrence',()=>{
+ const model=buildReview([1,2,3].map(index=>slide('Same footer',{index,runs:[{text:'Footer',font:'Arial',size:14}]})));
+ const [first,...rest]=model.findings;
+ assert.deepEqual(groupOpenFindings(model.findings,new Set([first.id])),[rest]);
+ assert.equal(first.passage,'Footer');
+ assert.match(first.quote,/14 pt/);
+});
+test('different claims and separate deck rules remain distinct in the queue',()=>{
+ const model=buildReview([slide('We save 80%.',{paragraphs:['We save 80%.','We save 50%.']})],'Maximum 0 slides\nMaximum 0 slides');
+ assert.equal(groupOpenFindings(model.findings,new Set()).length,4);
+});
+test('comparison and export use freshly measured counts independently of checklist marks',()=>{
+ const before=buildReview(demoSlides,demoRules), after=buildReview([slide('Students reserve books for pickup.')],demoRules);
+ const rows=compareReviews(before,after);
+ assert.deepEqual(rows.map(r=>r.after),[1,0,0,0]);
+ assert.equal(rows.at(-1).before,before.findings.length);
+ assert.match(reviewMarkdown(after,{comparison:{name:'first.pptx',rows}}),/Previous file: first.pptx[\s\S]*All findings: 5 → 0/);
 });
