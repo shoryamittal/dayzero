@@ -12,7 +12,7 @@ const port = Number(portArgument >= 0 ? process.argv[portArgument + 1] : process
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Choose a port between 1 and 65535.');
 const base = 'http://' + host + ':' + port;
 const root = resolve('dist');
-const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.md': 'text/plain; charset=utf-8', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8'};
+const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.md': 'text/plain; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.txt': 'text/plain; charset=utf-8'};
 
 createServer(async (incoming, outgoing) => {
   try {
