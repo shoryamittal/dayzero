@@ -2,6 +2,7 @@ import {createServer} from 'node:http';
 import {Readable} from 'node:stream';
 import {readFile} from 'node:fs/promises';
 import {extname, resolve, sep} from 'node:path';
+import {handleReviewAI} from '../api/review-ai.mjs';
 import {handleDeckReview} from '../api/deck-review.mjs';
 import {handleAssist} from '../api/assist.mjs';
 
@@ -25,11 +26,11 @@ createServer(async (incoming, outgoing) => {
       return await competition(incoming,outgoing);
     }
     if (url.pathname === '/api/pptx') return await generate(incoming, outgoing);
-    if (['/api/assist','/api/deck-review'].includes(url.pathname)) {
+    if (['/api/assist','/api/deck-review','/api/review-ai'].includes(url.pathname)) {
       const method = incoming.method;
       const request = new Request(url, {method, headers: incoming.headers,
         ...(method === 'GET' || method === 'HEAD' ? {} : {body: Readable.toWeb(incoming), duplex: 'half'})});
-      const response = await (url.pathname === '/api/deck-review' ? handleDeckReview : handleAssist)(request);
+      const response = await (url.pathname === '/api/review-ai' ? handleReviewAI : url.pathname === '/api/deck-review' ? handleDeckReview : handleAssist)(request);
       outgoing.writeHead(response.status, Object.fromEntries(response.headers));
       outgoing.end(Buffer.from(await response.arrayBuffer()));
       return;

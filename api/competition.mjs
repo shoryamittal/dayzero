@@ -45,16 +45,23 @@ function decode(value) {
   return value.replace(/&(?:amp|lt|gt|quot|apos|nbsp);/g, m => ({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&nbsp;':' '})[m]).replace(/&#(\d+);/g, (_,n) => Number(n) <= 0x10ffff ? String.fromCodePoint(Number(n)) : '');
 }
 
-export function extractRequirements(html) {
-  const text=html.replace(/<!--[\s\S]*?-->/g,'').replace(/<(script|style|nav|footer|header)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,'').replace(/<\/(?:p|li|h[1-6]|div|section|tr)>|<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,' ');
-  const lines=decode(text).split('\n').map(line=>line.replace(/\s+/g,' ').trim()).filter(Boolean);
-  return [...new Set(lines.filter(line=>line.length>=15 && /\b(judg\w*|criteri\w*|rubric|slide\w*|pitch\w*|deadline|eligib\w*|submission|submit|template|minute\w*|round\w*|track\w*|weight\w*|plagiar\w*|AI policy|intellectual property)\b/i.test(line)))].slice(0,18).map(line=>line.slice(0,450));
+export function sourceLines(html){
+ const value=html.replace(/<!--[\s\S]*?-->/g,'').replace(/<(script|style|nav|footer|header)\b[^>]*>[\s\S]*?<\/\1\s*>/gi,'').replace(/<\/(?:p|li|h[1-6]|div|section|tr)>|<br\s*\/?\s*>/gi,'\n').replace(/<[^>]*>/g,' ');
+ return [...new Set(decode(value).split('\n').map(line=>line.replace(/\s+/g,' ').trim()).filter(line=>line.length>=15))];
+}
+export function extractRequirements(html){
+ const lines=sourceLines(html);
+ const relevant=lines.filter(line=>/\b(judg\w*|criteri\w*|rubric|slide\w*|pitch\w*|deadline|eligib\w*|submission|submit|template|minute\w*|round\w*|track\w*|weight\w*|plagiar\w*|AI policy|intellectual property)\b/i.test(line));
+ return (relevant.length?relevant:lines.filter(line=>line.length>=25)).slice(0,18).map(line=>line.slice(0,450));
+}
+export function extractReference(html){
+ return sourceLines(html).filter(line=>line.length>=25).slice(0,24).map(line=>line.slice(0,450));
 }
 
-export async function competitionBrief(value, reader=readPage) {
+export async function competitionBrief(value, reader=readPage, kind='rules') {
   competitionURL(value);
   const page=await reader(value);
-  return {source:page.source,checked:new Date().toISOString(),excerpts:extractRequirements(page.html),status:'source_excerpts',note:'Page excerpts, not a verified complete rulebook. Check the edition, round and linked documents.'};
+  return {source:page.source,checked:new Date().toISOString(),excerpts:kind==='reference'?extractReference(page.html):extractRequirements(page.html),status:'source_excerpts',note:'Page excerpts, not a verified complete rulebook. Check the edition, round and linked documents.'};
 }
 
 export default async function handler(request,response) {
@@ -64,6 +71,6 @@ export default async function handler(request,response) {
   try {
     const url=new URL(request.url,'https://pitchviva.invalid').searchParams.get('url');
     if (!url || url.length>1000) return response.status(400).json({error:'Add a competition page link.'});
-    return response.status(200).json(await competitionBrief(url));
+    return response.status(200).json(await competitionBrief(url,readPage,new URL(request.url,'https://pitchviva.invalid').searchParams.get('kind')==='reference'?'reference':'rules'));
   } catch { return response.status(422).json({error:'Could not read this page. Paste the rules or continue in the studio.'}); }
 }
