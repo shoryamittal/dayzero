@@ -11,6 +11,8 @@ export function assistInput(project, mode) {
   if (mode === "rules") return context;
   return {
     ...context,
+    ...(project.winnerReference?.text ? {winnerReference:{name:bounded(project.winnerReference.name,160),text:bounded(project.winnerReference.text,16000)}} : {}),
+    ...(bounded(project.direction,1000) ? {direction:bounded(project.direction,1000)} : {}),
     eventRound: bounded(project.eventRound, 160),
     requirements: (Array.isArray(project.requirements) ? project.requirements :
       Array.isArray(project.preparation?.requirements) ? project.preparation.requirements : [])
@@ -53,3 +55,4 @@ export function validateAssistResult(mode, result, input) {
   });
   return {findings, gaps};
 }
+

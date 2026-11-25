@@ -28,6 +28,7 @@ export function clean(value,max=6000){return String(value??'').replace(/\u0000/g
 export function validateProject(p){
  if(!p||typeof p!=='object'||Array.isArray(p))throw Error('This is not a PitchViva project.');
  const result={};
+ const winnerReference=p.winnerReference&&typeof p.winnerReference==='object'?{name:clean(p.winnerReference.name,160),text:clean(p.winnerReference.text,16000)}:null;
  for(const key of ['name','team','event','eventRound','problem','solution','approach','proof','impact','ask','deadline','rules'])result[key]=clean(p[key],key==='rules'?10000:6000);
  result.name=result.name.slice(0,80);result.team=result.team.slice(0,100);result.event=result.event.slice(0,160);result.eventRound=result.eventRound.slice(0,160);
  if(!result.name)throw Error('Add a project name first.');
@@ -43,7 +44,7 @@ export function validateProject(p){
  const checklist=Object.fromEntries(checklistItems.map(([k])=>[k,p.checklist?.[k]===true]));
  const answers=Array.from({length:6},(_,n)=>clean(p.answers?.[n],3000));
  const rehearsals=Array.isArray(p.rehearsals)?p.rehearsals.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&Number.isFinite(v.seconds)&&v.seconds>=0&&v.seconds<=86400).map(v=>({at:v.at,seconds:v.seconds})):[];
- return {...result,preparation:normalizePreparation(p.preparation),id:/^[A-Za-z0-9-]{1,80}$/.test(p.id||'')?p.id:createId(),plan:p.plan==='solo'?'solo':'team',template:Object.hasOwn(themes,p.template)?p.template:'botanical',demo:p.demo===true,confirmed:p.confirmed===true&&!!result.rules,createdAt:Number(p.createdAt)||Date.now(),updatedAt:Number(p.updatedAt)||Date.now(),history,notes,slideImages,slideHeadlines,slideReviews,evidence,checklist,answers,rehearsals,eventBrief:normalizeEvent(p.eventBrief)?.name===result.event?normalizeEvent(p.eventBrief):null,eventChecks:Object.fromEntries(eventChecks.map(([k])=>[k,p.eventChecks?.[k]===true]))};
+ return {...result,winnerReference,preparation:normalizePreparation(p.preparation),id:/^[A-Za-z0-9-]{1,80}$/.test(p.id||'')?p.id:createId(),plan:p.plan==='solo'?'solo':'team',template:Object.hasOwn(themes,p.template)?p.template:'botanical',demo:p.demo===true,confirmed:p.confirmed===true&&!!result.rules,createdAt:Number(p.createdAt)||Date.now(),updatedAt:Number(p.updatedAt)||Date.now(),history,notes,slideImages,slideHeadlines,slideReviews,evidence,checklist,answers,rehearsals,eventBrief:normalizeEvent(p.eventBrief)?.name===result.event?normalizeEvent(p.eventBrief):null,eventChecks:Object.fromEntries(eventChecks.map(([k])=>[k,p.eventChecks?.[k]===true]))};
 }
 export function normalizeWorkspace(raw,now=Date.now()){
  const candidates=raw?.version===2&&Array.isArray(raw.projects)?raw.projects:raw?[raw]:[];
@@ -97,3 +98,4 @@ export function wrapText(text,measure,maxWidth){
 }
 export function safeFilename(s){return clean(s,70).replace(/[^a-zA-Z0-9_-]/g,'-').replace(/-+/g,'-')||'dayzero';}
 export const questions=[['Problem','Who experiences this problem, and how do you know?','Use an actual observation or interview. If you have not tested it, say so.'],['Solution','Why is this better than the current alternative?','Describe the specific workflow difference. Avoid unmeasured performance claims.'],['Approach','What works today, and what still needs building?','Separate the prototype, planned features, and technical risks.'],['Evidence','What would convince you that your idea is wrong?','Explain a test you can run and what result would change your direction.'],['Impact','How will you measure whether this helps?','Name a measurable outcome and a baseline you still need to collect.'],['Ask','What will you do next if you get the support?','Give a concrete next step that matches your actual stage.']];
+
