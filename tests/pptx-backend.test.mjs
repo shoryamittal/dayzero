@@ -1,17 +1,27 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createServer} from 'node:http';
+import {Readable} from 'node:stream';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import generate from '../api/pptx.mjs';
 
-test('HTTP export returns editable slides and notes and rejects invalid projects', async t => {
-  const server = createServer(generate);
-  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-  t.after(() => new Promise(resolve => server.close(resolve)));
-  const url = 'http://127.0.0.1:' + server.address().port + '/api/pptx';
-  const post = body => fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body});
-  assert.equal((await fetch(url)).status, 405);
+test('export handler returns editable slides and notes and rejects invalid projects', async () => {
+  // Invoke the same streamed request handler without requiring a loopback port.
+  const send = async (method, body='') => {
+    const request=Readable.from([Buffer.from(body)]);
+    request.method=method;
+    request.headers={'content-type':'application/json'};
+    const headers=new Headers();
+    let status, bytes;
+    await generate(request,{
+      setHeader:(key,value)=>headers.set(key,value),
+      writeHead:(code,values)=>{status=code;for(const [key,value] of Object.entries(values))headers.set(key,String(value));},
+      end:data=>{bytes=Buffer.from(data||'');}
+    });
+    return {status,headers,text:async()=>bytes.toString('utf8'),arrayBuffer:async()=>new Uint8Array(bytes).buffer};
+  };
+  const post = body => send('POST',body);
+  assert.equal((await send('GET')).status, 405);
   assert.equal((await post('{')).status, 400);
   assert.equal((await post('{}')).status, 422);
   assert.equal((await post('x'.repeat(4 * 1024 * 1024 + 1))).status, 413);
