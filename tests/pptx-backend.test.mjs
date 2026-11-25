@@ -37,3 +37,4 @@ test('export handler returns editable slides and notes and rejects invalid proje
   const manifest = await zip.file('[Content_Types].xml').async('string');
   for (const [,part] of manifest.matchAll(/PartName="\/([^"]+)"/g)) assert.ok(zip.file(part), part);
 });
+

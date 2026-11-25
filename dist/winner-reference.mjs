@@ -15,7 +15,7 @@ export function initWinnerReference({project,save,toast,render}) {
     if(!file||!active)return;
     event.target.value='';
     const status=document.querySelector('#winner-deck-status');
-    status.textContent='Reading reference deck text.';
+    status.textContent='Reading reference deck text…';
     try{
       const text=(await readBrief(file)).slice(0,16000);
       if(project()?.id!==active.id)return;
@@ -30,5 +30,5 @@ export function winnerComparison(project,escape) {
   const reference=project.winnerReference;
   if(!reference)return '';
   const result=compareReference(project,reference.text);
-  return `<h3>${escape(reference.name)}</h3><p>Your draft: ${result.draftWords} words � Reference: ${result.referenceWords} words</p><table><thead><tr><th>Text signal</th><th>Your draft</th><th>Reference</th></tr></thead><tbody>${result.rows.map(row=>`<tr><th>${row.label}</th><td>${row.draft?'Found':'Not found'}</td><td>${row.reference?'Found':'Not found'}</td></tr>`).join('')}</tbody></table><p>This compares wording signals only. It does not verify winner status, factual quality, slide design or competition compliance. AI can use the reference as a structure example when you choose to send it.</p>`;
+  return `<h3>${escape(reference.name)}</h3><p>Your draft: ${result.draftWords} words · Reference: ${result.referenceWords} words</p><table><thead><tr><th>Text signal</th><th>Your draft</th><th>Reference</th></tr></thead><tbody>${result.rows.map(row=>`<tr><th>${row.label}</th><td>${row.draft?'Found':'Not found'}</td><td>${row.reference?'Found':'Not found'}</td></tr>`).join('')}</tbody></table><p>This compares wording signals only. It does not verify winner status, factual quality, slide design or competition compliance. AI can use the reference as a structure example when you choose to send it.</p>`;
 }
