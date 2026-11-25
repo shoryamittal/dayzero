@@ -203,7 +203,7 @@ document.addEventListener('submit',async e=>{
   let model=await requestDeckReview(slides,rules);
   if(deep){
    try{
-    model=await requestDeepReview(model,{event,rules,stage,edition:$('review-edition').value.trim(),source:$('review-source').value.trim(),reference:$('review-reference').value,...pdf},
+    model=await requestDeepReview(model,{event,rules,stage,edition:$('review-edition').value.trim(),source:$('review-source').value.trim(),reference:$('review-reference').value,referenceSource:form.dataset.referenceSource||'',...pdf},
      {key,signal:deepRun.signal,onProgress:message=>step(3,message)});
    }catch(error){model.aiError=error.message;}
   }

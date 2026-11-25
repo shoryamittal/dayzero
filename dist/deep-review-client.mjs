@@ -22,5 +22,5 @@ export async function requestDeepReview(model,context,{key='',signal,onProgress=
  onProgress('Connecting the argument across slides and mapping competition criteria…');
  const body=await aiCall({...context,slides:model.slides,action:'strategy'},{key,signal,fetcher});
  if(!body.result?.summary||!Array.isArray(body.result.criteria)||!Array.isArray(body.result.crossSlide))throw Error('AI did not finish the competition strategy.');
- return mergeDeepReview(model,{...body.result,slides:reviews,provider:body.provider,model:body.model,context:{event:context.event,edition:context.edition,stage:context.stage,source:context.source,rules:context.rules,visual:!!context.visualPDF,reference:context.reference?'Reference supplied':''},checked:new Date().toISOString()});
+ return mergeDeepReview(model,{...body.result,slides:reviews,provider:body.provider,model:body.model,context:{event:context.event,edition:context.edition,stage:context.stage,source:context.source,referenceSource:context.referenceSource,rules:context.rules,visual:!!context.visualPDF,reference:context.reference?'Reference supplied':''},checked:new Date().toISOString()});
 }

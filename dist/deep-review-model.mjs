@@ -4,7 +4,7 @@ export function deepContext(data,slides,rules){
  const event=text(data.event,160),edition=text(data.edition,120),stage=text(data.stage,160);
  const source=text(data.source,1000);
  let sourceURL='';try{const u=new URL(source);if(u.protocol==='https:'&&!u.username&&!u.password)sourceURL=u.href;}catch{}
- return {event,edition,stage,source:sourceURL,rules,reference:text(data.reference,12000),slides:slides.map(s=>({
+ return {event,edition,stage,source:sourceURL,rules,reference:text(data.reference,12000),referenceSource:text(data.referenceSource,1000),slides:slides.map(s=>({
   index:s.index,title:s.title,paragraphs:s.paragraphs,runs:s.runs,
   hidden:s.hidden,outside:s.outside,pictures:s.pictures,missingAlt:s.missingAlt
  }))};
@@ -72,7 +72,7 @@ export function mergeDeepReview(model,review){
 }
 export function deepReviewMarkdown(model){
  const d=model.deepReview;if(!d?.complete)return model.aiError?'\n## AI review not completed\n'+model.aiError:'';
- return ['\n## Competition strategy — AI suggestions',d.summary,
+ return ['\n## Competition strategy — AI suggestions',d.summary,'Competition: '+(d.context.event||'General review'),'Edition / track: '+(d.context.edition||'Not supplied'),'Organizer source: '+(d.context.source||'Pasted brief / not supplied'),'Reference source: '+(d.context.referenceSource||'Imported or pasted reference / not supplied'),'Visual PDF: '+(d.context.visual?'Supplied by user':'Not supplied — text and metadata only'),'Reviewed: '+d.checked,
   ...d.criteria.map(c=>'- '+c.quote+'\n  '+c.state+' · Slides '+(c.slides.join(', ')||'none')+'\n  '+c.reason+'\n  Next: '+c.next),
   '\n## Cross-slide checks',...d.crossSlide.map(c=>'### '+c.title+'\n'+c.quotes.map(q=>'Slide '+q.index+': “'+q.quote+'”').join('\n')+'\nWhy: '+c.why+'\nFix: '+c.fix),
   '\n## Slide-by-slide coaching',...d.slides.map(s=>'### Slide '+s.index+'\nPurpose: '+s.purpose+'\nKeep: '+s.strength+'\nSuggested headline: '+(s.headline||'Review manually')+'\nJudge question: '+s.judgeQuestion+'\nEvidence to add: '+s.evidenceNeeded+'\n'+s.findings.map(f=>'Quoted passage: '+f.quote+'\nWhy: '+f.why+'\nFix: '+f.fix+(f.ruleQuote?'\nRequirement: '+f.ruleQuote:'')+(f.rewrite?'\nSuggested wording: '+f.rewrite:'')).join('\n\n')),

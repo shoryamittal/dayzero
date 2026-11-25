@@ -44,7 +44,7 @@ async function search(form,winners=false){
     const url=safeURL(source.url);if(!url)continue;
     const row=add(panel,'article','');link(row,source.title,url);
     const button=add(row,'button',winners?'Read reference page':'Use this source');button.type='button';button.className='rv-button rv-secondary';
-    button.addEventListener('click',()=>{field(form,'review-source').value=url;readSource(form,winners);});
+    button.addEventListener('click',()=>{if(winners)readSource(form,true,url);else{field(form,'review-source').value=url;readSource(form);}});
    }
    if(result.suggestions){
     const iframe=document.createElement('iframe');iframe.title='Google Search suggestions';iframe.setAttribute('sandbox','allow-popups allow-popups-to-escape-sandbox');iframe.referrerPolicy='no-referrer';
@@ -66,14 +66,14 @@ async function search(form,winners=false){
   if(!catalog.length&&!publicHits.length)add(panel,'p',searchFailed?'Public lookup could not connect. Paste an official link or current rules below.':'No matching event found. Add its official HTTPS link or paste the current brief; custom competitions are supported.');
  }catch(error){if(!controller.signal.aborted&&form.isConnected){panel.replaceChildren();add(panel,'p',error.message);}}
 }
-async function readSource(form,reference=false){
- const panel=field(form,'review-source-status'),url=safeURL(field(form,'review-source').value);
+async function readSource(form,reference=false,referenceURL=''){
+ const panel=field(form,'review-source-status'),url=safeURL(referenceURL||field(form,'review-source').value);
  panel.replaceChildren();if(!url){add(panel,'p','Use a public HTTPS organizer or reference link.');return;}
  const button=field(form,'review-read-source');button.disabled=true;add(panel,'p',reference?'Reading the reference page…':'Reading the organizer page…');
  try{
   const response=await fetch('/api/competition?url='+encodeURIComponent(url)+(reference?'&kind=reference':''),{signal:AbortSignal.timeout(20000),credentials:'same-origin'});
   const data=await response.json();if(!response.ok)throw Error(data.error||'Could not read this source.');
-  if(!form.isConnected||safeURL(field(form,'review-source').value)!==url)return;
+  if(!form.isConnected||(!reference&&safeURL(field(form,'review-source').value)!==url))return;
   panel.replaceChildren();add(panel,'strong',reference?'Reference page excerpts':'Organizer page excerpts');
   add(panel,'p','Read '+new Date(data.checked).toLocaleDateString()+'. Check edition, track and linked documents. This may be an incomplete brief.');
   link(panel,'Open source',safeURL(data.source)||url);
@@ -88,8 +88,9 @@ async function readSource(form,reference=false){
    if(!selected.length){add(panel,'p','The brief is full. Keep the relevant round and criteria, then try again.');return;}
    const next=[previous,selected.join('\n')].filter(Boolean).join('\n');
    if(selected.length<data.excerpts.length)add(panel,'p','Attached '+selected.length+' of '+data.excerpts.length+' excerpts. Review the remaining source text for requirements not included.');
-   target.value=next;target.dispatchEvent(new Event('input',{bubbles:true}));form.dataset.sourceChecked=data.checked;
-   imports.set(form,{event:field(form,'event').value,source:url,text:next,reference});
+   target.value=next;target.dispatchEvent(new Event('input',{bubbles:true}));
+   if(reference)form.dataset.referenceSource=data.source;else form.dataset.sourceChecked=data.checked;
+   const attached=imports.get(form)||new Map();attached.set(reference?'reference':'rules',{source:url,text:next,reference});imports.set(form,attached);
    if(!reference)form.querySelector('.rv-brief').open=true;else form.querySelector('.rv-reference').open=true;
    apply.disabled=true;apply.textContent=reference?'Reference attached':'Rules attached';
   });
@@ -105,9 +106,11 @@ document.addEventListener('click',e=>{
 document.addEventListener('change',e=>{const form=e.target.closest('#deck-review form#intake');if(form&&e.target.id==='review-depth')setDepth(form);});
 document.addEventListener('input',e=>{
  const form=e.target.closest('#deck-review form#intake');if(!form)return;
+ if(e.target.id==='review-reference')form.dataset.referenceSource='';
  if(['event','review-source','review-edition','round'].includes(e.target.id)){
   form.dataset.sourceChecked='';const attached=imports.get(form);
-  if(attached){const target=field(form,attached.reference?'review-reference':'rules');if(target.value===attached.text){target.value='';target.dispatchEvent(new Event('input',{bubbles:true}));}imports.delete(form);}
+  if(attached){for(const [kind,item] of attached){if(e.target.id==='review-source'&&kind==='reference')continue;const target=field(form,kind==='reference'?'review-reference':'rules');if(target.value===item.text){target.value='';target.dispatchEvent(new Event('input',{bubbles:true}));}attached.delete(kind);}if(!attached.size)imports.delete(form);}
+  if(e.target.id!=='review-source')form.dataset.referenceSource='';
   field(form,'review-source-status').textContent='Competition context changed. Read the source again for this edition and round.';
  }
 });
