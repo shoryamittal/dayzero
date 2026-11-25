@@ -1,5 +1,12 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "framework": null
+  "framework": null,
+  "redirects": [
+    {
+      "source": "/deck-workspace.html",
+      "destination": "/",
+      "permanent": false
+    }
+  ]
 }
