@@ -138,3 +138,13 @@ html {scroll-padding-block:24px;scrollbar-gutter:stable}
  .launch-header .launch-brand {min-width:0;gap:6px}
  .launch-header .launch-brand strong {font-size:clamp(20px,5.8vw,27px)}
 }
+
+.rv-studio .rv-view-nav {overflow-y:hidden}
+.rv-studio .rv-slide-rail .rv-mini-slide {width:100%;min-height:0}
+.rv-studio :is(.rv-button,.rv-text-button,.rv-plan-filters button,.rv-occurrences button,.rv-checkbox) {min-height:44px}
+.sidebar .mobile-close {width:44px;height:44px;min-width:44px!important;min-height:44px!important}
+@media(max-width:360px) {
+ .launch-header .launch-brand strong {font-size:17.5px}
+ .rv-map-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
+ .rv-map-grid button {min-width:0}
+}
