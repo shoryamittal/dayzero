@@ -76,3 +76,14 @@
 @media print {
  #deck-review.rv-studio #report {width:100%;padding:0}
 }
+
+/* Keep the two entry columns aligned, including when the brief is expanded. */
+@media(min-width:851px) {
+ .rv-intake-grid {align-items:stretch}
+ .rv-intro {display:flex;flex-direction:column;align-items:flex-start;min-width:0}
+ .rv-intro :is(h1,h2) {font-size:clamp(44px,4.8vw,72px)}
+ .rv-intro .rv-trust {margin-top:auto;padding-top:32px;max-width:48ch}
+ .rv-intake {display:flex;flex-direction:column;align-self:stretch}
+ .rv-intake .rv-upload {flex:1;min-height:195px}
+ .rv-intake .rv-form-top {min-height:24px}
+}

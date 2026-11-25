@@ -1,3 +1,4 @@
+import {requestDeckReview} from './review-client.mjs';
 import {validatePresentationFile} from './presentation-format.mjs';
 import {readTemplate} from './template-bridge.mjs?v=review-2';
 import {inspectSlide,buildReview,reviewMarkdown,groupOpenFindings,compareReviews} from './review-engine.mjs';
@@ -143,7 +144,9 @@ document.addEventListener('change',async e=>{
  try {
   const {slides,embeddedCount}=await inspectFile(file,update);
   if(states.get(report)!==s||!report.isConnected)return;
-  const model=buildReview(slides,s.rules);
+  update(3,'Checking the revised slides and competition rules…');
+  const model=await requestDeckReview(slides,s.rules);
+  if(states.get(report)!==s||!report.isConnected)return;
   showReport({file,slides,rules:s.rules,event:s.event,stage:s.stage,embeddedCount,stale:s.stale,model,
    comparison:{name:s.name,rows:compareReviews(s.model,model)}});
  }catch(error){update(0,error.message||'Choose another PowerPoint and try again.');}
@@ -155,9 +158,10 @@ document.addEventListener('submit',async e=>{
  const step=(n,text)=>{progress.dataset.step=n;$('status').textContent=text;};
  try{
   const {slides,embeddedCount}=await inspectFile(file,step);
-  step(3,'Checking your brief and organising findings…');await new Promise(requestAnimationFrame);
+  step(3,'Reviewing slide text, typography and your supplied rules…');
+  const model=await requestDeckReview(slides,rules);
   if(!form.isConnected)return;
-  showReport({file,event,rules,slides,stage,embeddedCount});step(3,'Your review is ready.');
+  showReport({file,event,rules,slides,stage,embeddedCount,model});step(3,'Your review is ready.');
  }catch(error){$('status').classList.add('is-error');$('status').textContent=error.message||'We could not read this deck. Save a fresh .pptx copy and try again.';}
  finally{fields.forEach(f=>f.disabled=false);progress.hidden=true;form.removeAttribute('aria-busy');}
 });

@@ -9,7 +9,7 @@ export function reviewIntake({standalone=false}={}){const heading=standalone?'h1
  <p class="rv-lede">Upload your presentation for a slide-by-slide review. Find gaps in your story, evidence and competition requirements, then see what to improve.</p>
  <div class="rv-value-list"><div>${reviewIcon('target')}<span><strong>The brief, beside your story.</strong><small>Connect your slides to the requirements that matter.</small></span></div><div>${reviewIcon('eye')}<span><strong>Every finding has a reason.</strong><small>See the exact wording, the concern, and your next move.</small></span></div><div>${reviewIcon('check')}<span><strong>Leave with a plan.</strong><small>Prioritise fixes and take your checklist back to PowerPoint.</small></span></div></div>
  <button type="button" class="rv-example" data-review-demo>Explore an example review ${reviewIcon('arrow',17)}</button><small class="rv-example-note">A fictional deck. Real checks. No upload needed.</small>
- <div class="rv-trust">${reviewIcon('shield',16)} Your file is inspected in this browser. No account or API key.</div>
+ <div class="rv-trust">${reviewIcon('shield',16)} Your PowerPoint stays on your device. Extracted text and metadata are sent for review, without being saved.</div>
  </div>
  <form id="intake" class="rv-intake"><div class="rv-form-top"><span class="rv-eyebrow">UPLOAD YOUR PRESENTATION</span><span class="rv-pill">POWERPOINT</span></div>
  <label class="rv-upload" id="review-drop" for="file"><input type="file" id="file" accept=".pptx,.pptm,.ppsx,.ppsm,.potx,.potm,.ppt,.pps,.pot" required aria-describedby="review-file-help"><span class="rv-upload-icon">${reviewIcon('upload',26)}</span><strong id="review-file-name">Drop your PowerPoint here</strong><span id="review-file-help">or <u>browse files</u> · up to 8 MB · 1–40 slides</span><span class="rv-file-selected" id="review-file-meta" hidden></span></label>
@@ -18,5 +18,5 @@ export function reviewIntake({standalone=false}={}){const heading=standalone?'h1
  <details class="rv-brief" open><summary>Make the review specific to your competition <span>+</span></summary><label for="rules">Judging criteria &amp; submission rules <span>optional</span></label><textarea id="rules" maxlength="6000" rows="3" placeholder="One requirement per line…&#10;Maximum 8 slides&#10;Show evidence of user testing"></textarea><p>Paste the current organiser’s brief. Leave blank for a general review. Wording checks currently work in English.</p></details>
  <button class="rv-button rv-primary rv-analyze" id="submit" type="submit"><span>Review my presentation</span>${reviewIcon('arrow')}</button>
  <div class="rv-progress" id="review-progress" hidden><span></span><span></span><span></span></div><p role="status" aria-live="polite" id="status" class="rv-status"></p>
- <p class="rv-form-note">Content, typography &amp; rule checks. Your original file stays unchanged.</p>
+ <p class="rv-form-note">Slide text, typography &amp; supplied-rule checks. No account needed. Your original file stays unchanged.</p>
  </form></div><section id="report" class="rv-report" hidden tabindex="-1" aria-label="Deck review results"></section>`;}
