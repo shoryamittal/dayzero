@@ -383,3 +383,12 @@
  .launch-copy .launch-actions {gap:4px 8px}
 }
 @media(prefers-reduced-motion:reduce){html:has(.launch-site){scroll-behavior:auto}.launch-site *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* One entrance into the create and review workflows. */
+.launch-entry{padding:64px 0;border-bottom:1px solid var(--edge)}
+.launch-entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+.launch-entry-card{display:flex;flex-direction:column;align-items:flex-start;padding:32px;border:1px solid #d9cbdc;border-radius:20px;text-decoration:none;background:#fffcf7;color:#2d2234;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+.launch-entry-card:last-child{background:#eee3f2}.launch-entry-card:hover{transform:translateY(-3px);border-color:#8e669f;box-shadow:0 14px 32px -26px #3d254e}
+.entry-number{font-size:11px;font-weight:700;letter-spacing:.13em;color:#735480}.launch-entry-card h3{font-size:clamp(26px,3vw,40px);line-height:1.15;letter-spacing:-.04em;margin:24px 0 14px}.launch-entry-card p{max-width:46ch;font-size:16px;line-height:1.7;color:#65556d;margin:0 0 28px}.entry-action{display:inline-flex;align-items:center;gap:12px;margin-top:auto;font-weight:700;font-size:14px}.launch-entry-card:focus-visible{outline:3px solid #895798;outline-offset:4px}
+@media(max-width:700px){.launch-entry{padding:40px 0}.launch-entry-grid{grid-template-columns:1fr}.launch-entry-card{padding:24px}.launch-header nav{gap:14px}}
+@media(prefers-reduced-motion:reduce){.launch-entry-card{transition:none}.launch-entry-card:hover{transform:none}}
