@@ -37,7 +37,7 @@ export function validateSlideBatch(result,indexes,slides,rules,{visual=false,ref
   if(!text(item.purpose)||!text(item.strength)||!text(item.judgeQuestion)||!Array.isArray(item.findings)||item.findings.length>4)throw Error('AI slide review was incomplete.');
   return {index:item.index,purpose:text(item.purpose,500),strength:text(item.strength,500),
    headline:rewrite(item.headline,context).slice(0,120),judgeQuestion:text(item.judgeQuestion,500),
-   evidenceNeeded:text(item.evidenceNeeded,600),referenceQuote:reference?referenceQuote:'',referenceLesson:reference?referenceLesson:'',visualScope:text(item.visualScope,500),findings:item.findings.map((f,n)=>finding(f,slide,rules,context,n,visual))};
+   evidenceNeeded:text(item.evidenceNeeded,600),referenceQuote:reference?referenceQuote:'',referenceLesson:reference?referenceLesson:'',visualScope:visual?text(item.visualScope,500):'Rendered slide images were not available. This feedback uses editable text and stored metadata.',findings:item.findings.map((f,n)=>finding(f,slide,rules,context,n,visual))};
  }).sort((a,b)=>a.index-b.index);
 }
 export function validateStrategy(result,slides,rules){

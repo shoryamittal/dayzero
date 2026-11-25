@@ -89,12 +89,21 @@ The homepage and /review.html support standard checks and an optional deep compe
 
 ### Activate AI
 
-Add GEMINI_API_KEY as a server-only Vercel environment variable and redeploy to enable the shared connection. No client-visible environment variable is needed. Alternatively users can enter their own Gemini key in the review form; it is never persisted and is cleared after review.
+Add GEMINI_API_KEY as a server-only Vercel environment variable and redeploy to enable the shared connection. No client-visible environment variable is needed. Customers are never asked to supply a provider key.
 
-The readiness endpoint GET /api/review-ai exposes only availability/provider/model. POST requires a connection, same-origin JSON, bounded input and explicit client consent for deck analysis. A failed or cancelled AI run leaves standard findings available and never appears as a completed deep review.
+The readiness endpoint GET /api/review-ai exposes only availability/provider/model. AI analysis requires a server connection, same-origin JSON and bounded input. The public form discloses content processing; research preparation also works with readable known/provided sources when AI is unavailable. A failed or cancelled AI run leaves standard findings available and never appears as a completed deep review.
 
-Progress reflects actual work: reading slides, measuring standard checks, analysing slide batches, then cross-slide strategy. Revised-deck comparison runs fresh standard checks; a new deep run and matching PDF are required to refresh AI feedback.
+Progress reflects actual work: reading slides, measuring standard checks, analysing slide batches, then cross-slide strategy. Revised-deck comparison runs fresh standard checks and attempts fresh deep analysis through the same automatic workflow.
 
 ### Review validation
 
 The automated suite exercises grounding, complete slide coverage, rule attribution, reference passages, PDF checks, cancellation, safe error handling, provider failures and export. Provider responses are mocked in tests. A real model-quality evaluation still requires a configured Gemini project and representative decks; no system guarantees selection or complete coverage of every competition.
+
+
+## Simplified public review
+
+The public reviewer asks for a PowerPoint, competition name, optional event link and optional additional organiser rules. Provider credentials belong in server configuration, never in the customer intake. PDF exports, reference uploads, required rulebook pasting, review-depth choices and setup confirmations are not part of the public form.
+
+POST /api/review-ai with action prepare collects bounded source excerpts using the known organizer directory and, when the server AI connection is available, grounded competition/reference discovery. Only successfully fetched excerpts are used. Sources and limitations are shown in the report. Re-review uses the same workflow.
+
+The standard review remains available when extended analysis cannot run. Missing AI/research/rendering capabilities are reported accurately rather than shifting setup to the visitor. Automatic original-deck rendering is not provided by the Vercel text-review service.

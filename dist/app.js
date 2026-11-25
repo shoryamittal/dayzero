@@ -2,7 +2,7 @@ import {projectBriefHandoff} from './backend-handoff.mjs';
 import {pitchKitFiles, slideReviewSignature, slideReviewed} from './pitch-kit.mjs';
 import {repairSlideMasters} from './pptx-package.mjs';
 import {designGrid} from './design-reference-grid.mjs';
-import './review.mjs?v=deep-review-1';
+import './review.mjs?v=simple-review-1';
 import './competition-lookup.mjs';
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
 import {launchPage} from './launch.mjs?v=pitch-flow-2';
