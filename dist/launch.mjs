@@ -19,7 +19,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
         <p class="launch-kicker"><span></span> THE HACKATHON PITCH STUDIO</p>
         <h1>Build a pitch<br> worth <em>presenting.</em></h1>
         <p class="launch-lede">Turn your project into an editable PowerPoint. Shape each slide around what your judges are looking for.</p>
-        <div class="launch-actions"><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a><a class="hero-review-link" href="/review.html">Review my deck</a></div>
+        <div class="launch-actions"><a class="launch-primary" href="/pitch.html">Build my pitch ${icons.arrow}</a><a class="hero-review-link" href="/review.html">Review my deck</a></div>
         <p class="launch-meta">${icons.shield} Free to start. Your draft stays in this browser.</p>
       </div>
     </div>
@@ -28,41 +28,15 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     </div>
   </section>
   <section id="deck-review" class="rv-studio launch-width" aria-labelledby="deck-review-title">${reviewIntake()}</section>
-  <section class="launch-lab launch-width" id="try" aria-labelledby="try-title">
-    <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> START YOUR PITCH</p><h2 id="try-title">What are you <em>building?</em></h2></div><p>Start with the idea you’d explain to a teammate. Your slide preview takes shape as you write.</p></div>
-    <div class="launch-lab-grid">
-      <form id="launch-draft" class="launch-form">
-        <idea-editor class="field"></idea-editor>
-        <div class="field"><label for="launch-problem">Who has the problem, and how do they handle it today?</label><textarea id="launch-problem" name="problem" rows="2" maxlength="700" required placeholder="Name the people affected, the current workaround and where it falls short."></textarea></div>
-        <div class="field"><label for="launch-name">Project title</label><input id="launch-name" name="name" placeholder="e.g. Campus food recovery" required maxlength="80"></div>
-        <details name="pitch-details"><summary>Competition &amp; judging</summary><competition-picker></competition-picker></details>
-        <details name="pitch-details"><summary>Prototype &amp; evidence</summary>
-        <div class="field"><label for="launch-approach">How does it work, and what can your team build? (optional)</label><textarea id="launch-approach" name="approach" rows="3" maxlength="1200" placeholder="Walk through two or three steps. Add what works today, what still needs building, and how you would deliver it."></textarea></div>
-        <div class="field"><label for="launch-proof">What have you tested or learned? (optional)</label><textarea id="launch-proof" name="proof" rows="2" maxlength="800" placeholder="Add an observation, interview or test result. Include how many people or trials it covers, if known."></textarea></div>
-        <div class="field"><label for="launch-source">Evidence source link (optional)</label><input id="launch-source" name="evidenceSource" type="url" maxlength="400" placeholder="https://…"></div>
-        </details>
-        <details name="pitch-details"><summary>Impact &amp; next steps</summary>
-        <div class="field"><label for="launch-impact">What result would show it works? (optional)</label><textarea id="launch-impact" name="impact" rows="2" maxlength="800" placeholder="Name what you would measure, what you would compare it with, and your target if you have one."></textarea></div>
-        <div class="field"><label for="launch-ask">What decision or support do you need next? (optional)</label><textarea id="launch-ask" name="ask" rows="2" maxlength="600" placeholder="For example, permission to run a pilot, a partner, or funding for a specific next step."></textarea></div>
-        </details>
-        <button type="submit" class="launch-primary">Create editable deck ${icons.arrow}</button>
-      </form>
-      <div class="launch-output">
-        <div class="launch-output-label"><span><i></i> LIVE DRAFT BOARD</span><span>WORKING DRAFT</span></div>
-        <div id="launch-draft-preview">${draft}</div>
-        <p>Your answers shape the story, the evidence you can show, and the next step you ask for. Add the current rubric so the draft can address what judges look for.</p>
-      </div>
-    </div>
-  </section>
   <section class="launch-how launch-width" id="workflow" aria-labelledby="workflow-title">
     <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> FROM IDEA TO SUBMISSION</p><h2 id="workflow-title">Everything in <em>one workspace.</em></h2></div><p>Your story, source notes, event requirements, and rehearsal stay with the same project.</p></div>
-    <div class="launch-steps">${steps.map(([number,icon,title,detail,action,target])=>`<article><div class="launch-step-top"><span>${number}</span>${icons[icon]}</div><h3>${title}</h3><p>${detail}</p>${target==='events'? `<button class="launch-text-action" data-route="events">${action} ${icons.arrow}</button>` : `<a class="launch-text-action" href="#${target}">${action} ${icons.arrow}</a>`}</article>`).join('')}</div>
+    <div class="launch-steps">${steps.map(([number,icon,title,detail,action,target])=>`<article><div class="launch-step-top"><span>${number}</span>${icons[icon]}</div><h3>${title}</h3><p>${detail}</p>${target==='events'? `<button class="launch-text-action" data-route="events">${action} ${icons.arrow}</button>` : `<a class="launch-text-action" href="/pitch.html">${action} ${icons.arrow}</a>`}</article>`).join('')}</div>
   </section>
   <section class="launch-faq launch-width" aria-labelledby="faq-title">
     <div><p class="launch-kicker"><span></span> BEFORE YOU START</p><h2 id="faq-title">Know what<br>you’re <em>getting.</em></h2></div>
     <div class="launch-answers">${questions.map(([question,answer])=>`<details><summary>${question}<span aria-hidden="true">+</span></summary><p>${answer}</p></details>`).join('')}</div>
   </section>
-  <section class="launch-end launch-width"><div><h2>Bring the idea.<br><em>Build the pitch.</em></h2><p>Start with the problem and what your solution changes.</p></div><a class="launch-primary" href="#try">Build my pitch ${icons.arrow}</a>${hasProjects?'<button class="launch-secondary" data-route="projects">Open my projects</button>':''}</section>`;
+  <section class="launch-end launch-width"><div><h2>Bring the idea.<br><em>Build the pitch.</em></h2><p>Start with the problem and what your solution changes.</p></div><a class="launch-primary" href="/pitch.html">Build my pitch ${icons.arrow}</a>${hasProjects?'<button class="launch-secondary" data-route="projects">Open my projects</button>':''}</section>`;
 }
 
 const formats = ['txt', 'md', 'docx', 'pptx', 'odt'];
@@ -84,7 +58,7 @@ async function readPart(entry, budget) {
   });
 }
 
-async function readBrief(file) {
+export async function readBrief(file) {
   if (file.size > 8 * 1024 * 1024) throw new Error('Choose a file under 8 MB.');
   const ext = file.name.split('.').pop().toLowerCase();
   if (!formats.includes(ext)) throw new Error('Choose a Word, PowerPoint, OpenDocument text, Markdown or plain text file.');
@@ -243,3 +217,4 @@ if (typeof customElements !== 'undefined' && !customElements.get('idea-editor'))
     }
   });
 }
+

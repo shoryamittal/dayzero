@@ -5,7 +5,9 @@ import {designGrid} from './design-reference-grid.mjs';
 import './review.mjs?v=studio-2';
 import './competition-lookup.mjs';
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
-import {launchPage} from './launch.mjs?v=competition-round-1';
+import {launchPage} from './launch.mjs?v=pitch-flow-2';
+import {pitchStart,enrichStudio,studioLookups} from './pitch-start.mjs?v=2';
+import {initWinnerReference,winnerComparison} from './winner-reference.mjs';
 import {sampleChapters,sampleDesign} from './sample-deck.mjs?v=sample-dusk-1';
 import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=competition-round-1';
 import {assistStudio,initAssist} from './assist-ui.mjs?v=competition-round-1';
@@ -23,7 +25,7 @@ const icon=(name,size=18)=>`<svg width="${size}" height="${size}" viewBox="0 0 2
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let library=[],heroLens=0,questionIndex=0,focusMode=false,timerStart=0,targetMinutes=3,presentationOpen=false;
 let db=null, memory=null, project=null,route='home',tab='overview',slideIndex=0,intakeStep=0,intakeDraft={},saving,toastTimer,timer=null,seconds=0,running=false,storageError=false;
-const routeNames={home:'Overview',projects:'My projects',events:'Event library',templates:'Design studio',practice:'Pitch practice',plans:'Community pilot',settings:'Workspace settings'};
+const routeNames={create:'Make my pitch',home:'Overview',projects:'My projects',events:'Event library',templates:'Design studio',practice:'Pitch practice',plans:'Community pilot',settings:'Workspace settings'};
 function toast(message){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('show');toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),4200);}
 function showModal(title,body,actions=''){const d=$('#modal');d.setAttribute('aria-labelledby','modal-title');d.removeAttribute('aria-label');d.className='';presentationOpen=false;d.innerHTML=`<button class="icon-btn close" data-action="close-modal" aria-label="Close dialog">${icon('close')}</button><h2 id="modal-title">${esc(title)}</h2>${body}<div class="toolbar">${actions}</div>`;d.showModal();}
 function privacy(){showModal('Your work stays with you.',`<p>This preview stores up to twelve projects in this browser’s IndexedDB. Project text stays on your device during ordinary editing. AI Studio shows the text before you choose to send it through the application endpoint to Google Gemini. Export your project to move it to another device.</p><p>Drafts expire 24 hours after the last edit and are removed when you next open the app. Browsers cannot guarantee deletion while the app is closed. Use Clear workspace to remove the saved draft immediately.</p><p>The site host may process access logs. Google Fonts receives a font request. Event search sends only your query to Wikipedia for public background. Curated references are dated snapshots, not live rule checks. Gemini requires your own API key and an explicit request. Google may use free-tier inputs to improve its products.</p>`,`<button class="btn" data-action="settings">${icon('settings')} Manage workspace</button>`);}
@@ -54,15 +56,15 @@ function clearStored(){
  return new Promise((resolve,reject)=>{if(!db){memory=null;library=[];return resolve();}const tx=db.transaction('workspace','readwrite');tx.objectStore('workspace').clear();tx.oncomplete=()=>{memory=null;library=[];resolve();};tx.onerror=()=>reject(tx.error);});
 }
 async function save(silent=true){if(!project)return;project.updatedAt=Date.now();try{await writeStored(project);if(!silent)toast(storageError?'Saved for this session only. Export a backup.':'Saved on this device.');document.querySelectorAll('.save-state').forEach(n=>n.textContent=storageError?'Session only · export a backup':'Saved on this device');}catch{storageError=true;toast('Device storage is unavailable. Export a backup before closing.');}}
-function go(name){if(!['workspace','practice'].includes(name)){focusMode=false;document.body.classList.remove('focus-mode');}$('#modal').open&&$('#modal').close();if(timer&&!(name==='practice'||(name==='workspace'&&tab==='questions'))){seconds=Math.floor((Date.now()-timerStart)/1000);clearInterval(timer);timer=null;running=false;}route=name;history.replaceState(null,'','#'+name);render();window.scrollTo({top:0,behavior:'instant'});$('#main')?.focus({preventScroll:true});}
+function go(name){if(name==='home'&&location.pathname==='/pitch.html'){location.assign('/');return;}if(!['workspace','practice'].includes(name)){focusMode=false;document.body.classList.remove('focus-mode');}$('#modal').open&&$('#modal').close();if(timer&&!(name==='practice'||(name==='workspace'&&tab==='questions'))){seconds=Math.floor((Date.now()-timerStart)/1000);clearInterval(timer);timer=null;running=false;}route=name;history.replaceState(null,'','#'+name);render();window.scrollTo({top:0,behavior:'instant'});$('#main')?.focus({preventScroll:true});}
 const btn=(label,action,style='primary',i='arrow')=>`<button class="btn ${style}" data-action="${action}">${esc(label)} ${i?icon(i,16):''}</button>`;
 function shell(body){
- if(route==='home')return `<div class="launch-site">
+ if(route==='home'||route==='create')return `<div class="launch-site">
   <header class="launch-header"><div class="launch-width launch-header-inner"><a href="#home" class="launch-brand" data-route="home" aria-label="PitchViva home"><span>pv</span><strong>PitchViva</strong></a>
    <nav aria-label="Website navigation"><a href="/review.html">Review my deck</a><a href="#workflow">How it works</a><a href="/deck-workspace.html">Generate PowerPoint</a><button data-route="projects">My projects</button></nav>
-   <a class="launch-primary" href="#try">Make a pitch ${icon('arrow',16)}</a>
+   <a class="launch-primary" href="/pitch.html">Make a pitch ${icon('arrow',16)}</a>
   </div></header>
-  <main class="route-home" id="main" tabindex="-1">${body}</main>
+  <main class="route-${route}" id="main" tabindex="-1">${body}</main>
   <footer class="launch-footer launch-width"><span>PitchViva <b>✳</b></span><div><button data-action="privacy">Privacy</button><button data-action="help">Help</button><button data-route="plans">Community pilot</button></div><small>Independent of event organizers</small></footer>
  </div>`;
  const work=route==='workspace'||route==='intake';
@@ -168,7 +170,8 @@ document.addEventListener('click',event=>{
 });
 function launchDraftFields(form){
  const fields=new FormData(form);
- return {name:clean(fields.get('name'),80),solution:clean(fields.get('solution'),600)};
+ const solution=clean(fields.get('solution'),600);
+ return {name:clean(fields.get('name'),80)||solution.split(/\s+/).slice(0,7).join(' ').slice(0,80),solution,team:clean(fields.get('team'),100)};
 }
 document.addEventListener('input',event=>{
  const form=event.target.closest('#launch-draft');
@@ -186,13 +189,13 @@ document.addEventListener('submit',async event=>{
  for(const [field, limit] of [['problem',700],['event',160],['eventRound',160],['deadline',10],['rules',10000],['approach',1200],['proof',800],['impact',800],['ask',600]]) {
   fields[field]=clean(answers.get(field),limit);
  }
- if(!fields.name||!fields.problem||!fields.solution)return toast('Enter your project title, problem and solution.');
+ if(!fields.solution)return toast('Add a few sentences about your idea to begin.');
  const submit=form.querySelector('[type=submit]');
  if(submit.disabled)return;
  submit.disabled=true;
  resetRehearsal();
  const picker=form.querySelector('competition-picker');
- const eventRecord=picker?.getBrief?.() || intakeEventRecords().find(record=>record.id===form.elements.event.dataset.eventRecord && record.name===fields.event);
+ const eventRecord=picker?.getBrief?.() || intakeEventRecords().find(record=>record.id===form.elements.event?.dataset.eventRecord && record.name===fields.event);
  const notes=picker?.pitchTip ? {approach:[fields.event,fields.eventRound].filter(Boolean).join(' · ')+' — '+picker.pitchTip} : {};
  const source=safeURL(clean(answers.get('evidenceSource'),400));
  const evidence=fields.proof&&source?[{slide:'proof',claim:fields.proof,source}]:[];
@@ -203,6 +206,8 @@ document.addEventListener('submit',async event=>{
  slideIndex=0;
  tab='deck';
  go('workspace');
+ const competitionLink=picker?.querySelector('#competition-link')?.value.trim() || eventRecord?.official || eventRecord?.source;
+ enrichStudio(draft,competitionLink,()=>writeStored(draft),()=>{if(project?.id===draft.id&&route==='workspace'&&['deck','overview'].includes(tab))render();});
 });
 
 const intakeStages = ['Project', 'Problem & solution', 'Approach & evidence', 'Impact & next step'];
@@ -226,7 +231,7 @@ function intakePreview(){
   </div>`;
 }
 function projects(){return `<div class="page-heading"><div class="eyebrow">YOUR IDEAS, WITH ROOM TO GROW</div><h1>The drawing <em>board.</em></h1><p>Every project has a different story. Keep up to ${MAX_PROJECTS} on this device, without replacing the one you’re working on.</p></div><div class="project-toolbar"><div class="search-wrap">${icon('eye',17)}<input type="search" id="project-search" placeholder="Find a project or event…" aria-label="Search your projects"></div><div class="toolbar-actions">${project?btn('Duplicate active project','duplicate','','file'):''}${btn('Import a project','import','','upload')}${btn('New project','new','primary','plus')}</div></div><div class="project-grid library-grid" id="project-library">${library.map(projectCard).join('')}${newCard()}</div><p id="project-empty-search" class="notice neutral" hidden>No projects match that search. Try another name or event.</p><p class="disabled-note">Local projects expire 24 hours after their last edit and are removed when you next open the app. Export backups to keep your work.</p>`;}
-function startNew(){if(library.length>=MAX_PROJECTS){toast('Your local library is full. Export a backup and manage your saved projects.');return go('settings');}newConfirm();}
+function startNew(){if(library.length>=MAX_PROJECTS){toast('Your local library is full. Export a backup and manage your saved projects.');return go('settings');}location.assign('/pitch.html');}
 function newConfirm(){resetRehearsal();intakeDraft={id:createId(),name:'',team:'',event:'',problem:'',solution:'',approach:'',proof:'',impact:'',ask:'',rules:'',deadline:'',template:'signal',plan:'team',demo:false,confirmed:false,createdAt:Date.now(),updatedAt:Date.now(),history:[],notes:{},evidence:[],checklist:{}};intakeStep=0;go('intake');}
 function intake(){const stepFields=intakeStep===0?`<div class="field-row"><div class="field"><label for="name">What’s your project called?</label><input id="name" name="name" required maxlength="80" placeholder="e.g. Before Close" value="${esc(intakeDraft.name)}" autocomplete="off"></div><div class="field"><label for="team">Team name <span class="subtle">(optional)</span></label><input id="team" name="team" maxlength="100" placeholder="e.g. Second Nature" value="${esc(intakeDraft.team)}"></div></div><div class="field"><label for="event">Which event are you preparing for?</label><input id="event" name="event" maxlength="160" placeholder="Event name, or leave blank for a general pitch" value="${esc(intakeDraft.event)}"><div class="hint">Search event background, then review the current organizer rules. <button type="button" class="btn text intake-event-link" data-action="event-desk">Find my event ↗</button></div><div class="event-intake-matches" aria-live="polite"></div></div><div class="field"><label for="deadline">Submission deadline <span class="subtle">(optional)</span></label><input id="deadline" name="deadline" type="date" value="${esc(intakeDraft.deadline)}"></div>`:fields.slice((intakeStep-1)*2,intakeStep*2).map(([k,label,hint])=>`<div class="field"><label for="${k}">${label} <span class="subtle">(add later if you need)</span></label><textarea id="${k}" name="${k}" maxlength="3000" placeholder="${esc(hint)}">${esc(intakeDraft[k])}</textarea><div class="hint">${esc(hint)}</div></div>`).join('');return `<section class="intake-studio" aria-label="Pitch intake">
  <header class="intake-heading"><span class="exhibit-kicker"><b>✳</b> NEW PITCH / STEP 0${intakeStep+1} OF 04</span><h1>${intakeTitles[intakeStep]}</h1><p>${intakeGuides[intakeStep]}</p></header>
@@ -264,10 +269,21 @@ function projectNext(a){
  const [title,description,action,label]=step;
  return `<section class="workspace-next"><div><span class="workspace-kicker">NEXT STEP</span><h2>${title}</h2><p>${description}</p></div><div class="workspace-next-progress"><strong>${a.completed}<small> / 6</small></strong><span>sections drafted</span><progress max="6" value="${a.completed}" aria-label="Story sections drafted"></progress></div>${btn(label,action)}</section>`;
 }
+
+function studioProcess(){
+ const known=!!project.rules.trim(),winner=/Preparation idea from|Team-supplied winner reference/.test(project.notes.approach||'');
+ return `<section class="studio-process" aria-labelledby="studio-process-title"><h2 id="studio-process-title">Your pitch is in the studio.</h2><p>Start editing now. Add evidence as you go, or ask AI to shape your idea into a full draft.</p>
+ <ol><li><strong>✓ Idea saved</strong>Your idea is on the slides. Empty sections show what still needs adding.</li><li><strong>${known?'✓ Rules available':'○ Competition rules needed'}</strong>${known?'Source text is attached. Confirm the edition and round.':'Add an official link or paste rules to tailor the draft.'}</li><li><strong>○ AI draft &amp; review</strong>Run a draft, review the suggestions, then check it against the rubric.</li></ol>
+ <div class="toolbar"><button class="btn primary" data-action="tab-assist">Draft with AI →</button><button class="btn" data-action="tab-rules">Review competition rules</button><button class="btn" data-action="project-details">Edit title &amp; team names</button></div>
+ ${studioLookups.has(project.id)?'<p role="status">'+esc(studioLookups.get(project.id))+'</p>':''}
+ <details><summary>${winner?'Winner reference & preparation ideas':'Learn from a winner'}</summary><p>${winner?esc(project.notes.approach):'Upload a published reference deck to compare its text with your draft.'}</p><label for="winner-deck-file">Reference deck or notes (optional)</label><input id="winner-deck-file" type="file" accept=".pptx,.docx,.odt,.md,.txt"><p id="winner-deck-status" role="status"></p>${winnerComparison(project,esc)}</details>
+ ${known?'<details><summary>Competition source text</summary><pre>'+esc(project.rules)+'</pre></details>':''}</section>`;
+}
+
 function workspace(){
  if(!project)return `<div class="empty"><span class="empty-star">✳</span><h2>Something good starts here.</h2><p>Give your next idea a place to become a story.</p>${btn('Create a project','new')}</div>`;
  const a=analyze(project),days=daysLeft(project.deadline);
- return `<div class="workspace-heading"><div><div class="eyebrow">${project.demo?'FICTIONAL PROJECT / LIVE WORKSPACE':'YOUR IDEA / IN THE MAKING'}</div><h1>${esc(project.name)}<span class="project-asterisk">✳</span><button class="project-edit" data-action="project-details" aria-label="Edit project details">${icon('settings',15)}</button></h1><p>${esc(project.team||'Your team')}<span class="separator">/</span>${esc(project.event||'A moment worth preparing for')}${days!==null?`<span class="deadline-chip ${days<=1?'urgent':''}">${icon('clock',12)}${days<0?'Deadline passed':days===0?'Due today':`${days} days to go`}</span>`:''}</p></div><div class="workspace-actions"><button class="btn focus-toggle ${focusMode?'selected':''}" data-action="focus">${icon('eye',15)}${focusMode?'Leave focus mode':'Focus mode'}</button><button class="btn" data-action="present">${icon('play',14)} Present</button>${btn('Export kit','tab-exports','primary','download')}</div></div><div class="workspace-bar">${projectViews()}<span class="save-state">${storageError?'Session only · back up':'Saved on this device'}</span></div>${tab==='assist'?assistStudio(project):tab==='official'?templateBridge():tab==='preparation'?preparationHub():tab==='overview'?projectNext(a)+readiness(a):tab==='rules'?rules():tab==='story'?story():tab==='proof'?proofBoard():tab==='deck'?deck():tab==='questions'?judge():exportsPage(a)}`;
+ return `<div class="workspace-heading"><div><div class="eyebrow">${project.demo?'FICTIONAL PROJECT / LIVE WORKSPACE':'YOUR IDEA / IN THE MAKING'}</div><h1>${esc(project.name)}<span class="project-asterisk">✳</span><button class="project-edit" data-action="project-details" aria-label="Edit project details">${icon('settings',15)}</button></h1><p>${esc(project.team||'Your team')}<span class="separator">/</span>${esc(project.event||'A moment worth preparing for')}${days!==null?`<span class="deadline-chip ${days<=1?'urgent':''}">${icon('clock',12)}${days<0?'Deadline passed':days===0?'Due today':`${days} days to go`}</span>`:''}</p></div><div class="workspace-actions"><button class="btn focus-toggle ${focusMode?'selected':''}" data-action="focus">${icon('eye',15)}${focusMode?'Leave focus mode':'Focus mode'}</button><button class="btn" data-action="present">${icon('play',14)} Present</button>${btn('Export kit','tab-exports','primary','download')}</div></div><div class="workspace-bar">${projectViews()}<span class="save-state">${storageError?'Session only · back up':'Saved on this device'}</span></div>${(tab==='deck'||tab==='overview')?studioProcess():''}${tab==='assist'?assistStudio(project):tab==='official'?templateBridge():tab==='preparation'?preparationHub():tab==='overview'?projectNext(a)+readiness(a):tab==='rules'?rules():tab==='story'?story():tab==='proof'?proofBoard():tab==='deck'?deck():tab==='questions'?judge():exportsPage(a)}`;
 }
 function readiness(a){
  const checklistCount=checklistItems.filter(([k])=>project.checklist[k]).length;
@@ -357,7 +373,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-attach-eve
 function practice(){if(project){tab='questions';return workspace();}return `<div class="page-heading"><div class="eyebrow">YOUR BIG MOMENT, REHEARSED</div><h1>Let’s make the questions<br>less intimidating.</h1><p>Get a judge’s view of your story, prepare your answers, and run a timed rehearsal. Nothing is recorded.</p></div><div class="empty">${icon('mic',35)}<h2>A little preparation goes a long way.</h2><p>Create a project to practise with your own story.</p>${btn('Create a project','new')}</div>`;}
 function plans(){return communityPlans();}
 function settings(){return `<div class="page-heading"><div class="eyebrow">YOUR WORK. YOUR CONTROL.</div><h1>A little space.<br><em>Entirely yours.</em></h1><p>${library.length} of ${MAX_PROJECTS} project spaces in use. Your proof boards, speaker notes, answers, and story snapshots stay in this browser.</p></div><div class="split"><section class="panel"><div class="section-head"><h2>The library on this device.</h2>${icon('shield',22)}</div>${library.length?library.map(p=>`<div class="storage-project"><span class="storage-initial" style="background:#${themes[p.template].bg};color:#${themes[p.template].fg}">${esc(p.name[0])}</span><div><strong>${esc(p.name)}</strong><small>Last edited ${esc(new Date(p.updatedAt).toLocaleString())}</small></div><button class="btn small" data-project="${esc(p.id)}">Open ${icon('arrow',13)}</button></div>`).join(''):'<p class="subtle">No saved projects yet.</p>'}<div class="toolbar">${library.length?btn('Back up the whole library','export-library','primary','download'):''}${btn('Import a project','import','','upload')}</div><p class="subtle">Projects expire 24 hours after the last edit and are removed on your next visit after expiry. Your browser may also evict data. Download backups to keep your work.</p>${library.length?`<div class="danger-zone"><h3>A clean slate, when you want it.</h3><p>This clears all ${library.length} local projects and their saved notes. Downloaded backups stay on your device.</p><button class="btn" data-action="clear">${icon('trash',16)} Clear all local projects</button></div>`:''}</section><aside class="privacy-card"><span>✳</span><h3>Private should<br>mean <em>private.</em></h3><p>Ordinary editing stays on your device. Optional Wikipedia lookup sends your query. AI Studio shows the text before you choose to send it to Google Gemini.</p><p>Public application files are cached for offline use. Google Fonts receives a font request; hosting may process normal access logs.</p>${btn('Read data handling','privacy','text','arrow')}</aside></div>`;}
-function render(){app.innerHTML=shell(route==='home'?home():route==='projects'?projects():route==='intake'?intake():route==='workspace'?workspace():route==='templates'?templates():route==='events'?events():route==='practice'?practice():route==='plans'?plans():settings());syncSidebar();}
+function render(){app.innerHTML=shell(route==='home'?home():route==='create'?pitchStart(Object.fromEntries(['arrow'].map(key=>[key,icon(key,18)]))):route==='projects'?projects():route==='intake'?intake():route==='workspace'?workspace():route==='templates'?templates():route==='events'?events():route==='practice'?practice():route==='plans'?plans():settings());syncSidebar();if(route==='create')$('#launch-draft-preview').innerHTML=draftBoard();}
 function syncSidebar(){const sidebar=$('#sidebar');if(sidebar)sidebar.inert=window.innerWidth<=700&&!sidebar.classList.contains('open');}
 window.addEventListener('resize',syncSidebar);
 function resetRehearsal(){questionIndex=0;clearInterval(timer);timer=null;running=false;seconds=0;}
@@ -489,7 +505,7 @@ async function removeProof(){project.evidence=project.evidence.filter(e=>e.id!==
 function confirmRemoveProject(){$('#modal').close();showModal('Remove this project?',`<p>“${esc(project.name)}” and its local notes, proof board, and versions will be removed from this browser. Your other projects will stay saved. Download a backup first if you want to keep it.</p>`,`<button class="btn" data-action="export-project">Export backup ${icon('download',14)}</button><button class="btn primary" data-action="remove-project-confirm">Remove this project</button>`);}
 async function removeProject(){clearTimeout(saving);library=library.filter(p=>p.id!==project.id);project=library[0]||null;await persistLibrary();go('projects');toast('Project removed from this device. Your other projects are still saved.');}
 
-await initStorage();route=location.hash.slice(1);if(!routeNames[route]&&route!=='workspace')route='home';render();
+await initStorage();route=location.hash.slice(1)||(location.pathname==='/pitch.html'?'create':'home');if(!routeNames[route]&&route!=='workspace')route='home';render();
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 
@@ -498,6 +514,7 @@ initPreparation({project:()=>project,save,render,toast,story:key=>{slideIndex=fi
 initTemplate({project:()=>project,render,toast,loadScript,download:downloadBlob});
 
 initAssist({project:()=>project,save,render,download:text=>downloadBlob(new Blob([text],{type:'application/json'}),'pitchviva-gemini-result.json')});
+initWinnerReference({project:()=>project,save,render,toast});
 
 function updateSlideReviewStatus(){
  const button=$('[data-action="mark-slide-reviewed"]');
@@ -513,3 +530,4 @@ function updateSlideReviewStatus(){
 document.addEventListener('input',event=>{
  if(event.target.matches('#slide-headline,#slide-text,#deck-speaker-notes,#deck-image-alt'))updateSlideReviewStatus();
 });
+

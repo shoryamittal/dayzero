@@ -5,6 +5,7 @@ import {extname, resolve, sep} from 'node:path';
 import {handleAssist} from '../api/assist.mjs';
 
 import generate from '../api/pptx.mjs';
+import competition from '../api/competition.mjs';
 
 const host = '127.0.0.1';
 const portArgument = process.argv.indexOf('--port');
@@ -17,6 +18,11 @@ const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.
 createServer(async (incoming, outgoing) => {
   try {
     const url = new URL(incoming.url, base);
+    if (url.pathname === '/api/competition') {
+      outgoing.status = code => {outgoing.statusCode=code;return outgoing;};
+      outgoing.json = body => {outgoing.setHeader('Content-Type','application/json');outgoing.end(JSON.stringify(body));};
+      return await competition(incoming,outgoing);
+    }
     if (url.pathname === '/api/pptx') return await generate(incoming, outgoing);
     if (url.pathname === '/api/assist') {
       const method = incoming.method;
@@ -43,3 +49,4 @@ createServer(async (incoming, outgoing) => {
     outgoing.writeHead(404).end('Not found.');
   }
 }).listen(port, host, () => process.stdout.write('Day-Zero local AI server at ' + base + '\n'));
+

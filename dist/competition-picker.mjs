@@ -121,10 +121,10 @@ customElements.define('competition-picker',class extends HTMLElement {
     if (this.childElementCount) return;
     this.innerHTML = `<div class="field"><label for="competition-name">Find your competition</label>
       <input id="competition-name" name="event" maxlength="160" autocomplete="off" placeholder="Search by name, e.g. Imagine Cup">
-      <details class="reference-link"><summary>Have a competition link?</summary>
-        <label for="competition-link">Competition or organizer page</label>
+      <div class="reference-link">
+        <label for="competition-link">Official link <small>(optional)</small></label>
         <input id="competition-link" type="url" placeholder="https://…" maxlength="1000">
-        <button type="button" data-link>Use this link</button></details>
+        <button type="button" data-link>Read link</button></div>
       <p class="competition-status" role="status"></p><div class="competition-results"></div></div>
       <div class="competition-context" hidden><a target="_blank" rel="noopener noreferrer"></a>
         <label for="competition-options">Round or track</label><select id="competition-options"></select>
@@ -182,7 +182,7 @@ customElements.define('competition-picker',class extends HTMLElement {
       q('label[for=competition-options]').textContent=guide?.label || 'Round or track';
       select.replaceChildren(option('Choose later',''),...Object.keys(guide?.choices || {}).map(x=>option(x,x)),option('Enter my own…','other'));
       custom.value='';updateRound();
-      select.focus();
+      this.dispatchEvent(new CustomEvent('competition-selected',{bubbles:true}));
       if(!guide && row.id.startsWith('devpost-') && row.official){
         const token=sequence;
         const active=new AbortController();pageController=active;
@@ -264,7 +264,7 @@ customElements.define('competition-picker',class extends HTMLElement {
           search();status.textContent='Link saved. Choose a match or use the name as entered.';
         }
       }
-      link.closest('details').open=false;
+      this.dispatchEvent(new CustomEvent('competition-selected',{bubbles:true}));
     };
     q('[data-link]').onclick=attach;
     link.oninput=()=>{pageController?.abort();linkedGuide=null;reference='';search();};
@@ -274,3 +274,4 @@ customElements.define('competition-picker',class extends HTMLElement {
   }
   disconnectedCallback(){this.stopSearch?.();}
 });
+
