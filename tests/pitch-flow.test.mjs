@@ -11,7 +11,7 @@ test('an idea alone creates a project and opens the deck editor, preserving opti
   let submit;
   const values={solution:'We help students find quiet study spaces.',event:'Campus Challenge',rules:'Maximum 6 slides.',team:'Asha and Sam'};
   const form={id:'launch-draft',elements:{event:{dataset:{}}},querySelector:selector=>selector==='[type=submit]'?{disabled:false}:null};
-  const context=vm.createContext({document:{addEventListener:(_name,callback)=>{submit=callback;}},library:[],MAX_PROJECTS,clean,validateProject,createId,FormData:class{get(key){return values[key]||null;}},launchDraftFields:()=>({solution:values.solution,name:'Study spaces',team:values.team}),toast:message=>assert.fail(message),resetRehearsal(){},intakeEventRecords:()=>[],safeURL:()=>null,choosePitchTheme:()=> 'editorial',save:async()=>{},go:route=>{context.target=route;},enrichStudio(){},writeStored(){},project:null,slideIndex:5,tab:'overview'});
+  const context=vm.createContext({document:{addEventListener:(_name,callback)=>{submit=callback;}},library:[],MAX_PROJECTS,clean,validateProject,createId,FormData:class{get(key){return values[key]||null;}},launchDraftFields:()=>({solution:values.solution,name:'Study spaces',team:values.team}),toast:message=>assert.fail(message),resetRehearsal(){},intakeEventRecords:()=>[],safeURL:()=>null,choosePitchTheme:()=> 'editorial',save:async()=>{},go:route=>{context.target=route;},enrichStudio:async()=>{},writeStored(){},project:null,slideIndex:5,tab:'overview'});
   vm.runInContext(code.slice(start,end),context);
   await submit({target:form,preventDefault(){}});
   assert.equal(context.project.solution,values.solution);

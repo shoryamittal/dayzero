@@ -6,11 +6,11 @@ import './review.mjs?v=simple-review-1';
 import './competition-lookup.mjs';
 import {prepareSlideImage} from './slide-images.mjs?v=visual-qa-1';
 import {launchPage} from './launch.mjs?v=pitch-flow-2';
-import {pitchStart,enrichStudio,studioLookups} from './pitch-start.mjs?v=2';
+import {pitchStart,enrichStudio,studioLookups} from './pitch-start.mjs?v=3';
 import {initWinnerReference,winnerComparison} from './winner-reference.mjs';
 import {sampleChapters,sampleDesign} from './sample-deck.mjs?v=sample-dusk-1';
 import {renderDeckSlide,makePowerPoint,makePDF} from './deck-design.mjs?v=competition-round-1';
-import {assistStudio,initAssist} from './assist-ui.mjs?v=competition-round-1';
+import {assistStudio,initAssist} from './assist-ui.mjs?v=studio-flow-1';
 import {communityPlans} from './community.mjs?v=launch-1';
 import {templateBridge,initTemplate} from './template-ui.mjs?v=audit-2';
 import {preparationHub,initPreparation} from './preparation-ui.mjs?v=ai-1.0';
@@ -18,7 +18,7 @@ import {preparationReport} from './preparation.mjs?v=pitchviva-1';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
 import {eventDesk,initEvents,selectAttachedEvent,lookupEvent} from './event-ui.mjs?v=pitchviva-1';
 import {normalizeEvent,eventChecks,eventBriefText,eventCatalog,searchEventRecords} from './event-engine.mjs?v=pitchviva-1';
-import {sample,fields,slides,analyze,validateProject,clean,daysLeft,isExpired,safeFilename,questions,TTL,createId,normalizeWorkspace,MAX_PROJECTS,themes,safeURL,readingTime,checklistItems,canExportPDF} from './engine.mjs?v=competition-round-1';
+import {sample,fields,slides,analyze,validateProject,clean,daysLeft,isExpired,safeFilename,questions,TTL,createId,normalizeWorkspace,MAX_PROJECTS,themes,safeURL,readingTime,checklistItems,canExportPDF} from './engine.mjs?v=studio-flow-1';
 const $=s=>document.querySelector(s), app=$('#app');
 const icons={home:'M3 10 12 3l9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z',deck:'M4 4h16v12H4z M8 21l4-5 4 5 M8 8h8 M8 11h5',event:'M5 5h14v16H5z M8 2v6 M16 2v6 M5 10h14 M9 14h2 M14 14h2 M9 17h2',grid:'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',mic:'M9 5a3 3 0 0 1 6 0v7a3 3 0 0 1-6 0z M5 10v2a7 7 0 0 0 14 0v-2 M12 19v3 M8 22h8',arrow:'M5 12h14 M13 6l6 6-6 6',plus:'M12 5v14 M5 12h14',check:'m5 12 4 4L19 6',chevron:'m9 5 7 7-7 7',shield:'M12 3 3 7v6c0 4 9 8 9 8s9-4 9-8V7z m-5 9 3 3 5-5',help:'M9 9a3 3 0 1 1 4 3v3 M12 18h.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',bolt:'m13 2-9 12h7l-1 8 10-13h-7z',clock:'M12 7v5l3 2 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',file:'M5 2h9l5 5v15H5z M14 2v6h5 M8 12h8 M8 16h8',download:'M12 3v12 m-5-5 5 5 5-5 M4 16v5h16v-5',upload:'M12 16V4 m-5 5 5-5 5 5 M4 16v5h16v-5',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12 M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0',settings:'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M9 3h6l1 4 4 1v8l-4 1-1 4H9l-1-4-4-1V8l4-1z',leaf:'M20 3C5 2 2 10 7 16s14 2 13-13Z M5 21 16 9',spark:'m12 2 3 7 7 3-7 3-3 7-3-7-7-3 7-3z',menu:'M4 6h16 M4 12h16 M4 18h16',close:'m6 6 12 12 M6 18 18 6',trash:'M3 6h18 M8 6V3h8v3 M6 6l1 15h10l1-15 M10 10v7 M14 10v7',back:'M19 12H5 m6-6-6 6 6 6',play:'m8 4 12 8-12 8z',pause:'M8 4v16 M16 4v16',external:'M14 3h7v7 M21 3 11 13 M10 4H4v16h16v-6',info:'M12 11v6 M12 7h.01 M22 12a10 10 0 1 1-20 0 10 10 0 0 1 20 0',refresh:'M20 7V2l-3 3a8 8 0 1 0 3 10 M20 7h-5',wallet:'M3 6h17v15H3z M3 6V3h14v3 M15 11h6v5h-6z'};
 const icon=(name,size=18)=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${icons[name]||icons.spark}"/></svg>`;
@@ -28,7 +28,7 @@ let db=null, memory=null, project=null,route='home',tab='overview',slideIndex=0,
 const routeNames={create:'Make my pitch',home:'Overview',projects:'My projects',events:'Event library',templates:'Design studio',practice:'Pitch practice',plans:'Community pilot',settings:'Workspace settings'};
 function toast(message){clearTimeout(toastTimer);$('#toast').textContent=message;$('#toast').classList.add('show');toastTimer=setTimeout(()=>$('#toast').classList.remove('show'),4200);}
 function showModal(title,body,actions=''){const d=$('#modal');d.setAttribute('aria-labelledby','modal-title');d.removeAttribute('aria-label');d.className='';presentationOpen=false;d.innerHTML=`<button class="icon-btn close" data-action="close-modal" aria-label="Close dialog">${icon('close')}</button><h2 id="modal-title">${esc(title)}</h2>${body}<div class="toolbar">${actions}</div>`;d.showModal();}
-function privacy(){showModal('Your work stays with you.',`<p>This preview stores up to twelve projects in this browser’s IndexedDB. Project text stays on your device during ordinary editing. When you request a presentation review, extracted slide text, typography metadata and your supplied rules are sent to the review endpoint. Deep review sends this content and any attached PDF or reference to Google Gemini only when you request it. The review service does not save this content; your original PowerPoint stays on your device. AI Studio shows the text before you choose to send it through the application endpoint to Google Gemini. Export your project to move it to another device.</p><p>Drafts expire 24 hours after the last edit and are removed when you next open the app. Browsers cannot guarantee deletion while the app is closed. Use Clear workspace to remove the saved draft immediately.</p><p>The site host may process access logs. Google Fonts receives a font request. Event search sends only your query to Wikipedia for public background. Curated references are dated snapshots, not live rule checks. Gemini requires your own API key and an explicit request. Google may use free-tier inputs to improve its products.</p>`,`<button class="btn" data-action="settings">${icon('settings')} Manage workspace</button>`);}
+function privacy(){showModal('Your work stays with you.',`<p>Projects are saved in this browser’s IndexedDB. Ordinary editing stays on your device. Building a pitch sends your idea and optional details to our service and, when available, Google Gemini for drafting. Presentation review sends extracted text and typography metadata to our review service, with extended analysis through Gemini when available. Competition research uses your event query and supplied event link. Our application does not save these request contents on the server.</p><p>Your original PowerPoint stays on your device. The editable project and collected pitch context are saved in this browser. Export a backup to move them to another device. Projects expire 24 hours after their last edit and are removed when you next open the app. Use Clear workspace to remove saved projects immediately.</p><p>The host may process access logs. Google Fonts receives font requests. Google may use free-tier AI submissions to improve its products. Use material you can share. Source excerpts and AI suggestions are preparation aids; they do not verify your facts or guarantee competition compliance.</p>`);}
 function help(){showModal('A little help, right here.',`<p>Start with your own idea. Confirm the rules, edit the six-slide story, and export an editable PowerPoint or PDF.</p><p>Readiness checks in this preview are deterministic checks, not an AI jury. They cannot verify facts, event compliance, visual overflow, or your chance of winning.</p><p>Nothing is charged. The paid service is not open for orders yet.</p>`,`<button class="btn primary" data-action="new">Create a project ${icon('arrow')}</button>`);}
 async function initStorage(){
  try{
@@ -206,8 +206,8 @@ document.addEventListener('submit',async event=>{
  slideIndex=0;
  tab='deck';
  go('workspace');
- const competitionLink=picker?.querySelector('#competition-link')?.value.trim() || eventRecord?.official || eventRecord?.source;
- enrichStudio(draft,competitionLink,()=>writeStored(draft),()=>{if(project?.id===draft.id&&route==='workspace'&&['deck','overview'].includes(tab))render();});
+ const competitionLink=clean(answers.get('competitionLink'),1000) || eventRecord?.official || eventRecord?.source;
+ enrichStudio(draft,competitionLink,()=>writeStored(draft),()=>{if(project?.id===draft.id&&route==='workspace'&&['deck','overview'].includes(tab))render();}).catch(()=>toast('Your idea is saved. Continue editing in the studio.'));
 });
 
 const intakeStages = ['Project', 'Problem & solution', 'Approach & evidence', 'Impact & next step'];
@@ -249,7 +249,7 @@ function intake(){const stepFields=intakeStep===0?`<div class="field-row"><div c
  </section>`;}
 const viewGroups=[
  ['Plan',[['overview','Overview'],['rules','Event rules'],['preparation','Preparation']]],
- ['Build',[['story','Story'],['proof','Evidence'],['deck','Deck canvas'],['assist','AI Studio']]],
+ ['Build',[['story','Story'],['proof','Evidence'],['deck','Deck canvas'],['assist','Writing assistant']]],
  ['Deliver',[['questions','Rehearse'],['official','Official template'],['exports','Export kit']]]
 ];
 function projectViews(){
@@ -271,13 +271,17 @@ function projectNext(a){
 }
 
 function studioProcess(){
- const known=!!project.rules.trim(),winner=/Preparation idea from|Team-supplied winner reference/.test(project.notes.approach||'');
- return `<section class="studio-process" aria-labelledby="studio-process-title"><h2 id="studio-process-title">Your pitch is in the studio.</h2><p>Start editing now. Add evidence as you go, or ask AI to shape your idea into a full draft.</p>
- <ol><li><strong>✓ Idea saved</strong>Your idea is on the slides. Empty sections show what still needs adding.</li><li><strong>${known?'✓ Rules available':'○ Competition rules needed'}</strong>${known?'Source text is attached. Confirm the edition and round.':'Add an official link or paste rules to tailor the draft.'}</li><li><strong>○ AI draft &amp; review</strong>Run a draft, review the suggestions, then check it against the rubric.</li></ol>
- <div class="toolbar"><button class="btn primary" data-action="tab-assist">Draft with AI →</button><button class="btn" data-action="tab-rules">Review competition rules</button><button class="btn" data-action="project-details">Edit title &amp; team names</button></div>
- ${studioLookups.has(project.id)?'<p role="status">'+esc(studioLookups.get(project.id))+'</p>':''}
- <details><summary>${winner?'Winner reference & preparation ideas':'Learn from a winner'}</summary><p>${winner?esc(project.notes.approach):'Upload a published reference deck to compare its text with your draft.'}</p><label for="winner-deck-file">Reference deck or notes (optional)</label><input id="winner-deck-file" type="file" accept=".pptx,.docx,.odt,.md,.txt"><p id="winner-deck-status" role="status"></p>${winnerComparison(project,esc)}</details>
- ${known?'<details><summary>Competition source text</summary><pre>'+esc(project.rules)+'</pre></details>':''}</section>`;
+ const build=project.pitchBuild,active=studioLookups.has(project.id),known=!!project.rules.trim();
+ const labels={waiting:'Next',running:active?'Working':'Paused',done:'Ready',limited:'Needs attention'};
+ const stages=[['research','Competition context',known?'Requirements are attached; check the edition and round.':'Only readable sources are used. Missing rules stay unconfirmed.'],['draft','Your product story','The user, solution, workflow and evidence in editable slides.']];
+ const pages=build?.sources||[];
+ return `<section class="studio-process" aria-labelledby="studio-process-title"><h2 id="studio-process-title">${active?'Your pitch is taking shape.':'Make the story your own.'}</h2>
+ <p role="status" aria-live="polite">${esc(!active&&build&&Object.values(build.steps).includes('running')?'Automatic preparation was interrupted. Your saved idea is ready to edit; retry in the writing assistant.':build?.message||'Start with your user, show the product workflow, and add evidence as you go.')}</p>
+ <ol class="studio-build-steps"><li><strong>Ready · Idea saved</strong>Your starting point is saved in this browser.</li>${stages.map(([key,title,copy])=>`<li data-state="${build?.steps[key]||'waiting'}"><strong>${esc(labels[build?.steps[key]||'waiting'])} · ${title}</strong>${copy}</li>`).join('')}</ol>
+ ${build?.gaps.length?`<details class="studio-next-facts" open><summary>${build.aiApplied?'Make this draft stronger':'The next details that will help'}</summary><ul>${build.gaps.map(gap=>'<li>'+esc(gap)+'</li>').join('')}</ul><button class="btn small" data-action="tab-story">Add details to my story</button></details>`:''}
+ <div class="toolbar"><button class="btn primary" data-action="tab-assist">Improve with the writing assistant</button><button class="btn" data-action="tab-rules">Competition requirements</button><button class="btn" data-action="project-details">Edit title &amp; names</button></div>
+ ${pages.length||build?.notes.length?`<details><summary>Sources &amp; research notes</summary>${pages.map(page=>'<article><a href="'+esc(page.url)+'" target="_blank" rel="noopener noreferrer">'+esc(page.title||page.url)+'</a><ul>'+page.excerpts.map(text=>'<li>'+esc(text)+'</li>').join('')+'</ul></article>').join('')}${build?.notes.length?'<ul>'+build.notes.map(note=>'<li>'+esc(note)+'</li>').join('')+'</ul>':''}</details>`:''}
+ ${known?'<details><summary>Requirements used in this draft</summary><pre>'+esc(project.rules)+'</pre></details>':''}</section>`;
 }
 
 function workspace(){

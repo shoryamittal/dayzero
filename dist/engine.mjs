@@ -1,3 +1,4 @@
+import {normalizePitchBuild} from './pitch-builder.mjs';
 import {isSlideImageData} from './slide-images.mjs?v=visual-qa-1';
 import {normalizePreparation} from './preparation.mjs?v=pitchviva-1';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
@@ -44,7 +45,7 @@ export function validateProject(p){
  const checklist=Object.fromEntries(checklistItems.map(([k])=>[k,p.checklist?.[k]===true]));
  const answers=Array.from({length:6},(_,n)=>clean(p.answers?.[n],3000));
  const rehearsals=Array.isArray(p.rehearsals)?p.rehearsals.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&Number.isFinite(v.seconds)&&v.seconds>=0&&v.seconds<=86400).map(v=>({at:v.at,seconds:v.seconds})):[];
- return {...result,winnerReference,preparation:normalizePreparation(p.preparation),id:/^[A-Za-z0-9-]{1,80}$/.test(p.id||'')?p.id:createId(),plan:p.plan==='solo'?'solo':'team',template:Object.hasOwn(themes,p.template)?p.template:'botanical',demo:p.demo===true,confirmed:p.confirmed===true&&!!result.rules,createdAt:Number(p.createdAt)||Date.now(),updatedAt:Number(p.updatedAt)||Date.now(),history,notes,slideImages,slideHeadlines,slideReviews,evidence,checklist,answers,rehearsals,eventBrief:normalizeEvent(p.eventBrief)?.name===result.event?normalizeEvent(p.eventBrief):null,eventChecks:Object.fromEntries(eventChecks.map(([k])=>[k,p.eventChecks?.[k]===true]))};
+ return {...result,pitchBuild:normalizePitchBuild(p.pitchBuild),winnerReference,preparation:normalizePreparation(p.preparation),id:/^[A-Za-z0-9-]{1,80}$/.test(p.id||'')?p.id:createId(),plan:p.plan==='solo'?'solo':'team',template:Object.hasOwn(themes,p.template)?p.template:'botanical',demo:p.demo===true,confirmed:p.confirmed===true&&!!result.rules,createdAt:Number(p.createdAt)||Date.now(),updatedAt:Number(p.updatedAt)||Date.now(),history,notes,slideImages,slideHeadlines,slideReviews,evidence,checklist,answers,rehearsals,eventBrief:normalizeEvent(p.eventBrief)?.name===result.event?normalizeEvent(p.eventBrief):null,eventChecks:Object.fromEntries(eventChecks.map(([k])=>[k,p.eventChecks?.[k]===true]))};
 }
 export function normalizeWorkspace(raw,now=Date.now()){
  const candidates=raw?.version===2&&Array.isArray(raw.projects)?raw.projects:raw?[raw]:[];

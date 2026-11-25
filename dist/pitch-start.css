@@ -10,3 +10,15 @@
 @media(max-width:800px){.route-create::before{height:490px;background:linear-gradient(90deg,#191220ed 0%,#1912209e 55%,#19122050),linear-gradient(0deg,#191220 0%,transparent 65%),url('/pitch-stage.webp') 78% 35%/cover no-repeat}.pitch-start-heading{max-width:650px}.pitch-start h1{font-size:clamp(38px,7vw,60px)}.pitch-start-heading>p:last-child{max-width:34ch}.pitch-start-grid{margin-top:26px}}
 
 /* Keep the original presenter photo on the dedicated pitch page. */
+
+.pitch-field-help{font-size:13px;line-height:1.6;color:#716079;margin:8px 0 0}
+.pitch-content-use{font-size:12px;line-height:1.7;color:#716079;margin-top:16px}
+.pitch-content-use summary{cursor:pointer}.pitch-extra>.field:first-of-type{margin-top:16px}
+.pitch-quick-prompts{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0}
+.studio-next-facts{padding:16px;background:#f2eaf6;border-radius:12px;margin:16px 0}
+.studio-next-facts ul{padding-left:20px;line-height:1.7}
+.studio-build-steps [data-state=running]{border:1px solid #926ba3}
+.studio-process article{margin:14px 0;overflow-wrap:anywhere}
+.studio-process article ul{font-size:13px;line-height:1.65}
+.studio-process summary{cursor:pointer;line-height:1.6}
+@media(max-width:600px){.pitch-extra summary,.pitch-content-use summary{min-height:44px;align-content:center}.pitch-quick-prompts .btn{min-height:44px}}
