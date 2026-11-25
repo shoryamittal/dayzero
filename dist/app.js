@@ -61,7 +61,7 @@ const btn=(label,action,style='primary',i='arrow')=>`<button class="btn ${style}
 function shell(body){
  if(route==='home'||route==='create')return `<div class="launch-site">
   <header class="launch-header"><div class="launch-width launch-header-inner"><a href="#home" class="launch-brand" data-route="home" aria-label="PitchViva home"><span>pv</span><strong>PitchViva</strong></a>
-   <nav aria-label="Website navigation"><a href="/review.html">Review my presentation</a><a href="/#workflow">How it works</a><button data-route="projects">My projects</button></nav>
+   <nav aria-label="Website navigation"><a href="/#deck-review">Review my presentation</a><a href="/#workflow">How it works</a><button data-route="projects">My projects</button></nav>
    <a class="launch-primary" href="/pitch.html">Make a pitch ${icon('arrow',16)}</a>
   </div></header>
   <main class="route-${route}" id="main" tabindex="-1">${body}</main>
@@ -463,7 +463,8 @@ document.addEventListener('input',e=>{if(e.target.matches('[data-edit]')&&projec
  project.checklist.facts=false;project.checklist.files=false;project.updatedAt=Date.now();const count=$('#count-'+e.target.dataset.edit);if(count)count.textContent=clean(e.target.value).split(/\s+/).filter(Boolean).length+' words · target 80 or fewer';document.querySelectorAll('.save-state').forEach(n=>n.textContent='Saving on this device…');clearTimeout(saving);saving=setTimeout(()=>save(),300);}if(e.target.id==='event-rules'&&project){project.rules=clean(e.target.value,10000);project.confirmed=false;Object.assign(project.checklist,{template:false,policy:false,files:false,portal:false});const cb=$('#rules-confirm');if(cb)cb.checked=false;document.querySelectorAll('.save-state').forEach(n=>n.textContent='Saving on this device…');clearTimeout(saving);saving=setTimeout(()=>save(),300);}});
 document.addEventListener('change',async e=>{if(e.target.id==='template-select'&&project){project.template=e.target.value;project.checklist.files=false;await save();render();}});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&project){clearTimeout(saving);writeStored(project).catch(()=>{storageError=true;});}});
-window.addEventListener('hashchange',()=>{const r=location.hash.slice(1);if(routeNames[r]||r==='workspace')go(r);});
+function openHomeSection(id){if(!['deck-review','workflow'].includes(id))return false;if(route!=='home'){route='home';render();}document.getElementById(id)?.scrollIntoView({behavior:'instant',block:'start'});return true;}
+window.addEventListener('hashchange',()=>{const r=location.hash.slice(1);if(openHomeSection(r))return;if(routeNames[r]||r==='workspace')go(r);});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){$('#sidebar')?.classList.remove('open');syncSidebar();}});
 
 $('#modal').addEventListener('close',()=>{presentationOpen=false;});
@@ -505,7 +506,7 @@ async function removeProof(){project.evidence=project.evidence.filter(e=>e.id!==
 function confirmRemoveProject(){$('#modal').close();showModal('Remove this project?',`<p>“${esc(project.name)}” and its local notes, proof board, and versions will be removed from this browser. Your other projects will stay saved. Download a backup first if you want to keep it.</p>`,`<button class="btn" data-action="export-project">Export backup ${icon('download',14)}</button><button class="btn primary" data-action="remove-project-confirm">Remove this project</button>`);}
 async function removeProject(){clearTimeout(saving);library=library.filter(p=>p.id!==project.id);project=library[0]||null;await persistLibrary();go('projects');toast('Project removed from this device. Your other projects are still saved.');}
 
-await initStorage();route=location.hash.slice(1)||(location.pathname==='/pitch.html'?'create':'home');if(!routeNames[route]&&route!=='workspace')route='home';render();
+await initStorage();route=location.hash.slice(1)||(location.pathname==='/pitch.html'?'create':'home');if(!routeNames[route]&&route!=='workspace')route='home';render();openHomeSection(location.hash.slice(1));
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
 

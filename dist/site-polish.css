@@ -1,0 +1,115 @@
+/* Shared interaction and alignment refinements. Keep presentation artwork untouched. */
+:root {
+ --ui-gap:16px;
+ --ui-control:44px;
+ --ui-focus:#9270ac;
+}
+html {scroll-padding-block:24px;scrollbar-gutter:stable}
+.layout,.page,.content {min-width:0}
+.content :is(.split,.project-grid,.template-grid,.story-grid,.deck-grid,.flight-grid,.proof-layout,.prep-split)>* {min-width:0}
+.content :is(.section-head,.toolbar,.toolbar-actions,.details-extra-actions) {gap:var(--ui-gap);flex-wrap:wrap}
+.content .section-head {align-items:center}
+.content .btn {min-height:var(--ui-control);line-height:1.4;white-space:normal;text-align:center}
+.content .btn svg {flex-shrink:0}
+.content :is(.field input:not([type=checkbox]):not([type=radio]),.field select) {min-height:46px}
+.content :is(.field textarea,.field input,.field select) {max-width:100%}
+.content :is(.panel,.download-card,.proof-form,.story-editor,.deck-inspector) {min-width:0}
+.workspace-heading {align-items:center;gap:24px}
+.workspace-heading>div:first-child {min-width:0;flex:1}
+.workspace-heading h1 {font-size:clamp(32px,3.5vw,48px);line-height:1.12;max-width:25ch}
+.workspace-actions {display:flex;flex-shrink:0;align-items:center;flex-wrap:wrap;gap:8px}
+.content .workspace-actions .btn {min-height:44px;font-size:12px;padding:10px 12px}
+.workspace-actions .focus-toggle {margin-right:0}
+.project-edit {width:44px;height:44px;min-width:44px;min-height:44px;vertical-align:middle}
+.workspace-bar {display:grid;grid-template-columns:minmax(0,1fr);gap:10px;overflow:visible;padding-bottom:16px;margin-bottom:28px}
+.project-views {align-items:stretch;gap:8px;min-width:0}
+.project-view-group {min-width:0;gap:2px;padding:4px}
+.project-view-group button {min-height:40px;padding:9px 7px}
+.workspace-bar>.save-state {justify-self:end;line-height:1.5;font-size:11px}
+.content .footer {align-items:center;gap:16px 24px;flex-wrap:wrap;padding-top:24px}
+.content .footer-links {gap:8px;flex-wrap:wrap}
+.content .footer-links button {font-size:12px;min-height:44px;padding:8px}
+.sidebar {scrollbar-width:thin;scrollbar-color:#6a5b75 #292431}
+.content .question-tabs {flex-wrap:wrap}
+.content .question-tabs>button {width:44px;height:44px;min-height:44px;font-size:11px}
+.content .story-rail button {min-height:44px}
+.content .project-toolbar {align-items:center;gap:20px}
+.content .project-toolbar .toolbar-actions {gap:10px;flex-wrap:wrap}
+.content .download-card {display:flex;flex-direction:column;align-items:flex-start}
+.content .download-card>.btn {margin-top:auto}
+.content .download-card p {line-height:1.75}
+.launch-site :is(.launch-text-action,.pitch-back,.hero-review-link) {min-height:44px;display:inline-flex;align-items:center}
+.launch-site .launch-footer button {min-height:44px;padding:10px 4px}
+.launch-steps article {border-radius:0 0 12px 12px}
+.pitch-start .launch-form :is(input:not([type=file]),select) {min-height:46px}
+.pitch-start .launch-form summary {min-height:44px;align-items:center}
+.pitch-start :is(.idea-heading button,.idea-tools button,.reference-link button) {min-height:44px}
+.pitch-start .pitch-start-note {max-width:65ch}
+.rv-format-help summary {display:flex;align-items:center;gap:8px;min-height:44px;list-style:none}
+.rv-format-help summary::-webkit-details-marker {display:none}
+.rv-format-help summary::before {content:'+';font-size:16px;width:16px}
+.rv-format-help[open] summary::before {content:'−'}
+.rv-brief summary {min-height:44px}
+.rv-studio .rv-example {min-height:44px}
+.rv-studio .rv-view-nav {overflow-x:auto;scrollbar-width:thin;gap:24px}
+.rv-studio .rv-view-nav>button {min-height:48px}
+.rv-studio .rv-icon-button {width:44px;height:44px}
+.rv-studio .rv-text-button {min-height:40px}
+.rv-studio .rv-results-actions {align-items:stretch}
+:where(button,a,input,textarea,select,summary):focus-visible {outline:3px solid var(--ui-focus);outline-offset:3px}
+@media(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+ .content .btn,.launch-primary,.project-card,.launch-steps article {transition:background-color .16s,border-color .16s,box-shadow .16s,transform .16s}
+ .content .btn:not(:disabled):hover,.launch-primary:hover {transform:translateY(-1px)}
+ .project-card:hover {box-shadow:0 10px 28px -18px #44304f66}
+ .launch-steps article:hover {border-color:#5d3c70}
+}
+@media(max-width:1050px) {
+ .workspace-heading {flex-wrap:wrap}
+ .workspace-heading>div:first-child {flex-basis:100%}
+ .workspace-actions {margin-left:0}
+}
+@media(max-width:700px) {
+ .content {padding:28px 20px}
+ .content .workspace-heading {gap:16px;margin-bottom:24px}
+ .workspace-heading h1 {font-size:clamp(32px,8.5vw,42px);line-height:1.12;margin-block:14px}
+ .workspace-actions {width:100%;gap:8px}
+ .content .workspace-actions .btn {font-size:12px;min-height:44px;padding:10px}
+ .workspace-actions .focus-toggle {margin-right:auto}
+ .workspace-bar {margin-bottom:28px;padding-bottom:16px}
+ .project-views {display:grid;grid-template-columns:minmax(0,1fr);gap:8px;width:100%}
+ .project-view-group {flex-wrap:nowrap;max-width:100%;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:thin;scrollbar-color:#b59bc2 #eee6ef}
+ .project-view-group>span,.project-view-group>button {flex-shrink:0}
+ .project-view-group>span {padding-inline:6px;font-size:9px}
+ .project-view-group>button {min-height:44px;padding:10px 9px;font-size:12px;white-space:nowrap}
+ .content .project-toolbar {align-items:stretch}
+ .content .project-toolbar .toolbar-actions {width:100%}
+ .content .project-toolbar .toolbar-actions .btn {min-width:0;flex:1 1 120px;white-space:normal;font-size:12px}
+ .content :is(.topbar .mobile-menu,.icon-btn,.command-trigger) {min-width:44px;min-height:44px}
+ .topbar :is(.mobile-menu,.icon-btn,.command-trigger) {width:44px;height:44px;min-width:44px;min-height:44px}
+ .topbar {gap:8px;padding-inline:16px}
+ .topbar .top-actions {gap:8px}
+ .content .question-tabs {display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px}
+ .content .question-tabs>button {width:100%;min-width:0}
+ .content .footer {align-items:flex-start}
+ .content .footer-links {justify-content:flex-start;margin-top:0}
+ .content .footer>span:nth-child(2) {flex:1 1 180px}
+ .pitch-start .launch-form :is(input:not([type=file]),textarea,select) {font-size:16px}
+ .rv-studio .rv-view-nav {gap:20px}
+}
+@media(max-width:360px) {
+ .content {padding-inline:16px}
+ .workspace-actions .focus-toggle {flex-basis:100%;justify-content:flex-start}
+ .workspace-actions .btn:not(.focus-toggle) {flex:1}
+ .content .question-tabs {grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+ .pitch-start .idea-heading {align-items:flex-start;flex-wrap:wrap;gap:8px}
+ .pitch-start .idea-heading button {margin-left:auto}
+ .rv-intake .rv-form-top {flex-wrap:wrap}
+}
+@media(prefers-reduced-motion:reduce) {
+ html {scroll-behavior:auto}
+ .content .btn,.launch-primary,.project-card,.launch-steps article {transition:none}
+}
+@media print {
+ .content .workspace-bar {display:none!important}
+ .content .download-card {display:block}
+}
