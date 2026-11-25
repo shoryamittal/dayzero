@@ -4,6 +4,7 @@ const instructions = {
   draft: [
     'Write six editable draft sections for a competition screener. Use the supplied organizer requirements and weights for the named round or track. When the supplied rules cover several rounds and the applicable round is unclear, flag that in gaps. Check for a conflicting slide limit, required headings or template and flag it in gaps.',
     'Give each slide a distinct, specific headline of at most 90 characters on one line. Keep each body under 55 words and 360 characters, in one short paragraph or up to three short lines.',
+    'Make the product specific: name the user and their current workaround, show the core action they take in the product, distinguish the benefit from the feature, and explain the supported difference from existing alternatives. Do not assume an app, AI, a business model or traction unless supplied.',
     'Show who has the problem, what changes for them, how the solution works, what has been tested, how impact will be measured and what decision or support is needed. Place criteria like market, team and business model in the relevant sections when supplied.',
     'Use plain verbs and concrete details. Keep facts grounded in the story or evidence. Distinguish observations, targets and plans. Do not invent numbers, quotes, sources, customers, outcomes or commitments.',
     'When a fact is missing, write the strongest supported version and ask for the missing fact in gaps. Mark a wholly unsupported section [ADD DATA]. Never assume eligibility or predict selection. If winnerReference is supplied, learn only from its structure and clarity. Do not copy its content or transfer any facts, results or achievements to this project. Its winner status is not verified.'
@@ -47,14 +48,14 @@ function schema(mode) {
   }, required: ['section', 'quote', 'advice']}}, gaps}, required: ['findings', 'gaps']};
 }
 
-export async function handleAssist(request, fetcher = fetch) {
-  if (request.method === 'GET') return reply({provider: 'Gemini', model, ownKeyRequired: true});
+export async function handleAssist(request, fetcher = fetch, {serverKey=process.env.GEMINI_API_KEY||''}={}) {
+  if (request.method === 'GET') return reply({provider: 'Gemini', model, ownKeyRequired: false, available: /^[A-Za-z0-9_-]{20,200}$/.test(serverKey)});
   if (request.method !== 'POST') return reply({error: 'Use POST for AI requests.'}, 405);
   const origin = request.headers.get('origin');
-  if (origin && origin !== new URL(request.url).origin) return reply({error: 'Open AI Studio on its own site.'}, 403);
+  if ((origin && origin !== new URL(request.url).origin)||request.headers.get('sec-fetch-site')==='cross-site') return reply({error: 'Open AI Studio on its own site.'}, 403);
   if (!request.headers.get('content-type')?.startsWith('application/json')) return reply({error: 'Expected JSON input.'}, 415);
-  const key = request.headers.get('x-gemini-key')?.trim();
-  if (!key || !/^[A-Za-z0-9_-]{20,200}$/.test(key)) return reply({error: 'Enter a valid Gemini API key.'}, 401);
+  const key = request.headers.get('x-gemini-key')?.trim() || serverKey;
+  if (!key || !/^[A-Za-z0-9_-]{20,200}$/.test(key)) return reply({error: 'The writing assistant is temporarily unavailable. Your project is ready to edit.'}, 401);
   let data;
   try { data = await readInput(request); }
   catch { return reply({error: 'Send a valid project request under 256 KiB.'}, 400); }
@@ -75,8 +76,8 @@ export async function handleAssist(request, fetcher = fetch) {
         generationConfig: {responseMimeType: 'application/json', responseSchema: schema(mode), maxOutputTokens: 6000}
       })
     });
-    if (upstream.status === 429) return reply({error: 'Your Gemini project has reached its quota. Try again later or use the local check.'}, 429);
-    if ([400, 401, 403].includes(upstream.status)) return reply({error: 'Gemini rejected the request. Check your key, model access and region in AI Studio.'}, 422);
+    if (upstream.status === 429) return reply({error: 'The writing assistant is busy. Try again later or continue editing.'}, 429);
+    if ([400, 401, 403].includes(upstream.status)) return reply({error: 'The writing assistant could not complete this request. Your draft is still available.'}, 422);
     if (!upstream.ok) return reply({error: 'Gemini is temporarily unavailable.'}, 502);
     const body = await upstream.json();
     const answer = body.candidates?.[0];

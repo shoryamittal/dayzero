@@ -29,7 +29,7 @@ The reader supports 1–40 slides and files up to 8 MB. Text outlines do not rep
 
 Export a library backup before switching hosts, then unzip it and import each project JSON on the new host. Browser storage is isolated by origin. Drafts expire 24 hours after last edit, checked on opening. Export backups for durable storage.
 
-Event search provides official references and Wikipedia background. It cannot discover every campus event or verify current deadlines. AI Studio is optional and uses your Gemini API key. Projects stay local unless you export them or send selected text to Gemini. A paid launch must accurately describe these limits. PPTX filling requires manual layout review in PowerPoint. Generated decks have six sections. If the built-in PDF cannot render your text, the pitch kit still includes the editable PowerPoint and other files.
+Event search provides official references and Wikipedia background. It cannot discover every campus event or verify current deadlines. The writing assistant uses server-configured Gemini access. Building a pitch can send your idea for automatic drafting as disclosed on the form; ordinary editing stays local. A paid launch must accurately describe these limits. PPTX filling requires manual layout review in PowerPoint. Generated decks have six sections. If the built-in PDF cannot render your text, the pitch kit still includes the editable PowerPoint and other files.
 
 Third-party licenses are retained under dist/vendor/.
 
@@ -39,7 +39,7 @@ The homepage and Community pilot page describe a proposed four-week preparation 
 
 ## AI Studio
 
-Open a project and choose AI Studio. Use a Gemini key from a free-tier Google AI Studio project. Review the outbound text before sending. A key is used for one request and is never included in project storage or exports. Google may use free-tier submissions to improve its products.
+Open a project and choose Writing assistant. The server uses GEMINI_API_KEY when configured. Provider credentials are never included in project storage or exports. The form lets users inspect outbound story and context. Google may use free-tier submissions to improve its products.
 
 The Vercel deployment runs /api/assist. For local development, run npm run dev and open http://127.0.0.1:4176/. Render continues serving the static workspace. AI Studio there links to Vercel.
 
@@ -107,3 +107,10 @@ The public reviewer asks for a PowerPoint, competition name, optional event link
 POST /api/review-ai with action prepare collects bounded source excerpts using the known organizer directory and, when the server AI connection is available, grounded competition/reference discovery. Only successfully fetched excerpts are used. Sources and limitations are shown in the report. Re-review uses the same workflow.
 
 The standard review remains available when extended analysis cannot run. Missing AI/research/rendering capabilities are reported accurately rather than shifting setup to the visitor. Automatic original-deck rendering is not provided by the Vercel text-review service.
+
+
+## Automatic pitch start
+
+The dedicated pitch page accepts an idea, optional competition name/link, and optional known facts, rules and names. It opens the editor immediately, then attempts bounded competition/reference research and server-backed drafting. Provider keys are never requested in the public creation form or writing assistant. Configure GEMINI_API_KEY server-side for AI operations; without it, the editor retains the idea and shows honest missing-data prompts.
+
+The automatic flow preserves extra rules, records source excerpts and research limits, validates complete six-section drafts, and checks for edits made during the provider request before applying any automatic result. Original wording is retained in version history. No winner status, fact verification or competition success is claimed. Exports currently remain six slides: constraints requiring another structure must be addressed before submission.

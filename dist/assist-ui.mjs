@@ -6,7 +6,7 @@ import {slideReadability} from './deck-design.mjs?v=competition-round-1';
 const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
 })[character]);
-const labels = {draft: 'Draft a competition pitch', review: 'Review against the rubric', rules: 'Extract rule requirements'};
+const labels = {draft: 'Improve my pitch', review: 'Check my story', rules: 'Explain competition requirements'};
 let api;
 let output;
 let pending = false;
@@ -36,17 +36,17 @@ function visibleOutput(project) {
 
 export function assistStudio(project) {
   const local = analyze(project);
-  return `<section class="prep-section-title"><span>WORKSPACE / AI STUDIO</span><h3>Draft, check, rehearse.</h3><p>Start with your own evidence. Use Gemini for a draft, practice feedback or a pass through pasted rules.</p></section>
+  return `<section class="prep-section-title"><span>WORKSPACE / AI STUDIO</span><h3>Draft, check, rehearse.</h3><p>Make the user benefit clear, explain how the product works, and strengthen the facts behind your story.</p></section>
     <div class="prep-split"><section class="panel">
-      <h3>Run Gemini with your API key</h3>
-      <p>AI Studio is hosted on <a href="https://dayzero-ivory.vercel.app/">Vercel</a>. Use a free-tier project in <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a>. Your key is used for this request and is cleared when you submit.</p>
+      <h3>What would make this pitch stronger?</h3>
+      <p>Ask for a clearer product story, a sharper opening or a check against the requirements. Review suggestions before applying them.</p>
+      <div class="pitch-quick-prompts" aria-label="Suggested improvements">${['Make the user problem clear','Explain the product workflow','Strengthen the evidence'].map(label=>'<button type="button" class="btn small" data-assist-direction="'+escape(label)+'">'+label+'</button>').join('')}</div>
       <form id="assist-form" method="post">
         <div class="field"><label for="assist-mode">What do you want to work on?</label><select id="assist-mode" name="mode">${Object.entries(labels).map(([key, label]) => `<option value="${key}">${label}</option>`).join('')}</select></div>
         <div class="field"><label for="assist-direction">What would you like to improve? <small>(optional)</small></label><textarea id="assist-direction" maxlength="1000" rows="2" placeholder="Make it simpler, explain the prototype, or strengthen the opening.">${escape(direction)}</textarea></div>
-        <div class="field"><label for="assist-key">Gemini API key</label><input id="assist-key" type="password" autocomplete="off" maxlength="200" required></div>
         <details><summary>See the text sent in an AI request</summary><pre id="assist-preview" style="white-space:pre-wrap;overflow-wrap:anywhere;max-height:20rem;overflow:auto">${escape(JSON.stringify(assistInput({...project,direction}, "draft"), null, 2))}</pre></details>
-        <label class="check-label"><input type="checkbox" required name="consent"> Send the displayed text to Google Gemini. Google may use free-tier submissions to improve its products. Use material you can share.</label>
-        <button class="btn primary" type="submit" ${pending ? 'disabled' : ''}>${pending ? 'Waiting for Gemini…' : 'Send to Gemini ↗'}</button>
+        <p class="disabled-note">Requests send the displayed story and context to Google Gemini through our service. Google may use free-tier submissions to improve its products. Use material you can share.</p>
+        <button class="btn primary" type="submit" ${pending ? 'disabled' : ''}>${pending ? 'Waiting for Gemini…' : 'Get suggestions ↗'}</button>
         <div class="assist-progress" aria-live="polite"><strong id="assist-status">${escape(message)}</strong><p id="assist-progress">${escape(progress)}</p></div>
       </form></section>
       <aside class="panel"><h3>Local review</h3><p>These checks run in your browser. Use them to improve your draft while you gather sources.</p>
@@ -55,7 +55,7 @@ export function assistStudio(project) {
       </aside></div>${visibleOutput(project)}`;
 }
 
-export async function requestPitchAssist(project, mode, key) {
+export async function requestPitchAssist(project, mode, key = '') {
   if (pending) return;
   const input = assistInput({...project,direction}, mode);
   const id = project.id;
@@ -71,12 +71,12 @@ export async function requestPitchAssist(project, mode, key) {
     document.querySelector('#assist-progress') && (document.querySelector('#assist-progress').textContent=progress);
     const response = await fetch('/api/assist', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json', 'x-gemini-key': key},
+      headers: {'Content-Type': 'application/json', ...(key?{'x-gemini-key': key}:{})},
       body: JSON.stringify({mode, input}),
       signal: AbortSignal.timeout(32000)
     });
     if (!response.headers.get('content-type')?.includes('application/json')) {
-      throw Error('Open the Vercel site or run the local AI server to use Gemini.');
+      throw Error('The writing assistant is temporarily unavailable. Continue editing or try again later.');
     }
     const data = await response.json();
     if (!response.ok) throw Error(data.error || 'The request failed.');
@@ -99,13 +99,11 @@ if (typeof document !== 'undefined') {
     if(event.target.id!=='assist-direction')return;
     direction=event.target.value.slice(0,1000);
     const form=event.target.form;
-    form.elements.consent.checked=false;
     form.querySelector('#assist-preview').textContent=JSON.stringify(assistInput({...api.project(),direction},form.elements.mode.value),null,2);
   });
   document.addEventListener('change', event => {
     if (event.target.id !== 'assist-mode') return;
     const form = event.target.form;
-    form.elements.consent.checked = false;
     form.querySelector('#assist-preview').textContent = JSON.stringify(assistInput({...api.project(),direction}, event.target.value), null, 2);
   });
   document.addEventListener('submit', async event => {
@@ -116,16 +114,14 @@ if (typeof document !== 'undefined') {
     if (!project) return;
     const form = event.target;
     const fields = new FormData(form);
-    if (!fields.has('consent')) return;
     const mode = fields.get('mode');
     direction = form.querySelector('#assist-direction').value.trim();
-    const keyField = form.querySelector('#assist-key');
-    const key = keyField.value.trim();
-    keyField.value = '';
-    await requestPitchAssist(project, mode, key);
+    await requestPitchAssist(project, mode);
   });
 
   document.addEventListener('click', async event => {
+    const preset=event.target.closest('[data-assist-direction]');
+    if(preset){const field=document.querySelector('#assist-direction');if(field){field.value=preset.dataset.assistDirection;field.dispatchEvent(new Event('input',{bubbles:true}));field.focus();}return;}
     const apply = event.target.closest('[data-assist-apply]');
     const download = event.target.closest('[data-assist-download]');
     if (!apply && !download) return;
