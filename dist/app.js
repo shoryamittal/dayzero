@@ -61,7 +61,7 @@ const btn=(label,action,style='primary',i='arrow')=>`<button class="btn ${style}
 function shell(body){
  if(route==='home'||route==='create')return `<div class="launch-site">
   <header class="launch-header"><div class="launch-width launch-header-inner"><a href="#home" class="launch-brand" data-route="home" aria-label="PitchViva home"><span>pv</span><strong>PitchViva</strong></a>
-   <nav aria-label="Website navigation"><a href="/review.html">Review my deck</a><a href="/#workflow">How it works</a><button data-route="projects">My projects</button></nav>
+   <nav aria-label="Website navigation"><a href="/review.html">Review my presentation</a><a href="/#workflow">How it works</a><button data-route="projects">My projects</button></nav>
    <a class="launch-primary" href="/pitch.html">Make a pitch ${icon('arrow',16)}</a>
   </div></header>
   <main class="route-${route}" id="main" tabindex="-1">${body}</main>
