@@ -19,7 +19,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
         <p class="launch-kicker"><span></span> THE HACKATHON PITCH STUDIO</p>
         <h1>Build a pitch<br> worth <em>presenting.</em></h1>
         <p class="launch-lede">Turn your project into an editable PowerPoint. Shape each slide around what your judges are looking for.</p>
-        <div class="launch-actions"><a class="launch-primary" href="/pitch.html">Build my pitch ${icons.arrow}</a><a class="hero-review-link" href="/review.html">Review my presentation</a></div>
+        <div class="launch-actions"><a class="launch-primary" href="/pitch.html">Build my pitch ${icons.arrow}</a><a class="hero-review-link" href="/#deck-review">Review my presentation</a></div>
         <p class="launch-meta">${icons.shield} Free to start. Your draft stays in this browser.</p>
       </div>
     </div>
