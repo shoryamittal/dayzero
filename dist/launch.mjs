@@ -1,3 +1,4 @@
+import {reviewIntake} from './review-shell.mjs';
 import './competition-picker.mjs';
 
 export function launchPage({deck, draft, icons, hasProjects}) {
@@ -26,7 +27,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
       <span><b>01</b> Editable PowerPoint</span><span><b>02</b> Evidence &amp; event rules</span><span><b>03</b> Rehearsal &amp; export kit</span>
     </div>
   </section>
-  <section class="launch-entry launch-width" aria-labelledby="entry-title"><div class="launch-section-heading"><div><p class="launch-kicker"><span></span> YOUR NEXT STEP</p><h2 id="entry-title">Start where <em>you are.</em></h2></div><p>One studio, from your first idea to your final presentation.</p></div><div class="launch-entry-grid"><a class="launch-entry-card" href="/pitch.html"><span class="entry-number">01 / CREATE</span><h3>I have an idea.</h3><p>Describe it in a few sentences. Add your competition, then shape the slides in Pitch Studio.</p><span class="entry-action">Build my pitch ${icons.arrow}</span></a><a class="launch-entry-card" href="/review.html"><span class="entry-number">02 / REVIEW</span><h3>I already have slides.</h3><p>Upload your PowerPoint, check it against the brief and leave with a focused revision checklist.</p><span class="entry-action">Review my deck ${icons.arrow}</span></a></div></section>
+  <section id="deck-review" class="rv-studio launch-width" aria-labelledby="deck-review-title">${reviewIntake()}</section>
   <section class="launch-how launch-width" id="workflow" aria-labelledby="workflow-title">
     <div class="launch-section-heading"><div><p class="launch-kicker"><span></span> FROM IDEA TO SUBMISSION</p><h2 id="workflow-title">Everything in <em>one workspace.</em></h2></div><p>Your story, source notes, event requirements, and rehearsal stay with the same project.</p></div>
     <div class="launch-steps">${steps.map(([number,icon,title,detail,action,target])=>`<article><div class="launch-step-top"><span>${number}</span>${icons[icon]}</div><h3>${title}</h3><p>${detail}</p>${target==='events'? `<button class="launch-text-action" data-route="events">${action} ${icons.arrow}</button>` : `<a class="launch-text-action" href="/pitch.html">${action} ${icons.arrow}</a>`}</article>`).join('')}</div>
