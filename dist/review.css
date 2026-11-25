@@ -87,3 +87,49 @@
  .rv-intake .rv-upload {flex:1;min-height:195px}
  .rv-intake .rv-form-top {min-height:24px}
 }
+
+/* A consistent spacing scale and readable form type at every entry point. */
+.rv-intake {padding:clamp(24px,2.4vw,36px);border-radius:20px}
+.rv-form-top {gap:16px;margin-bottom:24px}
+.rv-intake .rv-form-top .rv-eyebrow {font-size:10px;letter-spacing:1.3px}
+.rv-upload {flex:none!important;min-height:200px!important;padding:24px 16px}
+.rv-upload strong {font-size:16px;line-height:1.5}
+.rv-upload>span:not(.rv-upload-icon) {font-size:12px;line-height:1.6}
+.rv-format-help {margin-top:12px;color:#756180;font-size:12px;line-height:1.65}
+.rv-format-help summary {cursor:pointer;width:fit-content;text-underline-offset:3px}
+.rv-format-help p {margin-top:8px;font-size:12px}
+.rv-form-row {gap:16px;margin:24px 0}
+.rv-intake label:not(.rv-upload) {font-size:13px;margin-bottom:8px}
+.rv-intake label span {font-size:11px}
+.rv-intake :is(input:not([type=file]),select,textarea) {font-size:14px;line-height:1.55;padding:12px;min-height:46px}
+.rv-brief {padding-top:20px;margin-bottom:24px}
+.rv-brief summary {font-size:13px;min-height:24px;margin:0;gap:16px}
+.rv-brief[open] summary {margin-bottom:20px}
+.rv-brief p {font-size:12px;line-height:1.65;margin-bottom:0}
+.rv-intake .rv-analyze {min-height:52px;margin-top:auto;padding:16px 18px}
+.rv-intake>.rv-form-note {font-size:11px;line-height:1.65;margin-top:12px!important}
+.rv-intro .rv-value-list {gap:24px;margin:32px 0}
+.rv-intro .rv-value-list strong {font-size:14px}
+.rv-intro .rv-value-list small {font-size:13px;line-height:1.7}
+.rv-intro .rv-example {font-size:14px!important}
+.rv-intro .rv-example-note,.rv-intro .rv-trust {font-size:12px}
+@media(min-width:851px) {
+ .rv-intake-grid {column-gap:clamp(40px,5vw,80px)}
+ .rv-intro :is(h1,h2) {line-height:1.06;margin:24px 0}
+ .rv-intro .rv-trust {padding-top:28px}
+}
+@media(max-width:850px) {
+ .rv-intake-grid {width:100%;max-width:none;row-gap:32px}
+ .rv-intake {width:100%;max-width:650px;margin-inline:auto}
+ .rv-intro {max-width:650px;margin-inline:auto;width:100%}
+}
+@media(max-width:600px) {
+ .rv-intake {padding:24px 20px;border-radius:16px}
+ .rv-upload {min-height:180px!important}
+ .rv-intake :is(input:not([type=file]),select,textarea) {font-size:16px}
+ .rv-form-top {gap:8px}
+ .rv-intake .rv-form-top .rv-eyebrow {font-size:9px;letter-spacing:1px}
+ .rv-intro :is(h1,h2) {font-size:clamp(36px,10vw,44px)}
+ .rv-format-help,.rv-brief p {font-size:12px}
+ .rv-intake-grid .rv-intro .rv-trust {padding-top:0}
+}
