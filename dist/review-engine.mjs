@@ -153,7 +153,7 @@ export function reviewMarkdown(model, {name='Deck review',event='',demo=false,st
  '\n## Action plan',...model.findings.map(i=>`- [${addressed.has(i.id)?'x':' '}] ${i.index?'Slide '+i.index+' — ':''}${i.topic}: ${i.quote}\n  ${i.action}`),
  '\n## Supplied rules',...(model.checks.length?model.checks.map(c=>`- ${c.rule}\n  ${c.state}: ${c.detail}`):['No organiser rules supplied.']),
  '\n## Slide text',...model.slides.map(s=>`### Slide ${s.index}: ${s.title}\n${s.paragraphs.join('\n\n')}`),
- '\n## Review scope',`Round: ${stage==='demo'?'Live demo':'Idea screening'}. Checks use editable text and stored metadata. Topic matches are candidates, not verified evidence. Inspect original slide layouts, inherited fonts, chart data and organiser rules manually. No selection prediction.`,
+ '\n## Review scope',`Round: ${stage==='demo'?'Live demo':stage==='auto'?'Competition review':'Idea screening'}. Checks use editable text and stored metadata. Topic matches are candidates, not verified evidence. Inspect original slide layouts, inherited fonts, chart data and organiser rules manually. No selection prediction.`,
  'Checked items are marked addressed by you, not automatically verified. Checklist state lasts for this review session.'];
  return out.filter(Boolean).join('\n\n');
 }
