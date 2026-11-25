@@ -8,5 +8,10 @@
       "destination": "/",
       "permanent": false
     }
-  ]
+  ],
+  "functions": {
+    "api/review-ai.mjs": {
+      "maxDuration": 60
+    }
+  }
 }

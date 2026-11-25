@@ -1,3 +1,8 @@
+import './review-competition.mjs';
+import {aiKey,connectionReady} from './review-competition.mjs';
+import {requestDeepReview} from './deep-review-client.mjs';
+import {deepReviewMarkdown} from './deep-review-model.mjs';
+import {deepSummary,deepSlide,deepFinding} from './deep-review-view.mjs';
 import {requestDeckReview} from './review-client.mjs';
 import {validatePresentationFile} from './presentation-format.mjs';
 import {readTemplate} from './template-bridge.mjs?v=review-2';
@@ -19,7 +24,7 @@ function snippet(text,quote){
 }
 function findingCard(i,s,{compact=false}={}){
  const done=s.addressed.has(i.id);
- return `<article class="rv-finding ${done?'is-addressed':''}"><div class="rv-finding-meta"><span class="rv-badge ${i.severity==='priority'?'danger':'neutral'}">${i.severity==='priority'?'Fix first':'Review'}</span><span>${i.index?'SLIDE '+pad(i.index):'DECK RULE'} · ${esc(i.basis)}</span></div><h4>${esc(i.topic)}</h4><blockquote>${esc(i.quote)}</blockquote><p>${esc(i.action)}</p><div class="rv-finding-actions">${compact&&i.index?`<button type="button" class="rv-text-button" data-slide="${i.index}" data-finding="${i.id}">Inspect slide ${pad(i.index)} ${icon('arrow',14)}</button>`:''}<label class="rv-checkbox"><input type="checkbox" data-address="${i.id}" ${done?'checked':''}><span>${done?'Marked addressed':'Mark addressed'}</span></label></div></article>`;
+ return `<article class="rv-finding ${done?'is-addressed':''}"><div class="rv-finding-meta"><span class="rv-badge ${i.severity==='priority'?'danger':'neutral'}">${i.severity==='priority'?'Fix first':'Review'}</span><span>${i.index?'SLIDE '+pad(i.index):'DECK RULE'} · ${esc(i.basis)}</span></div><h4>${esc(i.topic)}</h4><blockquote>${esc(i.quote)}</blockquote>${deepFinding(i)}<div class="rv-finding-actions">${compact&&i.index?`<button type="button" class="rv-text-button" data-slide="${i.index}" data-finding="${i.id}">Inspect slide ${pad(i.index)} ${icon('arrow',14)}</button>`:''}<label class="rv-checkbox"><input type="checkbox" data-address="${i.id}" ${done?'checked':''}><span>${done?'Marked addressed':'Mark addressed'}</span></label></div></article>`;
 }
 function slideMap(s) {
  const {slides, issues} = s.model;
@@ -38,7 +43,7 @@ function overview(s){
  const m=s.model;
  const categories=[['Evidence','evidence'],['Rule breaches','rules'],['Readability','readability'],['Clarity & access','clarity']];
  const open=groupOpenFindings(m.findings,s.addressed);
- return `${slideMap(s)}<div class="rv-overview-grid"><section class="rv-priority-panel">${sectionHeading('REVISION QUEUE','What to fix next',`<span class="rv-pill">${m.findings.length} action${m.findings.length===1?'':'s'}</span>`)}<p class="rv-section-copy">Open a finding to see the passage in context. Repeated findings are grouped together.</p>${open.length?open.slice(0,3).map(group=>overviewGroup(group,s)).join(''):m.findings.length?'<div class="rv-empty"><h4>Every action is marked addressed.</h4><p>Review a revised PowerPoint to check the changes.</p></div>':'<div class="rv-empty">'+icon('check',28)+'<h4>No automatic flags surfaced.</h4><p>Check the original slides and the current organiser’s brief before submitting.</p></div>'}<button class="rv-button rv-secondary" type="button" data-view="plan">Open the complete action plan ${icon('arrow',17)}</button></section>
+ return `${deepSummary(m)}${slideMap(s)}<div class="rv-overview-grid"><section class="rv-priority-panel">${sectionHeading('REVISION QUEUE','What to fix next',`<span class="rv-pill">${m.findings.length} action${m.findings.length===1?'':'s'}</span>`)}<p class="rv-section-copy">Open a finding to see the passage in context. Repeated findings are grouped together.</p>${open.length?open.slice(0,3).map(group=>overviewGroup(group,s)).join(''):m.findings.length?'<div class="rv-empty"><h4>Every action is marked addressed.</h4><p>Review a revised PowerPoint to check the changes.</p></div>':'<div class="rv-empty">'+icon('check',28)+'<h4>No automatic flags surfaced.</h4><p>Check the original slides and the current organiser’s brief before submitting.</p></div>'}<button class="rv-button rv-secondary" type="button" data-view="plan">Open the complete action plan ${icon('arrow',17)}</button></section>
  <aside class="rv-overview-aside"><section class="rv-signal-card">${sectionHeading('A CLEARER PICTURE','Where to look.')}<p>Observations by review area</p>${categories.map(([title,lens])=>{const count=m.findings.filter(i=>i.lens===lens).length;return `<button class="rv-signal" type="button" data-lens-open="${lens}"><span>${title}</span><b>${pad(count)}</b><span class="rv-signal-track"><i style="width:${count?Math.max(6,count/Math.max(1,m.findings.length)*100):0}%"></i></span></button>`;}).join('')}<small>Counts describe findings. They are not a quality score or your chance of selection.</small></section>
  <section class="rv-round-card"><span class="rv-eyebrow">${s.stage==='demo'?'THE LIVE DEMO LENS':'THE FIRST-READ LENS'}</span><h3>${s.stage==='demo'?'Make the handoff<br>feel effortless.':'Can your opening<br>stand on its own?'}</h3><p>${s.stage==='demo'?'Find the moment where explaining becomes showing. Rehearse one action, its result, and a connection-free fallback.':'A screening judge may only have your slides. Can they identify the user, the problem and your proposed change from the opening?'}</p><button type="button" class="rv-text-button" data-view="slides" data-opening>Read the opening slides ${icon('arrow',15)}</button></section></aside></div>`;
 }
@@ -51,7 +56,7 @@ function slidesView(s){
  <div class="rv-outline"><div class="rv-outline-top"><span>${icon('deck',14)} EXTRACTED TEXT OUTLINE</span><span>${pad(slide.index)}</span></div><h4>${snippet(slide.title,current?.passage)}</h4><div>${slide.paragraphs.filter((p,n)=>!(n===0&&p===slide.title)).map(p=>`<p>${snippet(p,current?.passage)}</p>`).join('')||'<p>No editable body text found. Inspect images and diagrams in the original deck.</p>'}</div><div class="rv-outline-foot"><span>${esc(s.name.replace(/\.(?:pptx|pptm|ppsx|ppsm|potx|potm)$/i,''))}</span><span>${slide.count} editable words</span></div></div>
  <p class="rv-outline-note">${icon('eye',15)} Text outline, not the original slide layout. Check images, charts and placement in PowerPoint.</p>
  <div class="rv-slide-facts">${[[slide.count,'Editable words'],[slide.pictures,'Pictures'],[new Set(slide.runs.map(r=>r.font)).size,'Font declarations']].map(([n,label])=>`<div><strong>${n}</strong><span>${label}</span></div>`).join('')}</div>
- <details class="rv-type-details"><summary>Inspect text &amp; typography ${icon('chevron',14)}</summary><div class="rv-table-scroll"><table><thead><tr><th>Text</th><th>Declared font</th><th>Size</th></tr></thead><tbody>${slide.runs.map(r=>`<tr><td>${esc(r.text)}</td><td>${esc(r.font)}</td><td>${r.size?r.size+' pt':'Inherited'}</td></tr>`).join('')}</tbody></table></div><p>Inherited and theme styles need inspection in PowerPoint. Font declarations do not guarantee visual rendering.</p></details></div>
+ ${deepSlide(m,slide.index)}<details class="rv-type-details"><summary>Inspect text &amp; typography ${icon('chevron',14)}</summary><div class="rv-table-scroll"><table><thead><tr><th>Text</th><th>Declared font</th><th>Size</th></tr></thead><tbody>${slide.runs.map(r=>`<tr><td>${esc(r.text)}</td><td>${esc(r.font)}</td><td>${r.size?r.size+' pt':'Inherited'}</td></tr>`).join('')}</tbody></table></div><p>Inherited and theme styles need inspection in PowerPoint. Font declarations do not guarantee visual rendering.</p></details></div>
  <aside class="rv-inspector"><div class="rv-inspector-heading"><span class="rv-eyebrow">THE SECOND LOOK</span><h3>Slide observations <span>${issues.length}</span></h3></div><label class="rv-sr-only" for="review-lens">Filter findings</label><select id="review-lens">${lenses.map(([id,label])=>`<option value="${id}" ${s.lens===id?'selected':''}>${label}</option>`).join('')}</select>${issues.map(i=>`<div class="rv-observation" data-current="${i.id===current?.id}">${findingCard(i,s)}${i.passage && slide.paragraphs.some(p=>p.includes(i.passage))?`<button type="button" class="rv-text-button rv-show-passage" data-passage="${i.id}" aria-pressed="${i.id===current?.id}">${i.id===current?.id?'Passage highlighted':'Highlight passage'}</button>`:''}</div>`).join('')||'<div class="rv-empty"><h4>No findings in this view.</h4><p>Try another filter. A clear automated check still needs a human look at the original slide.</p></div>'}</aside></div>`;
 }
 function rulesView(s){return `${sectionHeading('THE BRIEF, MADE VISIBLE','Put every requirement in view.',`<button class="rv-button rv-secondary" type="button" data-edit-rules>Edit review context</button>`)}<p class="rv-section-copy">Measured limits and possible wording matches are shown separately. A topic match does not verify that a requirement is satisfied.</p><div class="rv-rules-list">${s.model.checks.map(c=>`<article class="rv-rule-card"><div><span class="rv-badge ${statusTone(c)}">${esc(c.state)}</span><h4>${esc(c.rule)}</h4><p>${esc(c.detail)}</p></div>${c.slide?`<button type="button" class="rv-button rv-secondary" data-slide="${c.slide}">Inspect slide ${pad(c.slide)} ${icon('arrow',15)}</button>`:''}</article>`).join('')||'<div class="rv-empty"><h4>Your brief is missing.</h4><p>Add the current judging rubric or submission rules, then run the review again.</p><button type="button" class="rv-button rv-primary" data-edit-rules>Add competition rules</button></div>'}</div>`;}
@@ -71,7 +76,7 @@ function render(s){
  report.innerHTML=`<div class="rv-results-header"><div><span class="rv-eyebrow"><i></i> ${s.demo?'FICTIONAL EXAMPLE REVIEW':'YOUR DECK, WITH FRESH EYES'}</span><h2>${esc(s.event||s.name.replace(/\.(?:pptx|pptm|ppsx|ppsm|potx|potm)$/i,''))}</h2><p>${esc(s.name)} <span>·</span> ${s.stage==='demo'?'Live demo':'Idea screening'} <span>·</span> ${m.slides.length} slides inspected</p></div><div class="rv-results-actions"><button type="button" class="rv-button rv-secondary" data-download>${icon('download',16)} Download report</button><button type="button" class="rv-button rv-primary" data-edit-context>Review another presentation ${icon('arrow',16)}</button></div></div>
  <div class="rv-stale" role="status" ${s.stale?'':'hidden'}>Review settings changed. Run the review again to update these findings.</div>
  <div class="rv-summary"><div class="rv-summary-lead"><span>${icon('spark',20)} THE REVIEW SNAPSHOT</span><strong>${m.priority?'A few things to strengthen.':m.findings.length?'Review the marked slides.':'No automatic flags surfaced.'}</strong><p>${s.demo?'You are exploring a fictional example. Upload your deck for your own findings.':'Start with the priorities. Keep what works. Give every important claim something to stand on.'}</p></div>${[[m.priority,'Priority actions','Fix these first'],[m.affected+'/'+m.slides.length,'Slides with observations','Editable text & metadata'],[m.checks.length,'Rules supplied',m.checks.length?m.breaches.length+' measured breach'+(m.breaches.length===1?'':'es'):'Add your organiser’s brief']].map(([n,label,detail])=>`<div class="rv-summary-stat"><strong>${n}</strong><span>${label}</span><small>${detail}</small></div>`).join('')}</div>
- ${revisionPanel(s)}<nav class="rv-view-nav" aria-label="Review views">${[['overview','Overview'],['slides','Slide review'],['rules','Rule check'],['plan','Action plan']].map(([id,label])=>`<button type="button" data-view="${id}" aria-pressed="${s.view===id}">${label}${id==='plan'?`<span>${m.findings.length}</span>`:''}</button>`).join('')}<span class="rv-session-status">${icon('shield',13)} ${s.demo?'Example review':'Server review · not saved'}</span></nav>
+ ${revisionPanel(s)}<nav class="rv-view-nav" aria-label="Review views">${[['overview','Overview'],['slides','Slide review'],['rules','Rule check'],['plan','Action plan']].map(([id,label])=>`<button type="button" data-view="${id}" aria-pressed="${s.view===id}">${label}${id==='plan'?`<span>${m.findings.length}</span>`:''}</button>`).join('')}<span class="rv-session-status">${icon('shield',13)} ${s.demo?'Example review':m.deepReview?.complete?'Gemini · deep review':'Standard checks · not saved'}</span></nav>
  <div class="rv-view-content">${s.view==='overview'?overview(s):s.view==='slides'?slidesView(s):s.view==='rules'?rulesView(s):planView(s)}</div>
  <details class="rv-coverage"><summary>What this review covers ${icon('chevron',14)}</summary><p>Checks inspect editable slide text, explicit Latin font settings, picture descriptions, hidden slides and stored object bounds. Wording matches are candidate evidence. Inherited styles, rendered layout, charts, factual accuracy, colour contrast and organiser decisions need human review. This review does not predict selection.${s.embeddedCount?' '+s.embeddedCount+' embedded attachment(s) skipped; check chart values against their workbooks.':''}</p><button type="button" class="rv-text-button" data-print>Print or save a full report as PDF ${icon('arrow',14)}</button></details>`;
  report.hidden=false;
@@ -100,7 +105,7 @@ document.addEventListener('click',e=>{
  if(button.hasAttribute('data-edit-rules')){editContext(true);return;}
  if(button.hasAttribute('data-edit-context')){editContext();return;}
  if(button.hasAttribute('data-download')){
-  const text=reviewMarkdown(s.model,{...s,addressed:s.addressed}),url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));
+  const text=reviewMarkdown(s.model,{...s,addressed:s.addressed})+deepReviewMarkdown(s.model),url=URL.createObjectURL(new Blob([text],{type:'text/markdown;charset=utf-8'}));
   const a=document.createElement('a');a.href=url;a.download=(s.name.replace(/\.(?:pptx|pptm|ppsx|ppsm|potx|potm)$/i,'').replace(/[^\p{L}\p{N}._ -]/gu,'').slice(0,90)||'deck')+'-review.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return;
  }
  if(button.hasAttribute('data-print')){window.print();return;}
@@ -146,26 +151,70 @@ document.addEventListener('change',async e=>{
   if(states.get(report)!==s||!report.isConnected)return;
   update(3,'Checking the revised slides and competition rules…');
   const model=await requestDeckReview(slides,s.rules);
+  if(s.model.deepReview||s.model.aiError)model.aiError='This revised file received standard checks. Run a new deep review with the revised PowerPoint and matching PDF to refresh AI feedback.';
   if(states.get(report)!==s||!report.isConnected)return;
   showReport({file,slides,rules:s.rules,event:s.event,stage:s.stage,embeddedCount,stale:s.stale,model,
    comparison:{name:s.name,rows:compareReviews(s.model,model)}});
  }catch(error){update(0,error.message||'Choose another PowerPoint and try again.');}
  finally{s.comparing=false;const picker=report.querySelector('[data-revision]');if(picker&&states.get(report)===s){picker.value='';picker.disabled=false;}}
 });
+let deepRun;
+async function visualInput(form){
+ const file=form.querySelector('#review-visual-pdf').files[0];
+ if(!file)return {};
+ if(file.size>2*1024*1024||await file.slice(0,5).text()!=='%PDF-')throw Error('Use an exported PDF under 2 MiB for visual review.');
+ if(!form.querySelector('#review-visual-confirm').checked)throw Error('Confirm that the PDF has the same slide order and count as the PowerPoint.');
+ const visualPDF=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('Could not read this PDF.'));reader.readAsDataURL(file);});
+ return {visualPDF,visualConfirmed:true};
+}
+document.addEventListener('click',e=>{if(e.target.closest('#review-cancel'))deepRun?.abort();});
+document.addEventListener('change',async e=>{
+ if(e.target.id==='file'&&e.target.form===$('intake')){$('review-visual-pdf').value='';$('review-visual-confirm').checked=false;}
+ if(e.target.id==='review-visual-pdf')$('review-visual-confirm').checked=false;
+ if(e.target.id!=='review-reference-file'||!e.target.files[0])return;
+ const picker=e.target,form=picker.form,status=$('status');picker.disabled=true;form.dataset.referenceReading='true';
+ try{
+  const {slides}=await inspectFile(picker.files[0],(_,message)=>status.textContent=message);
+  if(!form.isConnected)return;
+  const text=slides.map(s=>'Slide '+s.index+': '+s.title+'\n'+s.text).join('\n\n');
+  if(text.length>12000)throw Error('Reference text exceeds 12,000 characters. Paste selected reference slides instead.');
+  $('review-reference').value=text;$('review-reference').dispatchEvent(new Event('input',{bubbles:true}));
+  status.textContent='Reference text attached. Its winner status is not verified.';
+ }catch(error){status.textContent=error.message;}
+ finally{picker.disabled=false;delete form.dataset.referenceReading;}
+});
 document.addEventListener('submit',async e=>{
- if(!e.target.matches('form#intake'))return;e.preventDefault();const form=e.target,file=$('file').files[0],event=$('event').value.trim(),rules=$('rules').value,stage=$('round').value;
- const fields=Array.from(form.elements);fields.forEach(f=>f.disabled=true);const progress=$('review-progress');progress.hidden=false;form.setAttribute('aria-busy','true');$('status').classList.remove('is-error');
+ if(!e.target.matches('form#intake'))return;e.preventDefault();
+ const form=e.target,file=$('file').files[0],event=$('event').value.trim(),rules=$('rules').value,stage=$('round').value;
+ const deep=$('review-depth').value==='deep',key=aiKey(form);
+ if(form.dataset.referenceReading){$('status').textContent='Wait for the reference deck to finish opening.';return;}
+ $('status').classList.remove('is-error');
+ if(deep&&!$('review-ai-consent').checked){$('status').classList.add('is-error');$('status').textContent='Confirm that you can send the displayed content to Gemini, or choose standard checks.';return;}
+ const info=deep?await connectionReady():{};
+ if(deep&&!key&&!info.available){$('status').classList.add('is-error');$('status').textContent='Connect Gemini with a key below, or choose standard checks.';$('review-ai-key').focus();return;}
+ let pdf={};try{if(deep)pdf=await visualInput(form);}catch(error){$('status').classList.add('is-error');$('status').textContent=error.message;return;}
+ const fields=Array.from(form.elements);fields.forEach(f=>f.disabled=true);
+ const progress=$('review-progress');progress.hidden=false;form.setAttribute('aria-busy','true');
+ deepRun=new AbortController();const cancel=$('review-cancel');cancel.hidden=!deep;cancel.disabled=false;
  const step=(n,text)=>{progress.dataset.step=n;$('status').textContent=text;};
  try{
   const {slides,embeddedCount}=await inspectFile(file,step);
-  step(3,'Reviewing slide text, typography and your supplied rules…');
-  const model=await requestDeckReview(slides,rules);
+  step(3,'Measuring slide text, typography and supplied rules…');
+  let model=await requestDeckReview(slides,rules);
+  if(deep){
+   try{
+    model=await requestDeepReview(model,{event,rules,stage,edition:$('review-edition').value.trim(),source:$('review-source').value.trim(),reference:$('review-reference').value,...pdf},
+     {key,signal:deepRun.signal,onProgress:message=>step(3,message)});
+   }catch(error){model.aiError=error.message;}
+  }
   if(!form.isConnected)return;
-  showReport({file,event,rules,slides,stage,embeddedCount,model});step(3,'Your review is ready.');
- }catch(error){$('status').classList.add('is-error');$('status').textContent=error.message||'We could not read this deck. Save a fresh .pptx copy and try again.';}
- finally{fields.forEach(f=>f.disabled=false);progress.hidden=true;form.removeAttribute('aria-busy');}
+  showReport({file,event,rules,slides,stage,embeddedCount,model});
+  step(3,model.aiError?'Standard review ready. Deep analysis did not finish.':deep?'Deep review ready. Every slide and the competition strategy have been reviewed.':'Your standard review is ready.');
+ }catch(error){$('status').classList.add('is-error');$('status').textContent=error.message||'Could not review this presentation. Save a fresh PPTX copy and try again.';}
+ finally{fields.forEach(f=>f.disabled=false);progress.hidden=true;cancel.hidden=true;form.removeAttribute('aria-busy');$('review-ai-key').value='';deepRun=null;}
 });
+
 let printState;
-window.addEventListener('beforeprint',()=>{const report=$('report'),s=report&&states.get(report);if(!s)return;printState={report,html:report.innerHTML};report.innerHTML=`<div class="rv-print-report"><h1>${esc(s.demo?'Example deck review':s.name)}</h1><pre>${esc(reviewMarkdown(s.model,{...s,addressed:s.addressed}))}</pre></div>`;});
+window.addEventListener('beforeprint',()=>{const report=$('report'),s=report&&states.get(report);if(!s)return;printState={report,html:report.innerHTML};report.innerHTML=`<div class="rv-print-report"><h1>${esc(s.demo?'Example deck review':s.name)}</h1><pre>${esc(reviewMarkdown(s.model,{...s,addressed:s.addressed})+deepReviewMarkdown(s.model))}</pre></div>`;});
 window.addEventListener('afterprint',()=>{if(printState){printState.report.innerHTML=printState.html;printState=null;}});
 const mount=document.querySelector('[data-review-mount]');if(mount)mount.innerHTML=reviewIntake({standalone:true});

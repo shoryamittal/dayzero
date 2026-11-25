@@ -133,3 +133,44 @@
  .rv-format-help,.rv-brief p {font-size:12px}
  .rv-intake-grid .rv-intro .rv-trust {padding-top:0}
 }
+
+/* Competition discovery and the deeper, evidence-anchored review. */
+.rv-competition-tools {margin:0 0 24px}
+.rv-competition-tools>p,.rv-ai-settings>p,.rv-ai-settings #review-key-wrap p,.rv-reference p,.rv-visual p {font-size:12px;color:#756180;line-height:1.65;margin:8px 0 16px}
+.rv-source-row {display:flex;gap:8px;align-items:stretch;margin-bottom:12px;min-width:0;flex-wrap:wrap}
+.rv-source-row input {flex:1 1 200px;min-width:0}
+.rv-source-row button {flex:0 1 auto}
+.rv-ai-settings {border-top:1px solid #e6dce9;padding-top:24px;margin:0 0 24px}
+.rv-ai-settings select {margin-bottom:12px}
+.rv-ai-consent {display:flex!important;align-items:flex-start;gap:10px;font-size:12px!important;line-height:1.65;font-weight:400!important;margin:16px 0!important}
+.rv-ai-consent input {width:18px;min-width:18px;height:18px;margin:3px 0 0;accent-color:#78538d}
+.rv-ai-consent span {font:inherit!important;color:#63516c!important;margin:0!important}
+.rv-reference,.rv-visual {margin-top:12px;border:1px solid #e2d7e8;border-radius:10px;padding:12px}
+.rv-reference summary,.rv-visual summary {font-size:13px;cursor:pointer;min-height:32px}
+.rv-reference[open] summary,.rv-visual[open] summary {margin-bottom:16px}
+.rv-reference label,.rv-visual label {margin-top:12px!important}
+#review-search-results:empty,#review-source-status:empty {display:none}
+#review-search-results,#review-source-status {margin:12px 0;padding:16px;border:1px solid #ddcce6;border-radius:12px;background:#f6f0f8;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+#review-search-results>p {white-space:pre-wrap;margin-bottom:12px}
+#review-search-results article {border-top:1px solid #dfd1e5;margin-top:12px;padding-top:12px;display:grid;gap:8px}
+#review-search-results a,#review-source-status a {text-decoration:underline;text-underline-offset:3px}
+#review-search-results button,#review-source-status button {justify-self:start;margin-top:8px}
+#review-search-results iframe {display:block;width:100%;height:150px;border:0;margin-top:16px;background:white}
+#review-source-status details {margin:12px 0}
+#review-source-status ul {padding-left:18px;max-height:220px;overflow:auto}
+#review-cancel {margin:12px 0 0;width:100%}
+.rv-deep-strategy,.rv-deep-slide,.rv-deep-status {background:#f1e8f5;border:1px solid #d8c2e2;border-radius:16px;padding:clamp(20px,3vw,32px);margin-bottom:24px}
+.rv-deep-status {background:#fff1d5;border-color:#ead19d}
+.rv-deep-strategy h3 {font-size:clamp(24px,3vw,34px);line-height:1.2;margin:16px 0}
+.rv-deep-strategy p,.rv-deep-slide p,.rv-deep-status p {font-size:14px;line-height:1.8;margin:10px 0;color:#644e70}
+.rv-deep-strategy .rv-deep-scope {font-size:12px}
+.rv-deep-strategy details {border-top:1px solid #d5bfdf;padding-top:16px;margin-top:20px}
+.rv-deep-strategy summary {cursor:pointer;min-height:44px;font-size:14px;font-weight:650}
+.rv-deep-criteria {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.rv-deep-criteria article,.rv-cross-finding {border:1px solid #decee6;border-radius:12px;padding:20px;background:#fffcf7;margin-top:12px;min-width:0}
+.rv-deep-strategy blockquote,.rv-deep-slide blockquote {border-left:3px solid #ac86bd;padding-left:14px;margin:16px 0;color:#51385f;font-size:14px;line-height:1.8}
+.rv-deep-strategy h4,.rv-deep-slide h4 {font-size:16px;line-height:1.4;margin:20px 0 8px}
+.rv-deep-slide {margin:24px 0}
+.rv-finding h5 {font-size:12px;letter-spacing:0;margin:16px 0 5px}
+.rv-finding .rv-rule-anchor {border-top:1px solid #e4d8eb;padding-top:12px;margin-top:12px;font-size:12px}
+@media(max-width:700px){.rv-deep-criteria{grid-template-columns:1fr}.rv-source-row>button{min-height:44px}.rv-ai-settings input,.rv-reference textarea{font-size:16px!important}.rv-reference summary,.rv-visual summary{min-height:44px}}

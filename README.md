@@ -75,3 +75,26 @@ Example project.json:
     {"name":"Campus Food","problem":"Cafeterias discard surplus meals.","solution":"Students reserve surplus portions before closing."}
 
 Requests are limited to 4 MiB, with two concurrent exports per process. Responses use no-store. The service processes project data in memory. Authentication, billing and model-based drafting are outside this endpoint.
+
+
+## Deep presentation review
+
+The homepage and /review.html support standard checks and an optional deep competition review.
+
+- Standard: editable text, declared typography, stored bounds and supplied-rule checks through /api/deck-review.
+- Deep: /api/review-ai reviews up to five selected slides per call, then runs a deck-wide strategy and criterion mapping pass. Each accepted text finding has an exact slide passage, a reason, a concrete fix and optional suggested wording. New numeric claims in rewrites are removed.
+- Visual: attach a matching PDF under 2 MiB and confirm the same slide count/order. The PDF is sent to Gemini with the extracted text. Visual suggestions identify a page region; text-only runs cannot claim visual inspection.
+- References: import reference PowerPoint text or read a public reference page. Reference lessons require an exact reference passage. Winner status is not verified, and reference achievements must not become project facts.
+- Discovery: directory/encyclopedia discovery works without an AI key. A connected Gemini project enables grounded live web research for competition and past-winner sources. Google Search suggestions are displayed in a sandboxed frame. Users explicitly select a source, preview excerpts and attach the relevant brief. Restricted sites, scanned documents and unavailable rulebooks require a pasted brief or an alternate public source.
+
+### Activate AI
+
+Add GEMINI_API_KEY as a server-only Vercel environment variable and redeploy to enable the shared connection. No client-visible environment variable is needed. Alternatively users can enter their own Gemini key in the review form; it is never persisted and is cleared after review.
+
+The readiness endpoint GET /api/review-ai exposes only availability/provider/model. POST requires a connection, same-origin JSON, bounded input and explicit client consent for deck analysis. A failed or cancelled AI run leaves standard findings available and never appears as a completed deep review.
+
+Progress reflects actual work: reading slides, measuring standard checks, analysing slide batches, then cross-slide strategy. Revised-deck comparison runs fresh standard checks; a new deep run and matching PDF are required to refresh AI feedback.
+
+### Review validation
+
+The automated suite exercises grounding, complete slide coverage, rule attribution, reference passages, PDF checks, cancellation, safe error handling, provider failures and export. Provider responses are mocked in tests. A real model-quality evaluation still requires a configured Gemini project and representative decks; no system guarantees selection or complete coverage of every competition.

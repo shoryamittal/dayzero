@@ -7,7 +7,7 @@ async function briefs(){
 function node(parent,tag,text){const el=document.createElement(tag);el.textContent=text;parent.append(el);return el;}
 document.addEventListener('input',async e=>{
  const input=e.target;
- if(!input.matches('#launch-event,#intake-form #event,#intake #event'))return;
+ if(!input.matches('#launch-event,#intake-form #event'))return;
  const form=input.form,query=input.value.trim().toLowerCase();
  for(const [el,value] of imports.get(form)||[]){if(el.value===value){el.value='';el.dispatchEvent(new Event('input',{bubbles:true}));}}
  imports.delete(form);
