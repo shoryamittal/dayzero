@@ -71,3 +71,16 @@ export async function buildStudioPitch(project,{source='',save=async()=>{},refre
  }
  project.pitchBuild=normalizePitchBuild(state);await update();return project.pitchBuild;
 }
+
+export function pitchNextSteps(project){
+ const prompts=[
+ ['problem','Start with the user','Who experiences the problem, and what do they do today?'],
+ ['solution','Make the benefit clear','What changes for that user when they use your product?'],
+ ['approach','Show the product working','Describe one workflow: what the user does, what the product does, and what happens next.'],
+ ['proof','Show what you know','What have you built or tested? If testing is still planned, say so and describe the next test.'],
+ ['impact','Define a useful outcome','What would improve for the user, and how would you measure it?'],
+ ['ask','Land the next step','What support do you need, and what specific action would it enable?']
+ ];
+ return prompts.filter(([key])=>!String(project?.[key]||'').trim()||/^\[ADD (?:DATA|EVIDENCE)\b/i.test(String(project[key]).trim()))
+ .slice(0,3).map(([key,title,question])=>({key,title,question}));
+}
