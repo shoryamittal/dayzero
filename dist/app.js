@@ -1,6 +1,6 @@
 import {pitchNextSteps} from './pitch-builder.mjs';
 import {projectBriefHandoff} from './backend-handoff.mjs';
-import {pitchKitFiles, slideReviewSignature, slideReviewed} from './pitch-kit.mjs';
+import {pitchDelivery,resolvedSpeakerNotes,withSpeakerNotes,pitchKitFiles, slideReviewSignature, slideReviewed} from './pitch-kit.mjs';
 import {repairSlideMasters} from './pptx-package.mjs';
 import {designGrid} from './design-reference-grid.mjs';
 import './review.mjs?v=simple-review-1';
@@ -272,12 +272,18 @@ function projectNext(a){
 }
 
 function studioProcess(){
+ const delivery=pitchDelivery(project);
  const build=project.pitchBuild,active=studioLookups.has(project.id),known=!!project.rules.trim();
  const labels={waiting:'Next',running:active?'Working':'Paused',done:'Ready',limited:'Needs attention'};
  const stages=[['research','Competition context',known?'Requirements are attached; check the edition and round.':'Only readable sources are used. Missing rules stay unconfirmed.'],['draft','Your product story','The user, solution, workflow and evidence in editable slides.']];
  const pages=build?.sources||[];
  return `<section class="studio-process" aria-labelledby="studio-process-title"><h2 id="studio-process-title">${active?'Your pitch is taking shape.':'Make the story your own.'}</h2>
  <p role="status" aria-live="polite">${esc(!active&&build&&Object.values(build.steps).includes('running')?'Automatic preparation was interrupted. Your saved idea is ready to edit; retry in the writing assistant.':build?.message||'Start with your user, show the product workflow, and add evidence as you go.')}</p>
+
+ <section class="studio-next-facts" aria-label="Your pitch package"><h3>Your pitch package.</h3><p>${delivery.filled} of ${delivery.total} slides have draft content. ${delivery.missing.length?'Missing facts stay marked so you can complete them.':'Content is filled; check evidence, rules and the exported layout before submitting.'}</p>
+ <div class="toolbar"><button class="btn primary" data-export="zip">Download the pitch kit ${icon('download',15)}</button><button class="btn" data-action="preview-pitch-kit">Preview script &amp; judge questions</button><button class="btn" data-export="pptx">Editable PowerPoint</button></div>
+ <details><summary>Inside your package</summary><ul>${delivery.files.map(file=>'<li>'+esc(file)+'</li>').join('')}</ul><p>Scripts and answer drafts use your current content. Missing information is a prompt, not a verified result.</p></details>
+ <details><summary>Check each slide</summary><ol>${delivery.slides.map(slide=>'<li><button class="btn text" data-action="edit-'+slide.key+'">'+esc(slide.title)+'</button> — '+(slide.hasContent?'Draft content added':'Facts needed')+'</li>').join('')}</ol></details></section>
  <ol class="studio-build-steps"><li><strong>Ready · Idea saved</strong>Your starting point is saved in this browser.</li>${stages.map(([key,title,copy])=>`<li data-state="${build?.steps[key]||'waiting'}"><strong>${esc(labels[build?.steps[key]||'waiting'])} · ${title}</strong>${copy}</li>`).join('')}</ol>
  ${pitchNextSteps(project).length?`<section class="studio-next-facts" aria-label="Next steps for your pitch"><h3>Build the missing pieces.</h3><p>Start with these details. Each one takes you to the right slide.</p>${pitchNextSteps(project).map(step=>'<article><strong>'+esc(step.title)+'</strong><p>'+esc(step.question)+'</p><button class="btn small" data-action="edit-'+step.key+'">Work on this slide '+icon('arrow',14)+'</button></article>').join('')}</section>`:''}
  ${build?.gaps.length?`<details class="studio-next-facts"><summary>${build.aiApplied?'Make this draft stronger':'The next details that will help'}</summary><ul>${build.gaps.map(gap=>'<li>'+esc(gap)+'</li>').join('')}</ul><button class="btn small" data-action="tab-story">Add details to my story</button></details>`:''}
@@ -393,7 +399,7 @@ function exportProject(){if(!project)return toast('Create a project first.');dow
 function loadScript(src){return new Promise((resolve,reject)=>{let s=document.querySelector(`script[src="${src}"]`);if(s?.dataset.loaded)return resolve();s=document.createElement('script');s.src=src;s.onload=()=>{s.dataset.loaded='true';resolve()};s.onerror=()=>{s.remove();reject(Error('The export library could not load. Try again while online.'))};document.head.append(s);});}
 async function pptxBlob(p,design){
  await Promise.all([loadScript('/vendor/pptxgen.bundle.js'),loadScript('/vendor/jszip.min.js')]);
- const original=await makePowerPoint(p,window.PptxGenJS,design);
+ const original=await makePowerPoint(withSpeakerNotes(p),window.PptxGenJS,design);
  return repairSlideMasters(original,window.JSZip);
 }
 async function downloadSample(button){
@@ -414,7 +420,7 @@ function reportText(p){const a=analyze(p);return `PITCHVIVA / ${p.name}\n${p.dem
 async function exportFiles(type,button){if(!project)return;const p=structuredClone(project);if(type==='project')return exportProject();const pdfSupported=canExportPDF(p);if(!pdfSupported&&type==='pdf'){showModal('This PDF export supports Latin text.',`<p>The preview PDF engine cannot safely render Hindi or other non-Latin characters. Use PowerPoint export, which preserves your text, then export a PDF from PowerPoint with the appropriate font installed.</p>`);return;}const old=button.innerHTML;button.disabled=true;button.textContent='Preparing your files…';try{const name=safeFilename(p.name);if(type==='pptx')downloadBlob(await pptxBlob(p),name+'-draft.pptx');if(type==='pdf')downloadBlob(await pdfBlob(p),name+'-draft.pdf');if(type==='zip'){await loadScript('/vendor/jszip.min.js');const zip=new window.JSZip();zip.file(name+'-draft.pptx',await pptxBlob(p));if(pdfSupported){
  try{zip.file(name+'-draft.pdf',await pdfBlob(p));}
  catch(error){zip.file('PDF-export-note.txt','PitchViva could not make the PDF. '+clean(error.message,240)+' Open the included PowerPoint to export a PDF.');}
- }else zip.file('PDF-export-note.txt','The built-in PDF export cannot render some characters in this pitch. Open the included PowerPoint with a font that supports your text and export a PDF there.');for(const [file,content] of Object.entries(pitchKitFiles(p)))zip.file(file,content);zip.file('preparation-workbook.txt',preparationReport(p));zip.file('readiness-and-practice.txt',reportText(p));if(p.eventBrief)zip.file('event-brief.txt',eventBriefText(p.eventBrief,p));zip.file('source-notes.json',JSON.stringify(p.evidence,null,2));zip.file('speaker-notes.txt',slides(p).map(s=>s.title+'\n'+(p.notes[s.key]||'No notes supplied.')).join('\n\n'));zip.file(name+'-project.json',JSON.stringify({format:'dayzero-project',version:1,...p},null,2));downloadBlob(await zip.generateAsync({type:'blob'}),name+'-pitch-kit.zip');}toast('Draft exported. Open the files and check them before submission.');}catch(e){toast('Export failed. Your project is still saved. '+clean(e.message,130));}finally{button.disabled=false;button.innerHTML=old;}}
+ }else zip.file('PDF-export-note.txt','The built-in PDF export cannot render some characters in this pitch. Open the included PowerPoint with a font that supports your text and export a PDF there.');for(const [file,content] of Object.entries(pitchKitFiles(p)))zip.file(file,content);zip.file('preparation-workbook.txt',preparationReport(p));zip.file('readiness-and-practice.txt',reportText(p));if(p.eventBrief)zip.file('event-brief.txt',eventBriefText(p.eventBrief,p));zip.file('source-notes.json',JSON.stringify(p.evidence,null,2));zip.file('speaker-notes.txt',slides(p).map(s=>s.title+'\n'+resolvedSpeakerNotes(p)[s.key]).join('\n\n'));zip.file(name+'-project.json',JSON.stringify({format:'dayzero-project',version:1,...p},null,2));downloadBlob(await zip.generateAsync({type:'blob'}),name+'-pitch-kit.zip');}toast('Draft exported. Open the files and check them before submission.');}catch(e){toast('Export failed. Your project is still saved. '+clean(e.message,130));}finally{button.disabled=false;button.innerHTML=old;}}
 function importProject(){
  if(library.length>=MAX_PROJECTS)return toast('Your library is full. Export a backup and manage saved projects first.');
  const f=document.createElement('input');f.type='file';f.accept='.json,application/json';
