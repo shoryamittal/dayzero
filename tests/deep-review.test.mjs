@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {handleReviewAI} from '../api/review-ai.mjs';
+import {handleReviewAI as handleReviewAIRaw} from '../api/review-ai.mjs';
 import {validateSlideBatch,validateStrategy,mergeDeepReview,deepReviewMarkdown} from '../dist/deep-review-model.mjs';
-import {requestDeepReview} from '../dist/deep-review-client.mjs';
+import {requestDeepReview as requestDeepReviewRaw} from '../dist/deep-review-client.mjs';
+const requestDeepReview=(model,context,options={})=>requestDeepReviewRaw(model,context,{externalEnabled:true,...options});
 import {buildReview} from '../dist/review-engine.mjs';
 
 const key='test-key-with-at-least-twenty-characters';
+const handleReviewAI=(request,options={})=>handleReviewAIRaw(request,{externalEnabled:true,serverKey:key,...options});
 const slide=(index=1)=>({index,title:'Pilot',paragraphs:['We plan to test with 12 students.'],text:'We plan to test with 12 students.',count:7,runs:[{text:'12 students',font:'Arial',size:24}],outside:[],pictures:0,missingAlt:0,hidden:false});
 const finding=()=>({title:'Distinguish the plan from results',quote:'We plan to test with 12 students.',visualRegion:'',why:'Judges cannot evaluate validation from a planned sample.',fix:'Add the recruitment method and show measured outcomes once the pilot is complete.',rewrite:'We plan to test with 12 students. [ADD EVIDENCE]',ruleQuote:'Show testing evidence',lens:'evidence',severity:'priority'});
 const coached=(index=1)=>({index,purpose:'Explain what has been tested.',strength:'The pilot is labelled as a plan.',headline:'A student pilot is the next test',judgeQuestion:'What result would change your approach?',evidenceNeeded:'Collect completed tasks and failures.',visualScope:'No matching PDF: rendered design was not inspected.',findings:[finding()]});
@@ -20,10 +22,10 @@ test('AI review requires a connection and never calls upstream without it',async
  assert.equal(response.status,401);assert.equal(calls,0);
  const info=await handleReviewAI(new Request('https://pitch.test/api/review-ai'),{serverKey:''});
  assert.equal((await info.json()).available,false);
- assert.equal((await handleReviewAI(req({action:'slides'},{origin:'https://foreign.test'}),{serverKey:''})).status,403);
+ assert.equal((await handleReviewAI(req({action:'slides'},{origin:'https://foreign.test'}),{serverKey:key})).status,403);
 });
 test('AI slide endpoint sends the actual deck and returns grounded reasons and fixes',async()=>{
- const response=await handleReviewAI(req({action:'slides',slides:[slide()],rules,indexes:[1],reference:'Winning decks often introduce the user first.'}),{serverKey:'',fetcher:async(url,options)=>{
+ const response=await handleReviewAI(req({action:'slides',slides:[slide()],rules,indexes:[1],reference:'Winning decks often introduce the user first.'}),{serverKey:key,fetcher:async(url,options)=>{
   assert.equal(options.headers['x-goog-api-key'],key);
   const sent=JSON.parse(options.body),context=JSON.parse(sent.contents[0].parts[0].text);
   assert.equal(context.reference,'Winning decks often introduce the user first.');assert.deepEqual(context.selectedIndexes,[1]);
@@ -51,10 +53,10 @@ test('cross-slide reasoning must cite passages on different known slides',()=>{
 });
 test('PDF visual analysis requires real PDF bytes, size limits and matching-order confirmation',async()=>{
  const data={action:'slides',slides:[slide()],rules,indexes:[1]};
- assert.equal((await handleReviewAI(req({...data,visualPDF:Buffer.from('not a pdf').toString('base64'),visualConfirmed:true}),{serverKey:''})).status,400);
- assert.equal((await handleReviewAI(req({...data,visualPDF:Buffer.from('%PDF-1.7 test').toString('base64')}),{serverKey:''})).status,400);
+ assert.equal((await handleReviewAI(req({...data,visualPDF:Buffer.from('not a pdf').toString('base64'),visualConfirmed:true}),{serverKey:key})).status,400);
+ assert.equal((await handleReviewAI(req({...data,visualPDF:Buffer.from('%PDF-1.7 test').toString('base64')}),{serverKey:key})).status,400);
  const visual={...coached(),findings:[{...finding(),quote:'',visualRegion:'Title at the top left',lens:'readability',ruleQuote:''}]};
- const response=await handleReviewAI(req({...data,visualPDF:Buffer.from('%PDF-1.7 test').toString('base64'),visualConfirmed:true}),{serverKey:'',fetcher:async(url,options)=>{
+ const response=await handleReviewAI(req({...data,visualPDF:Buffer.from('%PDF-1.7 test').toString('base64'),visualConfirmed:true}),{serverKey:key,fetcher:async(url,options)=>{
   const parts=JSON.parse(options.body).contents[0].parts;assert.equal(parts[1].inlineData.mimeType,'application/pdf');
   return upstream({slides:[visual]})()
  }});
@@ -62,15 +64,15 @@ test('PDF visual analysis requires real PDF bytes, size limits and matching-orde
 });
 test('provider quota, blocked output and malformed results never become completed reviews or expose keys',async()=>{
  for(const response of [Response.json({secret:key},{status:429}),Response.json({candidates:[{finishReason:'SAFETY'}]}),Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'not JSON'}]}}]})]){
-  const out=await handleReviewAI(req({action:'slides',slides:[slide()],rules,indexes:[1]}),{serverKey:'',fetcher:async()=>response});
+  const out=await handleReviewAI(req({action:'slides',slides:[slide()],rules,indexes:[1]}),{serverKey:key,fetcher:async()=>response});
   assert.ok(out.status>=400);assert.ok(!(await out.text()).includes(key));
  }
 });
 test('live search requires grounded sources and keeps only HTTPS links',async()=>{
  const fetcher=async()=>Response.json({candidates:[{finishReason:'STOP',content:{parts:[{text:'Check the organizer page.'}]},groundingMetadata:{groundingChunks:[{web:{title:'Organizer',uri:'https://event.example/rules'}},{web:{title:'bad',uri:'javascript:alert(1)'}}],searchEntryPoint:{renderedContent:'<p>Search suggestions</p>'}}}]});
- const response=await handleReviewAI(req({action:'search',query:'Example competition 2027'}),{serverKey:'',fetcher});
+ const response=await handleReviewAI(req({action:'search',query:'Example competition 2027'}),{serverKey:key,fetcher});
  const data=await response.json();assert.equal(response.status,200);assert.equal(data.sources.length,1);assert.ok(data.suggestions);
- const empty=await handleReviewAI(req({action:'search',query:'Unknown competition'}),{serverKey:'',fetcher:upstream({})});assert.equal(empty.status,502);
+ const empty=await handleReviewAI(req({action:'search',query:'Unknown competition'}),{serverKey:key,fetcher:upstream({})});assert.equal(empty.status,502);
 });
 test('the client reviews every batch then runs strategy and exports full reasoning',async()=>{
  const slides=Array.from({length:7},(_,i)=>slide(i+1)),model=buildReview(slides,rules),progress=[],batches=[];

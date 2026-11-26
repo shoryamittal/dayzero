@@ -2,9 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {reviewIntake} from '../dist/review-shell.mjs';
 import {prepareCompetition} from '../api/review-research.mjs';
-import {handleReviewAI} from '../api/review-ai.mjs';
+import {handleReviewAI as handleReviewAIRaw} from '../api/review-ai.mjs';
+const handleReviewAI=(request,options={})=>handleReviewAIRaw(request,{externalEnabled:true,...options});
 import {handleDeckReview} from '../api/deck-review.mjs';
-import {runPresentationReview} from '../dist/review-runner.mjs';
+import {runPresentationReview as runPresentationReviewRaw} from '../dist/review-runner.mjs';
+const runPresentationReview=(slides,options={})=>runPresentationReviewRaw(slides,{externalEnabled:true,...options});
 
 const slide=()=>({index:1,title:'Pilot',text:'We will test with students.',paragraphs:['We will test with students.'],runs:[],outside:[],pictures:0,missingAlt:0,hidden:false});
 const request=data=>new Request('https://pitch.test/api/review-ai',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});

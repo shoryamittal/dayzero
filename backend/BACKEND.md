@@ -2,9 +2,9 @@
 
 This release connects the v3 catalog, ranking and export code into a durable deck-generation workflow. Run it on a machine with Python 3.12, LibreOffice Impress, Fontconfig and Poppler. The included example was generated using the packaged HTTP service and worker. A browser or website can use this API through its authenticated server.
 
-## Open the result immediately
+## Included example
 
-See [the generated PowerPoint](examples/verified-offline/campus-pilot.pptx), [its rendered PDF](examples/verified-offline/campus-pilot.pdf), [the reading copy](examples/verified-offline/campus-pilot.html) and [the checks from that render](examples/verified-offline/quality.json). The example includes a labeled fictional dataset and an editable chart.
+The tracked [pilot content](examples/pilot-content.json) includes a labeled fictional dataset and an editable chart. After starting the local service, run `python demo_job.py --out demo-output` to produce a PowerPoint, rendered PDF, reading copy and quality report from that input. Generated files are not included in the source checkout.
 
 ## Start the backend
 
@@ -19,6 +19,8 @@ python local_server.py
 ```
 
 Open http://127.0.0.1:8080/docs to inspect the APIs. Send the token as an Authorization header in the form Bearer followed by a space and the token. If you leave PPT_BACKEND_TOKEN unset, the launcher prints an ephemeral token for local use. Keep the service token on the website server. The website’s existing login should determine X-Workspace. A browser must never choose its own tenant header or receive the service credential.
+
+The bundled `catalog.sqlite.gz` is opened automatically when a runtime database is first initialized; no manual decompression is needed. The temporary catalog copy is removed after use, and runtime data remains separate from the bundled seed.
 
 local_server.py starts the HTTP server and one render worker. It forces external API access off, even when external keys exist in the environment. Local installation may need internet access to obtain dependencies. Running the installed backend and the example requires no external network. If multiple local processes are needed, run python manage.py init once, then start uvicorn app:app and python deck_worker.py using the same PPT_DB path and credentials. Use local persistent storage for SQLite. The worker discovers queued jobs and reclaims interrupted renders after a five-minute lease. Render subprocesses have timeouts. Each job can recover up to three interrupted attempts before it reports a recoverable failure.
 
@@ -58,3 +60,9 @@ The worker selects installed fonts using Fontconfig and records substitutions. I
 Local rendering uses zero paid external API requests. CPU, storage and hosting still have operating costs. The v3 estimator and ledger remain available for future integrations. The v4 /decks path always reads local or user-supplied evidence. Cloud research, connected Canva templates, stock-photo retrieval and LLM drafting are deferred. The public-facing competition UI should use /decks and the returned download URLs. The older /export endpoints remain server-side utilities for generic presentations and do not confer a competition review.
 
 Run `python -m unittest -v` for the regression suite. Standalone v3 documentation and catalog access remain in [README.md](README.md). To verify a fresh installation, check `which soffice pdftotext fc-match` and run demo_job.py against the running local server.
+
+## Offline owner workspace and gallery
+
+The public browser studio and review work without this service. This backend remains an optional owner preview until end-user authentication is connected. To use its separate workspace locally, set `PPT_BACKEND_TOKEN`, optionally set `PORT=8080`, then run `python cloud_server.py`. It serves the workspace at `/` and the service at `/backend`; keep the token private. `python make_gallery.py` creates the bundled template gallery locally before starting the workspace. The Docker build runs this gallery step automatically. A missing gallery no longer prevents the service from starting.
+
+Both launchers force external integrations off. Do not add provider keys for the current local release. The Node website services independently require `PITCHVIVA_ENABLE_EXTERNAL_APIS=1` and owner-side credentials before future provider activation; client-supplied keys cannot activate them.

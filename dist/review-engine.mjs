@@ -4,20 +4,25 @@ const stop = new Set('a an the for with must include demonstrate show should our
 const groups = ['testing test tested interviews interview surveyed survey validation feedback','prototype prototype demo demonstration mvp','impact outcomes outcome benefit benefits','users user users customer customers audience','feasibility feasible implementation implement technical architecture','cost costs budget pricing price','innovation novelty novel innovative differentiation','metrics results measured measurement benchmark','market competitors competition alternatives competitor','privacy consent confidential data-protection'].map(group=>group.split(' '));
 function related(term){return groups.find(g=>g.includes(term)) || [term];}
 
-// Prefer PowerPoint's title placeholder. For free-form decks, use the most
-// prominent explicitly sized text box, retaining file order for ties.
+// Prefer a title placeholder or explicitly named heading. Decorative ordinals
+// must not outrank an actual heading just because they use a larger font.
 function outlineTitle(doc, fallback) {
- let best = '', bestSize = 0;
+ const candidates=[];
  for (const shape of nodes(doc,'sp')) {
   const text = nodes(shape,'p').map(p=>nodes(p,'t').map(t=>t.textContent).join('')).join(' ').trim();
   if(!text)continue;
   const type = nodes(shape,'ph')[0]?.getAttribute('type');
-  if(type==='title'||type==='ctrTitle')return text;
   if(['sldNum','dt','ftr','hdr'].includes(type))continue;
   const size = [...nodes(shape,'rPr'),...nodes(shape,'defRPr')].reduce((max,prop)=>Math.max(max,Number(prop.getAttribute('sz'))||0),0);
-  if(size>bestSize){bestSize=size;best=text;}
+  const name=nodes(shape,'cNvPr')[0]?.getAttribute('name')||'';
+  const priority=type==='title'||type==='ctrTitle'?2:/\b(?:title|heading|headline)\b/i.test(name)?1:0;
+  const decoration=/^(?:(?:slide|page)\s*)?\d{1,3}(?:st|nd|rd|th)?(?:\s*(?:\/|of)\s*\d{1,3})?\s*[.)]?$/i.test(text);
+  candidates.push({text,size,priority,decoration});
  }
- return (best||fallback||'Visual slide').slice(0,90);
+ const meaningful=candidates.filter(candidate=>!candidate.decoration);
+ const best=(meaningful.length?meaningful:candidates).reduce((best,candidate)=>
+  !best||candidate.priority>best.priority||candidate.priority===best.priority&&candidate.size>best.size?candidate:best,null);
+ return (best?.text||fallback||'Visual slide').slice(0,90);
 }
 
 export function inspectSlide(doc, index, canvas){
@@ -75,7 +80,60 @@ export function auditSlide(slide){
  return findings;
 }
 
+// Keep qualifications attached to the numeric statement they qualify. A limit
+// with excluded slides or conditional scope cannot safely be measured as a
+// simple file-wide count, even if the qualification starts another sentence.
+const ruleQualification=/\b(?:exclud(?:e[sd]?|ing)|except(?:ions?)?|exempt(?:ions?)?|unless|without|including|inclusive|exclusive|only|additional|plus|if|depending)\b|\b(?:not|never|do not|does not|don['’]t|doesn['’]t)\s+(?:be\s+)?(?:count(?:ed)?|includ(?:e[sd]?))\b|\b(?:apart from|other than|provided that)\b/i;
+const numericRule=/\d/;
+const independentRule=/^(?:(?:include|show|provide|demonstrate|explain|describe|submit|use|present|state|list|add|keep|avoid|ensure|limit|required|font|minimum|maximum|exactly)\b|(?:max|min)\.?\s|(?:at least|at most|no more than|up to)\b|\d+\s+slides?\s+(?:max(?:imum)?|min(?:imum)?|exactly)\b)/i;
+const abbreviation=/^(?:(?:[a-z]\.){2,}|(?:max|min|no|fig|approx|vs|etc|mr|mrs|ms|dr|prof|sr|jr|st)\.)$/i;
+
+export function splitReviewRules(rules='') {
+ const groups=[];
+ for(const raw of rules.split(/\r?\n/)){
+  const line=raw.replace(/^\s*[-•]\s*/,'').trim();
+  if(!line)continue;
+  // Exclusions on adjacent lines can qualify a limit in either direction.
+  const previous=groups.at(-1);
+  if(previous&&(numericRule.test(previous)&&ruleQualification.test(line)||ruleQualification.test(previous)&&numericRule.test(line)))groups[groups.length-1]+='\n'+line;
+  else groups.push(line);
+ }
+ return groups.flatMap(originalRule=>{
+  if(ruleQualification.test(originalRule))return [{rule:originalRule,originalRule}];
+  const parts=[];
+  let start=0;
+  for(const match of originalRule.matchAll(/([.!?;])\s+/g)){
+   const next=match.index+match[0].length;
+   if(!independentRule.test(originalRule.slice(next)))continue;
+   if(match[1]==='.'){
+    const token=originalRule.slice(0,match.index+1).match(/\S+$/)?.[0]||'';
+    if(abbreviation.test(token)||/https?:\/\/|www\.|@/i.test(token))continue;
+   }
+   parts.push(originalRule.slice(start,match.index+1).trim());
+   start=next;
+  }
+  parts.push(originalRule.slice(start).trim());
+  return parts.filter(Boolean).map(rule=>({rule,originalRule}));
+ });
+}
+
 export function assessRule(rule,slides){
+ rule=rule.trim().replace(/[.!;]$/,'');
+ // Match the complete sentence only. Exceptions such as excluding an appendix
+ // need a manual check instead of quietly changing the counting method.
+ const countRule=rule.trim().replace(/[.!]$/,'').replace(/^(?:submit|use|include)\s+(?:a\s+)?/i,'');
+ const countForms=[
+  ['max',/^(?:max(?:imum)?\.?\s*(?:of\s*)?(?:slides?(?:\s+limit)?\s*)?[:=]?\s*(\d+)\s*slides?|(?:up to|no more than|at most)\s+(\d+)\s+slides?|(\d+)\s+slides?\s+(?:max(?:imum)?|at most)|(\d+)[- ]slide limit)$/i],
+  ['min',/^(?:min(?:imum)?\.?\s*(?:of\s*)?(?:slides?(?:\s+count)?\s*)?[:=]?\s*(\d+)\s*slides?|at least\s+(\d+)\s+slides?|(\d+)\s+slides?\s+(?:min(?:imum)?|at least))$/i],
+  ['exact',/^(?:exactly\s+(\d+)\s+slides?|(?:exact\s+)?slide\s+count\s*[:=]\s*(\d+)|(\d+)\s+slides?\s+exactly)$/i]
+ ];
+ for(const [kind,pattern] of countForms){
+  const match=countRule.match(pattern);if(!match)continue;
+  const limit=Number(match.slice(1).find(value=>value!==undefined));
+  const below=slides.length<limit,above=slides.length>limit;
+  const state=kind==='max'?above?'Over limit':'Within limit':kind==='min'?below?'Below minimum':'Within limit':below?'Below minimum':above?'Over limit':'Within limit';
+  return {state,detail:slides.length+' slides in the file, including hidden slides. '+({max:'Maximum',min:'Minimum',exact:'Exactly'}[kind])+' '+limit+' required.'};
+ }
  const wordLimit=rule.match(/^(?:max(?:imum)?(?: of)?|up to|no more than)\s+(\d+)\s+words\s+(?:per|on each)\s+slide[.!]?$/i);
  if(wordLimit){
   const over=slides.filter(s=>s.count>Number(wordLimit[1]));
@@ -121,10 +179,10 @@ export function buildReview(slides, rules='') {
  const priority=['Unfinished text','Evidence','Submission','Object bounds','Projection','Visual review','Wording','Reading load','Image accessibility','Typography','Long passage'];
  const lens=topic=>topic==='Evidence'?'evidence':['Projection','Reading load','Typography','Long passage'].includes(topic)?'readability':topic==='Submission'?'rules':'clarity';
  const issues=slides.flatMap(auditSlide).sort((a,b)=>priority.indexOf(a.topic)-priority.indexOf(b.topic)).map((i,n)=>({...i,id:'slide-'+n,lens:lens(i.topic),severity:['Unfinished text','Evidence','Submission'].includes(i.topic)?'priority':'review',basis:['Projection','Object bounds','Image accessibility','Typography','Submission','Reading load'].includes(i.topic)?'File check':'Wording check'}));
- const checks=rules.split(/\r?\n/).map(s=>s.replace(/^\s*[-•]\s*/,'').trim()).filter(Boolean).map((rule,n)=>({id:'rule-'+n,rule,...assessRule(rule,slides)}));
+ const checks=splitReviewRules(rules).map(({rule,originalRule},n)=>({id:'rule-'+n,rule,originalRule,...assessRule(rule,slides)}));
  const breaches=checks.filter(c=>['Over limit','Below minimum','Font mismatch'].includes(c.state));
  const findings=[...breaches.map(c=>({id:c.id,topic:c.state,quote:c.rule,action:c.detail,index:c.slide||null,lens:'rules',severity:'priority',basis:'Supplied rule'})),...issues];
- return {slides,issues,checks,breaches,findings,totalWords:slides.reduce((n,s)=>n+s.count,0),affected:slides.filter(s=>issues.some(i=>i.index===s.index)).length,priority:findings.filter(i=>i.severity==='priority').length};
+ return {slides,suppliedRules:rules,issues,checks,breaches,findings,totalWords:slides.reduce((n,s)=>n+s.count,0),affected:slides.filter(s=>issues.some(i=>i.index===s.index)).length,priority:findings.filter(i=>i.severity==='priority').length};
 }
 
 export function groupOpenFindings(findings, addressed) {
@@ -147,11 +205,24 @@ export function compareReviews(previous, current) {
 }
 
 export function reviewMarkdown(model, {name='Deck review',event='',demo=false,stage='screening',addressed=new Set(),comparison=null}={}) {
+ const research=model.research;
+ const context=research?['\n## Competition context',
+  research.source?'Event reference: '+research.source+(research.mode==='local'?' (saved reference; not fetched)':''):'',
+  research.frozen?'Comparison uses the original saved brief.':'',
+  ...(research.notes||[]).map(note=>'- '+note),
+  ...[...(research.sources||[]),...(research.referenceSources||[])].flatMap(source=>[
+   '### '+(source.title||'Source'),'URL: '+source.url,source.checked?'Read: '+source.checked:'',
+   ...(source.excerpts||[]).map(line=>'> '+line.replace(/\n/g,'\n> '))
+  ])]:[];
  const out=['# '+name,event?'Competition: '+event:'General review',demo?'FICTIONAL EXAMPLE — not a review of your deck.':'',
+ model.checked?'Reviewed: '+model.checked:'',
+ model.execution==='local'?'Method: on-device text and metadata checks.':'',
  `${model.slides.length} slides; ${model.totalWords} editable words; ${model.issues.length} slide observations; ${model.breaches.length} measured rule breaches.`,
  ...(comparison ? ['\n## Draft comparison', 'Previous file: '+comparison.name, ...comparison.rows.map(r=>r.label+': '+r.before+' → '+r.after)] : []),
  '\n## Action plan',...model.findings.map(i=>`- [${addressed.has(i.id)?'x':' '}] ${i.index?'Slide '+i.index+' — ':''}${i.topic}: ${i.quote}\n  ${i.action}`),
- '\n## Supplied rules',...(model.checks.length?model.checks.map(c=>`- ${c.rule}\n  ${c.state}: ${c.detail}`):['No organiser rules supplied.']),
+ '\n## Supplied rules',...(model.suppliedRules?.trim()?['### Original supplied text',model.suppliedRules,'### Requirement checks']:[]),
+ ...(model.checks.length?model.checks.map(c=>`- ${c.rule}\n  ${c.state}: ${c.detail}`):['No organiser rules supplied.']),
+ ...context,
  '\n## Slide text',...model.slides.map(s=>`### Slide ${s.index}: ${s.title}\n${s.paragraphs.join('\n\n')}`),
  '\n## Review scope',`Round: ${stage==='demo'?'Live demo':stage==='auto'?'Competition review':'Idea screening'}. Checks use editable text and stored metadata. Topic matches are candidates, not verified evidence. Inspect original slide layouts, inherited fonts, chart data and organiser rules manually. No selection prediction.`,
  'Checked items are marked addressed by you, not automatically verified. Checklist state lasts for this review session.'];

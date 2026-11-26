@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {handleDeckReview,reviewInput} from '../api/deck-review.mjs';
-import {requestDeckReview} from '../dist/review-client.mjs';
+import {requestDeckReview as requestDeckReviewRaw} from '../dist/review-client.mjs';
+const requestDeckReview=(slides,rules,fetcher)=>requestDeckReviewRaw(slides,rules,fetcher,{remote:true});
 
 const slide = (index=1) => ({index,title:'Results',paragraphs:['TODO: Revolutionary solution improves outcomes by 80%'],runs:[{text:'TODO',font:'Arial',size:12}],outside:[],pictures:1,missingAlt:1,hidden:false,count:0,text:'forged'});
 const request = (data,options={}) => new Request('https://pitch.test/api/deck-review',{

@@ -2,6 +2,7 @@ import {prepareCompetition} from './review-research.mjs';
 import {model as defaultModel} from '../dist/assist-model.mjs';
 import {reviewInput} from './deck-review.mjs';
 import {deepContext,validateSlideBatch,validateStrategy} from '../dist/deep-review-model.mjs';
+import {externalAPIsEnabled, validProviderKey, pendingIntegration} from './service-policy.mjs';
 const reply=(body,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
 const str={type:'STRING'},integer={type:'INTEGER'};
 const object=(properties)=>({type:'OBJECT',properties,required:Object.keys(properties)});
@@ -60,14 +61,15 @@ async function discover(query,key,fetcher,signal){
    const answer=candidate.content?.parts?.filter(p=>!p.thought).map(p=>p.text||'').join('').slice(0,10000);
    return {answer,sources,suggestions:String(candidate.groundingMetadata?.searchEntryPoint?.renderedContent||'').slice(0,60000),checked:new Date().toISOString()};
 }
-export async function handleReviewAI(request,{fetcher=fetch,serverKey=process.env.GEMINI_API_KEY||'',reader}={}){
- if(request.method==='GET')return reply({available:!!serverKey,provider:'Gemini',model:defaultModel});
+export async function handleReviewAI(request,{fetcher=fetch,serverKey=process.env.GEMINI_API_KEY||'',reader,externalEnabled=externalAPIsEnabled()}={}){
+ if(request.method==='GET')return reply({available:externalEnabled&&validProviderKey(serverKey),provider:'Gemini',model:defaultModel,status:externalEnabled?'configured':'pending'});
  if(request.method!=='POST')return reply({error:'Use POST.'},405);
  const origin=request.headers.get('origin');
  if((origin&&origin!==new URL(request.url).origin)||request.headers.get('sec-fetch-site')==='cross-site')return reply({error:'Use this website to start the review.'},403);
  if(!request.headers.get('content-type')?.startsWith('application/json'))return reply({error:'Expected JSON.'},415);
- const key=request.headers.get('x-gemini-key')?.trim()||serverKey;
- const validKey=/^[A-Za-z0-9_-]{20,200}$/.test(key);
+ if(!externalEnabled)return reply(pendingIntegration,503);
+ const key=serverKey;
+ const validKey=validProviderKey(key);
  let data;
  try{data=await input(request);}catch{return reply({error:'Send valid JSON under 4 MiB.'},400);}
  try{

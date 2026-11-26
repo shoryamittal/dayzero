@@ -1,4 +1,7 @@
 import {normalizePitchBuild} from './pitch-builder.mjs';
+import {hasDraftContent} from './pitch-content.mjs';
+import {normalizeProjectSnapshot} from './project-history.mjs';
+export {hasDraftContent} from './pitch-content.mjs';
 import {isSlideImageData} from './slide-images.mjs?v=visual-qa-1';
 import {normalizePreparation} from './preparation.mjs?v=pitchviva-1';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
@@ -29,7 +32,9 @@ export function clean(value,max=6000){return String(value??'').replace(/\u0000/g
 export function validateProject(p){
  if(!p||typeof p!=='object'||Array.isArray(p))throw Error('This is not a PitchViva project.');
  const result={};
- const winnerReference=p.winnerReference&&typeof p.winnerReference==='object'?{name:clean(p.winnerReference.name,160),text:clean(p.winnerReference.text,16000)}:null;
+ const referenceURL=safeURL(p.winnerReference?.source);
+ const referenceSource=referenceURL&&/^https:\/\//.test(referenceURL)&&!new URL(referenceURL).username&&!new URL(referenceURL).password?referenceURL:'';
+ const winnerReference=p.winnerReference&&typeof p.winnerReference==='object'?{name:clean(p.winnerReference.name,160),text:clean(p.winnerReference.text,16000),source:referenceSource}:null;
  for(const key of ['name','team','event','eventRound','problem','solution','approach','proof','impact','ask','deadline','rules'])result[key]=clean(p[key],key==='rules'?10000:6000);
  result.name=result.name.slice(0,80);result.team=result.team.slice(0,100);result.event=result.event.slice(0,160);result.eventRound=result.eventRound.slice(0,160);
  if(!result.name)throw Error('Add a project name first.');
@@ -41,7 +46,7 @@ export function validateProject(p){
   return isSlideImageData(image?.data)?[[key,{data:image.data,alt:clean(image.alt,160)}]]:[];
  }));
  const evidence=Array.isArray(p.evidence)?p.evidence.slice(0,30).filter(v=>v&&typeof v==='object'&&!Array.isArray(v)).map(v=>({id:clean(v.id,80)||createId(),claim:clean(v.claim,1200),source:clean(v.source,2000),type:['interview','demo','measurement','reference'].includes(v.type)?v.type:'reference',slide:fields.some(([k])=>k===v.slide)?v.slide:'proof'})).filter(v=>v.claim):[];
- const history=Array.isArray(p.history)?p.history.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&v.data&&typeof v.data==='object').map(v=>({at:v.at,data:Object.fromEntries(fields.map(([k])=>[k,clean(v.data[k],6000)])),...(v.slideHeadlines ? {slideHeadlines:Object.fromEntries(fields.map(([key])=>[key,clean(v.slideHeadlines[key],90)]))} : {})})):[];
+ const history=Array.isArray(p.history)?p.history.slice(-5).map(normalizeProjectSnapshot).filter(Boolean):[];
  const checklist=Object.fromEntries(checklistItems.map(([k])=>[k,p.checklist?.[k]===true]));
  const answers=Array.from({length:6},(_,n)=>clean(p.answers?.[n],3000));
  const rehearsals=Array.isArray(p.rehearsals)?p.rehearsals.slice(-5).filter(v=>v&&Number.isFinite(v.at)&&Number.isFinite(v.seconds)&&v.seconds>=0&&v.seconds<=86400).map(v=>({at:v.at,seconds:v.seconds})):[];
@@ -67,16 +72,24 @@ function detectSlideLimit(rules){
 }
 export function analyze(p){
  const deck=slides(p);const issues=[];
- for(const s of deck){if(!clean(p[s.key]))issues.push({id:s.key,kind:'missing',title:`Add ${s.title.toLowerCase()}`,detail:'This section needs your own information. We have kept an [ADD DATA] placeholder.',slide:deck.indexOf(s)+1});if(s.text.split(/\s+/).length>80)issues.push({id:s.key+'-length',kind:'length',title:`Shorten ${s.title.toLowerCase()}`,detail:'This section exceeds the preview’s 80-word readability target. Your event may have a different limit.',slide:deck.indexOf(s)+1});if(/(?:\b(?:best|guaranteed|revolutionary|first ever)\b|100%)/i.test(s.text))issues.push({id:s.key+'-claim',kind:'claim',title:'Review an absolute claim',detail:'Support this wording with a source or use a specific description without a superlative.',slide:deck.indexOf(s)+1});}
+ for(const s of deck){if(!hasDraftContent(p[s.key]))issues.push({id:s.key,kind:'missing',title:`Complete ${s.title.toLowerCase()}`,detail:'This section is missing information or still contains an edit prompt. Replace prompts with your own facts, or state honestly what is not known yet.',slide:deck.indexOf(s)+1});if(s.text.split(/\s+/).length>80)issues.push({id:s.key+'-length',kind:'length',title:`Shorten ${s.title.toLowerCase()}`,detail:'This section exceeds the preview’s 80-word readability target. Your event may have a different limit.',slide:deck.indexOf(s)+1});if(/(?:\b(?:best|guaranteed|revolutionary|first ever)\b|100%)/i.test(s.text))issues.push({id:s.key+'-claim',kind:'claim',title:'Review an absolute claim',detail:'Support this wording with a source or use a specific description without a superlative.',slide:deck.indexOf(s)+1});}
  for(const c of reviewClaims(p).filter(c=>c.status==='needs-source'))issues.push({id:c.key+'-number',kind:'number',title:'Add a source for a numerical claim',detail:'“'+c.quote+'” — add a source note with this exact sentence on the same slide, or label a proposed target as a goal.',slide:fields.findIndex(([k])=>k===c.key)+1});
  const countRule=detectSlideLimit(p.rules);
  if(countRule!==null&&countRule<deck.length)issues.push({id:'slide-limit',kind:'rule',title:'Your slide limit conflicts with this export',detail:'The rules include a '+countRule+'-slide requirement. Confirm whether it applies to your round. This workspace exports '+deck.length+' slides, so adapt the deck if that requirement applies.',slide:0});
  if(!p.confirmed)issues.unshift({id:'rules',kind:'rule',title:'Confirm your event rules',detail:'Check the slide limit, required headings, accepted formats, and AI policy before submitting.',slide:0});
  if(!p.proof||/no user|no interview|not yet|none yet|no .*results/i.test(p.proof))issues.push({id:'evidence',kind:'proof',title:'Give the story real-world proof',detail:'Run a small interview or prototype test. Record what happened and its source; do not invent results.',slide:4});
  const blockers=issues.filter(i=>['missing','rule','claim','number'].includes(i.kind));
- return {deck,issues,blockers,ready:blockers.length===0,completed:fields.filter(([k])=>clean(p[k])).length};
+ return {deck,issues,blockers,ready:blockers.length===0,completed:fields.filter(([k])=>hasDraftContent(p[k])).length};
 }
-export function daysLeft(deadline,now=Date.now()){if(!deadline)return null;let t=new Date(deadline).getTime();if(!Number.isFinite(t))return null;return Math.ceil((t-now)/86400000);}
+export function daysLeft(deadline,now=Date.now()){
+ if(typeof deadline!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(deadline))return null;
+ const target=new Date(deadline+'T00:00:00Z'),today=new Date(now);
+ if(!Number.isFinite(target.getTime())||!Number.isFinite(today.getTime())||target.toISOString().slice(0,10)!==deadline)return null;
+ // A date input represents a calendar day in the user's timezone, not UTC
+ // midnight. Compare local calendar dates so evening and DST changes are safe.
+ const localDay=new Date(0);localDay.setUTCFullYear(today.getFullYear(),today.getMonth(),today.getDate());localDay.setUTCHours(0,0,0,0);
+ return Math.round((target.getTime()-localDay.getTime())/86400000);
+}
 export function isExpired(p,now=Date.now()){return !p||!Number.isFinite(Number(p.updatedAt))||now-Number(p.updatedAt)>=TTL;}
 export function wrapText(text,measure,maxWidth){
  const lines=[];

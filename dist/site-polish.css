@@ -148,3 +148,19 @@ html {scroll-padding-block:24px;scrollbar-gutter:stable}
  .rv-map-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}
  .rv-map-grid button {min-width:0}
 }
+
+/* Local workspace status and safe restore controls. */
+.integration-status{margin-top:28px}
+.integration-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:20px}
+.integration-list article{padding:18px;border:1px solid var(--line,#ded9e6);border-radius:14px}
+.integration-list article>div{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.integration-list h3{margin:0;font-size:1rem;line-height:1.5}
+.integration-list p{margin:10px 0 0;font-size:.9375rem;line-height:1.6;color:var(--muted,#68616e)}
+@media(max-width:700px){.integration-list{grid-template-columns:1fr}.integration-list article>div{flex-wrap:wrap}}
+
+/* Keep frequently used workspace controls readable on desktop and touch screens. */
+.content .field :is(input:not([type=checkbox]):not([type=radio]),textarea,select){font-size:1rem;line-height:1.55}
+.content :is(.field>label,.speaker-note-field>label){font-size:.875rem;line-height:1.5}
+.content :is(.hint,.disabled-note){font-size:.8125rem;line-height:1.65}
+.content .btn,.project-view-group>button{font-size:.875rem}
+.sidebar .nav button,.sidebar .side-bottom>button{font-size:.875rem}

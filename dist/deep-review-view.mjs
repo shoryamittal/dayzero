@@ -1,6 +1,7 @@
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export function deepSummary(model){
  const d=model.deepReview;
+ if(model.integrationStatus==='pending')return '<section class="rv-deep-status" role="status"><strong>On-device review complete</strong><p>Your slide text, stored typography and supplied rules were checked in your browser. Live research and AI coaching remain pending.</p></section>';
  if(model.aiError)return '<section class="rv-deep-status" role="status"><strong>Standard review ready · deep review not completed</strong><p>'+esc(model.aiError)+'</p><p>The completed findings remain below. You can try the review again later.</p></section>';
  if(!d?.complete)return '';
  return '<section class="rv-deep-strategy"><span class="rv-eyebrow">YOUR COMPETITION GAME PLAN · AI SUGGESTIONS</span><h3>A stronger argument, slide by slide.</h3><p>'+esc(d.summary)+'</p><p class="rv-deep-scope">Reviewed every slide against the supplied text and metadata. '+(d.context.rules?'Check the edition and round of the attached brief.':'No organizer rules supplied: this is general pitch coaching.')+' AI visual checks are suggestions; original slides and facts still need your review.</p>'+
@@ -30,7 +31,7 @@ const measuredReasons={
  'Long passage':'A long sentence can bury the takeaway and make the slide harder to scan.',
  'Image accessibility':'A missing stored description can make informative visual content harder to access.',
  'Over limit':'The measured slide or word count exceeds the limit explicitly supplied in your brief.',
- 'Below minimum':'An explicitly sized text run is smaller than the minimum specified in your brief.',
+ 'Below minimum':'The measured slide count or an explicitly sized text run is below the minimum specified in your brief.',
  'Font mismatch':'A declared Latin font differs from the font family named in your supplied rule.'
 };
 export function deepFinding(i){

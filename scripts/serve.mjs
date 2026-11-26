@@ -11,15 +11,24 @@ import competition from '../api/competition.mjs';
 
 const host = '127.0.0.1';
 const portArgument = process.argv.indexOf('--port');
-const port = Number(portArgument >= 0 ? process.argv[portArgument + 1] : process.env.DAYZERO_PORT || 4176);
+const port = Number(portArgument >= 0 ? process.argv[portArgument + 1] : process.env.DAYZERO_PORT || process.env.PORT || 4176);
 if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('Choose a port between 1 and 65535.');
 const base = 'http://' + host + ':' + port;
 const root = resolve('dist');
-const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.md': 'text/plain; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.txt': 'text/plain; charset=utf-8'};
+const types = {'.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.md': 'text/plain; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.txt': 'text/plain; charset=utf-8'};
 
 createServer(async (incoming, outgoing) => {
   try {
     const url = new URL(incoming.url, base);
+    if (url.pathname === '/health' && ['GET', 'HEAD'].includes(incoming.method)) {
+      outgoing.writeHead(200, {'Content-Type': 'application/json', 'Cache-Control': 'no-store'});
+      outgoing.end(incoming.method === 'HEAD' ? undefined : JSON.stringify({service: 'PitchViva local workspace', status: 'ready', integrations: 'pending'}));
+      return;
+    }
+    if (url.pathname === '/deck-workspace.html' && ['GET', 'HEAD'].includes(incoming.method)) {
+      outgoing.writeHead(302, {Location: '/'}).end();
+      return;
+    }
     if (url.pathname === '/api/competition') {
       outgoing.status = code => {outgoing.statusCode=code;return outgoing;};
       outgoing.json = body => {outgoing.setHeader('Content-Type','application/json');outgoing.end(JSON.stringify(body));};
@@ -50,5 +59,5 @@ createServer(async (incoming, outgoing) => {
   } catch {
     outgoing.writeHead(404).end('Not found.');
   }
-}).listen(port, host, () => process.stdout.write('Day-Zero local AI server at ' + base + '\n'));
+}).listen(port, host, () => process.stdout.write('PitchViva local workspace at ' + base + '\n'));
 

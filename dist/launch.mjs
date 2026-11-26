@@ -1,4 +1,5 @@
 import {reviewIntake} from './review-shell.mjs';
+import {externalIntegrationsEnabled} from './integration-policy.mjs';
 
 export function launchPage({deck, draft, icons, hasProjects}) {
   const steps = [
@@ -10,7 +11,7 @@ export function launchPage({deck, draft, icons, hasProjects}) {
     ['What do I get?','An editable PowerPoint with six sections and speaker notes, plus a PDF preview where the text is supported. The export kit also includes your report and a project backup.'],
     ['Where is my draft saved?','In this browser. Drafts expire 24 hours after the last edit, checked when you reopen PitchViva. Export a project backup to keep it or move it to another device.'],
     ['Can I use my organizer’s template?','Yes, if it is a supported PPTX. Use Official template to map your text into the organizer’s slides. Check the rules and review the exported layout before submitting.'],
-    ['Do I need an account or an API key?','You can build and export a pitch without an account or key. AI tools use a server connection when available. Building a pitch or requesting suggestions can send your content for analysis, as explained on the form.']
+    ['Do I need an account or an API key?',externalIntegrationsEnabled()?'You can build and export a pitch without an account or key. AI tools use a server connection when available. Content use is explained on each form.':'You can build, edit, review and export locally without an account or key. Live AI, web research, cloud sync and payments are pending setup. This release sends no live AI or research requests.']
   ];
   return `<section class="launch-hero">
     <div class="launch-hero-inner launch-width">

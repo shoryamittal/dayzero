@@ -1,15 +1,18 @@
 import {assistInput,sections,validateAssistResult} from './assist-model.mjs';
+import {externalIntegrationsEnabled,INTEGRATION_PENDING_MESSAGE} from './integration-policy.mjs';
+import {hasDraftContent} from './pitch-content.mjs';
+import {createProjectSnapshot} from './project-history.mjs';
 const bounded=(value,max)=>typeof value==='string'?value.trim().slice(0,max):'';
 const safeURL=value=>{try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}};
 export function normalizePitchBuild(value){
  if(!value||typeof value!=='object'||Array.isArray(value))return null;
  const steps={};
- for(const key of ['research','draft'])steps[key]=['waiting','running','done','limited'].includes(value.steps?.[key])?value.steps[key]:'waiting';
+ for(const key of ['research','draft'])steps[key]=['waiting','running','done','limited','pending','local'].includes(value.steps?.[key])?value.steps[key]:'waiting';
  const sources=(Array.isArray(value.sources)?value.sources:[]).slice(0,5).flatMap(page=>{
   const url=safeURL(page?.url);return url?[{url,title:bounded(page.title,180),checked:bounded(page.checked,80),
    excerpts:(Array.isArray(page.excerpts)?page.excerpts:[]).slice(0,12).map(v=>bounded(v,500)).filter(Boolean)}]:[];
  });
- return {steps,source:safeURL(value.source),message:bounded(value.message,500),gaps:(Array.isArray(value.gaps)?value.gaps:[]).slice(0,8).map(v=>bounded(v,350)).filter(Boolean),
+ return {steps,mode:value.mode==='local'?'local':'assisted',source:safeURL(value.source),message:bounded(value.message,500),gaps:(Array.isArray(value.gaps)?value.gaps:[]).slice(0,8).map(v=>bounded(v,350)).filter(Boolean),
   notes:(Array.isArray(value.notes)?value.notes:[]).slice(0,8).map(v=>bounded(v,500)).filter(Boolean),sources,aiApplied:value.aiApplied===true};
 }
 const fingerprint=project=>JSON.stringify({input:assistInput(project,'draft'),headlines:project.slideHeadlines});
@@ -24,8 +27,60 @@ async function call(url,data,fetcher){
  if(!response.ok)throw Error('Service unavailable.');
  return response.json();
 }
-export async function buildStudioPitch(project,{source='',save=async()=>{},refresh=()=>{},fetcher=fetch,isCurrent=()=>true}={}){
+
+const noteHeadings = {
+ problem:'problem', 'the problem':'problem', solution:'solution', 'your solution':'solution',
+ approach:'approach', 'how it works':'approach', workflow:'approach',
+ proof:'proof', evidence:'proof', validation:'proof',
+ impact:'impact', outcome:'impact', outcomes:'impact',
+ ask:'ask', 'next step':'ask', 'next steps':'ask'
+};
+
+// This recognises explicit headings only. It does not guess what the user's
+// product does, manufacture a test result, or turn an intention into evidence.
+export function arrangeLabeledNotes(value) {
+ const text=bounded(value,6000),result={},found=new Set();let current=null;
+ for(const line of text.split(/\r?\n/)){
+  const match=line.match(/^\s*(?:#{1,6}\s*)?(?:\d+[.)]\s*)?(?:\*\*)?([A-Za-z ]{3,24})(?:\*\*)?\s*[:：]\s*(.*)$/);
+  const key=match&&noteHeadings[match[1].trim().toLowerCase()];
+  if(key){current=key;found.add(key);result[key]=[result[key],match[2]].filter(Boolean).join('\n');}
+  else if(current)result[current]=[result[current],line].join('\n');
+ }
+ if(found.size<2)return {};
+ return Object.fromEntries(Object.entries(result).map(([key,value])=>[key,bounded(value,6000)]).filter(([,value])=>hasDraftContent(value)));
+}
+
+export function prepareLocalPitch(project,source=''){
+ const previous=normalizePitchBuild(project.pitchBuild);
+ const arranged=arrangeLabeledNotes(project.solution);
+ const changes=Object.entries(arranged).filter(([key,value])=>(key==='solution'||!hasDraftContent(project[key]))&&project[key]!==value);
+ if(changes.length){
+  project.history=[...(project.history||[]),createProjectSnapshot(project)].slice(-5);
+  for(const [key,value] of changes)project[key]=value;
+  project.checklist={...project.checklist,facts:false,files:false};
+ }
+ project.pitchBuild=normalizePitchBuild({
+  mode:'local',source:source||previous?.source||'',steps:{research:'pending',draft:'local'},
+  message:'Your editable six-slide workspace is ready. '+INTEGRATION_PENDING_MESSAGE+' Add the missing facts, review the rules, and export whenever you are ready.',
+  gaps:pitchNextSteps(project).map(step=>step.question),
+  sources:previous?.sources||[],
+  notes:[
+   changes.length?'Explicitly labelled sections were arranged from your notes. Your original wording is saved in version history.':'Your supplied idea, facts and organiser rules have been kept without automatic rewriting.',
+   'No web research or AI request was made. Empty slides remain prompts; no evidence or competition rules were invented.',
+   ...(previous?.sources.length?['Saved source excerpts have not been refreshed. Check the current edition and round yourself.']:[])
+  ],aiApplied:false
+ });
+ return project.pitchBuild;
+}
+
+export async function buildStudioPitch(project,{source='',save=async()=>{},refresh=()=>{},fetcher=fetch,isCurrent=()=>true,allowExternal=externalIntegrationsEnabled()}={}){
  if(!isCurrent())return null;
+ if(allowExternal!==true){
+  const state=prepareLocalPitch(project,source);
+  await save();
+  if(!isCurrent())return null;
+  refresh();return state;
+ }
  source=source||project.pitchBuild?.source||'';
  project.pitchBuild=normalizePitchBuild({source,steps:{research:'running',draft:'waiting'},message:'Finding competition context…',gaps:nextQuestions});
  const state=project.pitchBuild;
@@ -72,7 +127,7 @@ export async function buildStudioPitch(project,{source='',save=async()=>{},refre
   if(fingerprint(project)!==snapshot){
    state.steps.draft='limited';state.message='You edited the story while drafting ran. Your edits were kept; the automatic draft was not applied.';
   }else{
-   project.history=[...(project.history||[]),{at:Date.now(),data:Object.fromEntries(sections.map(key=>[key,project[key]])),slideHeadlines:{...project.slideHeadlines}}].slice(-5);
+   project.history=[...(project.history||[]),createProjectSnapshot(project)].slice(-5);
    for(const key of sections){project[key]=result.story[key];project.slideHeadlines[key]=result.headlines[key];}
    project.checklist.facts=false;project.checklist.files=false;
    state.steps.draft='done';state.aiApplied=true;state.gaps=result.gaps;
@@ -94,6 +149,6 @@ export function pitchNextSteps(project){
  ['impact','Define a useful outcome','What would improve for the user, and how would you measure it?'],
  ['ask','Land the next step','What support do you need, and what specific action would it enable?']
  ];
- return prompts.filter(([key])=>!String(project?.[key]||'').trim()||/^\[ADD (?:DATA|EVIDENCE)\b/i.test(String(project[key]).trim()))
+ return prompts.filter(([key])=>!hasDraftContent(project?.[key]))
  .slice(0,3).map(([key,title,question])=>({key,title,question}));
 }

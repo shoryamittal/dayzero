@@ -2,6 +2,7 @@ import {analyze, clean, questions, slides, themes} from './engine.mjs?v=competit
 import {slideReadability} from './deck-design.mjs?v=competition-round-1';
 import {challengeQuestions, normalizePreparation, requirementState, runOfShow, signature} from './preparation.mjs?v=pitchviva-1';
 import {reviewClaims} from './claim-engine.mjs?v=ai-1.0';
+import {hasDraftContent} from './pitch-content.mjs';
 
 const slidePurpose = [
   'Start with the people affected and the problem they face.',
@@ -30,8 +31,7 @@ const missingAnswer = [
 ];
 
 function hasDraft(value) {
-  const text = clean(value);
-  return Boolean(text) && !/^\[ADD (?:DATA|EVIDENCE)\b/i.test(text);
+  return hasDraftContent(value);
 }
 
 function context(p) {
@@ -69,39 +69,39 @@ function buildReport(p) {
 }
 
 function speakerScript(p) {
-  const timing = runOfShow(p);
-  const opening = 'Hello, we’re ' + (p.team || 'the team behind ' + p.name) + '.';
+  const timing = runOfShow(withSpeakerNotes(p));
   const sections = timing.map((slot, index) => {
-    const draft = hasDraft(slot.script) ? slot.script : missingAnswer[index];
-    const lines = [index === 0 ? opening : '', draft, transitions[index]].filter(Boolean);
-    // Count spoken text, including the opening and speaker handoffs. Bracketed prompts are edit cues.
-    const words = lines.filter(line => !line.startsWith('[')).join(' ').split(/\s+/u).filter(Boolean).length;
+    // Exactly the notes used by PowerPoint, including each supplied manual note.
+    // Generated openings and transitions only belong to the fallback notes.
+    const draft = slot.script;
+    const words = draft.replace(/\[[^\]]*\]/g, '').split(/\s+/u).filter(Boolean).length;
     const estimated = Math.ceil(words * 60 / 130);
     const speaker = slot.speaker || 'Assign a speaker';
     return [
       'Slide ' + (index + 1) + ' / ' + (p.slideHeadlines?.[slot.key] || slot.title),
       slot.start + '–' + slot.end + ' s / ' + speaker,
-      ...lines,
+      draft,
       estimated > slot.duration ? 'Timing — Estimated ' + estimated + ' s. Trim to ' + slot.duration + ' s.' : ''
     ].filter(Boolean).join('\n');
   });
   return ['SPEAKER SCRIPT', context(p), 'Total speaking slot — ' + timing.at(-1).end + ' s',
-    'Use this as a draft. Replace bracketed lines, confirm every claim, and rehearse aloud. Slide notes take priority over slide text when supplied.',
+    'This script uses the same speaker notes as the PowerPoint. Manual notes are kept unchanged. Replace bracketed lines, confirm every claim, and rehearse aloud.',
     ...sections].join('\n\n') + '\n';
 }
 
 function juryPractice(p) {
-  const claims = reviewClaims(p);
-  function answer(key, index) {
-    const draft = hasDraft(p[key]) ? clean(p[key], 6000) : missingAnswer[index];
-    const unsupported = claims.some(claim => claim.key === key && claim.status === 'needs-source');
+  function answer(key, index, preferRehearsed = false) {
+    const rehearsed = preferRehearsed && hasDraft(p.answers?.[index]) ? clean(p.answers[index], 3000) : '';
+    const draft = rehearsed || (hasDraft(p[key]) ? clean(p[key], 6000) : missingAnswer[index]);
+    const label = rehearsed ? 'Your rehearsed answer — ' : 'Answer draft — ';
+    const unsupported = reviewClaims({...p, [key]: draft}).some(claim => claim.key === key && claim.status === 'needs-source');
     return unsupported
-      ? 'Add proof or remove the unsupported number before answering. Draft wording to revise — ' + draft
-      : 'Answer draft — ' + draft;
+      ? 'Add proof or remove the unsupported number before answering.\n' + label + draft
+      : label + draft;
   }
   const deck = slides(p);
   const base = deck.map((slide, index) => [
-    questions[index][1], answer(slide.key, index), 'Prepare — ' + questions[index][2]
+    questions[index][1], answer(slide.key, index, true), 'Prepare — ' + questions[index][2]
   ].join('\n'));
   const prep = normalizePreparation(p.preparation);
   const followUps = challengeQuestions(p).slice(0, prep.requirements.length).map((question, index) => {
@@ -119,7 +119,7 @@ function juryPractice(p) {
       (prep.fallback ? 'Answer draft — ' + prep.fallback : 'Plan a fallback using files your team can open during the pitch.'));
   }
   return ['JURY PRACTICE', context(p),
-    'These are practice questions drawn from your project and mapped rules. Edit the answers to reflect what your team can demonstrate.',
+    'These are practice questions drawn from your project and mapped rules. Saved rehearsal answers take priority for their matching questions; other answers use your current slide text. Confirm what your team can demonstrate.',
     ...base, ...followUps].join('\n\n') + '\n';
 }
 
@@ -133,14 +133,18 @@ export function pitchKitFiles(project) {
 
 export function slideReviewSignature(project, key) {
   return signature(JSON.stringify([
-    project.name, project.template, project[key] || '',
+    project.name, project.team, project.template, project.demo === true, project[key] || '',
     project.slideHeadlines?.[key] || '', project.notes?.[key] || '',
-    project.slideImages?.[key] || null
+    project.slideImages?.[key] || null,
+    project.event || '', project.eventRound || '', project.rules || '',
+    (project.evidence || []).filter(note => note.slide === key).map(note => [note.claim, note.source, note.type]),
+    normalizePreparation(project.preparation).requirements.filter(rule => rule.section === key)
+      .map(rule => [rule.title, rule.quote, rule.source, rule.weight])
   ]));
 }
 
 export function slideReviewed(project, key) {
-  return Boolean(project.slideReviews?.[key] && project.slideReviews[key] === slideReviewSignature(project, key));
+  return Boolean(hasDraft(project[key]) && project.slideReviews?.[key] && project.slideReviews[key] === slideReviewSignature(project, key));
 }
 
 export function pitchDelivery(project){
