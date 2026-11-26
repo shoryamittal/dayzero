@@ -1,17 +1,46 @@
-const CACHE='dayzero-shell-studio-flow-1';
-const SHELL=['/pitch-builder.mjs','/pitch.html','/pitch-start.mjs','/pitch-start.css','/','/index.html','/styles.css','/studio.css','/launch.css','/launch.mjs','/app.js','/engine.mjs','/deck-design.mjs','/sample-deck.mjs','/slide-images.mjs','/before-close-dusk.png','/before-close-handoff.png','/before-close-listing.png','/before-close-pickup.png','/before-close-log.png','/before-close-cover.png','/reloop-canteen-concept.png','/event-engine.mjs','/event-ui.mjs','/claim-engine.mjs','/preparation.mjs','/preparation-ui.mjs','/template-ui.mjs','/template-bridge.mjs','/community.mjs','/assist-ui.mjs','/assist-model.mjs'];
-const VERSIONED=[
- '/app.js?v=studio-flow-1','/pitch-start.mjs?v=3','/pitch-start.css?v=3','/engine.mjs?v=studio-flow-1','/assist-ui.mjs?v=studio-flow-1',
- '/app.js?v=competition-round-1','/preparation.mjs?v=pitchviva-1','/event-engine.mjs?v=pitchviva-1','/event-ui.mjs?v=pitchviva-1','/engine.mjs?v=competition-round-1','/slide-images.mjs?v=visual-qa-1','/deck-design.mjs?v=competition-round-1','/sample-deck.mjs?v=sample-dusk-1','/assist-ui.mjs?v=competition-round-1','/assist-model.mjs?v=competition-round-1','/community.mjs?v=launch-1','/template-ui.mjs?v=audit-2','/template-bridge.mjs?v=audit-2',
- ...SHELL.filter(path=>path.endsWith('.mjs')&&!path.includes('/assist-')&&!path.includes('/community.')&&!path.includes('/template-')&&!path.includes('/deck-design.')&&!path.includes('/sample-deck.')&&!path.includes('/launch.')&&!path.includes('/slide-images.')).map(path=>path+'?v=ai-1.0'),
- '/styles.css?v=ai-1.0','/studio.css?v=deck-1','/launch.css?v=pitchviva-1','/launch.mjs?v=competition-round-1'
-];
-self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll([...SHELL,...VERSIONED])).then(()=>self.skipWaiting()));});
-self.addEventListener('activate',event=>{event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('dayzero-shell-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
-self.addEventListener('fetch',event=>{
- const url=new URL(event.request.url);
- if(event.request.method!=='GET'||url.origin!==self.location.origin)return;
- if(!SHELL.includes(url.pathname)&&!url.pathname.startsWith('/vendor/'))return;
- event.respondWith(fetch(event.request,{cache:'no-store'}).then(async response=>{if(response.ok){const cache=await caches.open(CACHE);await cache.put(event.request,response.clone()).catch(()=>{});}return response;}).catch(async()=>{const cached=await caches.match(event.request);if(cached)return cached;if(event.request.mode==='navigate')return caches.match('/index.html');return new Response('Not available offline yet',{status:503});}));
+importScripts('/offline-assets.js?v=29f2fbb4acf711a1');
+
+const {version, assets} = self.PITCHVIVA_OFFLINE;
+const CACHE = 'dayzero-shell-local-' + version;
+const SHELL = new Set(assets);
+
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE).then(async cache => {
+    // A failed install leaves the last working release available offline.
+    await cache.addAll(assets.map(path => new Request(path, {cache: 'reload'})));
+    await self.skipWaiting();
+  }));
 });
 
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys
+    .filter(key => key.startsWith('dayzero-shell-') && key !== CACHE)
+    .map(key => caches.delete(key)))).then(() => self.clients.claim()));
+});
+
+self.addEventListener('fetch', event => {
+  const url = new URL(event.request.url);
+  if (event.request.method !== 'GET' || url.origin !== self.location.origin) return;
+  const path = url.pathname === '/' ? '/index.html' : url.pathname;
+  if (!SHELL.has(path)) return;
+  event.respondWith((async () => {
+    // The manifest fingerprints a complete release. Cache-first lets an installed
+    // workspace open immediately on stalled connections as well as fully offline.
+    const cached = await caches.match(path, {cacheName: CACHE}).catch(() => null);
+    if (cached) return cached;
+    try {
+      const response = await fetch(event.request, {cache: 'no-store'});
+      if (response.ok) {
+        try {
+          const cache = await caches.open(CACHE);
+          await cache.put(path, response.clone());
+        } catch { /* A full cache must not discard a usable network response. */ }
+      }
+      return response;
+    } catch {
+      return new Response(
+        'This file is not saved offline yet. Open the workspace once while connected.',
+        {status: 503, headers: {'Content-Type': 'text/plain; charset=utf-8'}});
+    }
+  })());
+});

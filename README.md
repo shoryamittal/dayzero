@@ -1,116 +1,109 @@
-# PitchViva
+# PitchViva — Dayzero
 
-Event preparation and pitch studio. Browser-local projects, evidence, editable decks, requirement mapping, speaking plans, organizer PPTX text filling, and handoff workbooks.
+A competition pitch workspace for student teams: prepare an editable story, keep evidence and organizer rules beside it, review an existing PowerPoint, rehearse, and download the complete handoff.
 
-## Structure
+**This release runs locally with live integrations intentionally pending.** No API key, account, payment or provider request is required to use the browser workspace. Existing provider credentials cannot activate live calls on their own.
 
-- dist/: deployable app and licensed export libraries
-- tests/: behavior tests
-- scripts/: validation tooling
-- vercel.json: Vercel deployment configuration
+## Run the complete app
 
-## Run
+Use Node 22 or later. The browser app has no package-install step.
 
-Use Node 22 or later. The local workspace runs without package dependencies or API keys.
+```sh
+npm run build
+npm start
+```
 
-    npm run build
-    npm run dev
+Open **http://127.0.0.1:4176/**. `npm run dev` runs the same workspace. Set `PORT` or `DAYZERO_PORT`, or pass `--port` to `scripts/serve.mjs`, to choose another port.
 
-Render: Static Site, branch main, build npm run build, publish dist.
-Vercel: import this repository; settings are included.
+- `/` — homepage and presentation review.
+- `/pitch.html` — compact pitch intake and the complete editor.
+- `/review.html` — dedicated presentation reviewer.
+- `/health` — local server readiness.
 
-## Review Studio
+The deployable browser app is `dist/`. The existing Vercel configuration builds with `npm run build`; a static host can publish `dist/` after the same command. The local workflow works on either deployment without serverless functions.
 
-Open `/review.html` for the dedicated deck review workspace, or use the shared review section on the homepage. A browser-local PPTX review provides an overview, slide text outlines with highlighted findings, supplied-rule checks and a revision checklist. The overview groups repeated findings and links to individual slides. Compare revised PPTX reruns the same brief in this tab and includes previous and current counts in the downloadable report. The fictional example uses the same checks as uploaded slide data. Review marks last for the current session; download the Markdown report or use the print action to retain them. Marking an item addressed is a user acknowledgement, not automatic verification of an edited deck.
+## What you can complete without APIs
 
-The reader supports 1–40 slides and files up to 8 MB. Text outlines do not reproduce original visual layouts. Checks use editable text and stored metadata; inherited styles, image/chart content, factual accuracy and final organiser compliance require manual inspection. No model API, quality score or selection prediction is used by this feature.
-
-## Storage and service boundaries
-
-Export a library backup before switching hosts, then unzip it and import each project JSON on the new host. Browser storage is isolated by origin. Drafts expire 24 hours after last edit, checked on opening. Export backups for durable storage.
-
-Event search provides official references and Wikipedia background. It cannot discover every campus event or verify current deadlines. The writing assistant uses server-configured Gemini access. Building a pitch can send your idea for automatic drafting as disclosed on the form; ordinary editing stays local. A paid launch must accurately describe these limits. PPTX filling requires manual layout review in PowerPoint. Generated decks have six sections. If the built-in PDF cannot render your text, the pitch kit still includes the editable PowerPoint and other files.
-
-Third-party licenses are retained under dist/vendor/.
-
-## Community-led direction
-
-The homepage and Community pilot page describe a proposed four-week preparation cohort. The free workspace remains available. Enrollment and payments are closed until hosts, schedule, delivery capacity and commercial terms are confirmed. `dist/community-model.md` records the final model and owner decisions. `dist/community.mjs` includes the personal four-week calendar generator; calendar files do not reserve a seat or hosted meeting.
-
-## AI Studio
-
-Open a project and choose Writing assistant. The server uses GEMINI_API_KEY when configured. Provider credentials are never included in project storage or exports. The form lets users inspect outbound story and context. Google may use free-tier submissions to improve its products.
-
-The Vercel deployment runs /api/assist. For local development, run npm run dev and open http://127.0.0.1:4176/. Render continues serving the static workspace. AI Studio there links to Vercel.
-
-## Archived sampler - Before Close
-
-Before Close is the fictional six-slide campus food-recovery pitch previously featured on the homepage. Students reserve an unsold meal and staff verify pickup at the counter.
-
-[Download the editable six-slide sample](archive/Before_Close_Sample.pptx).
-
-| Slide | Purpose |
+| Workflow | Included behavior |
 | --- | --- |
-| Opening | Introduce the reservation and verified pickup. |
-| Reservation | Show how one code connects the booking to the portion. |
-| Workflow | Follow a portion from listing through pickup or expiry. |
-| Handoff | Separate the clickable walkthrough from the on-shift test. |
-| Pilot | Compare leftovers on matching weekdays. |
-| Decision | Request one canteen for a two-week pilot. |
+| Create a pitch | Type or import notes, refine wording locally, add an optional event/round and supplied rules, then open an editable six-section story immediately. Explicitly labelled notes can be arranged into their matching sections. Missing facts stay marked. |
+| Select competition context | Search saved references and dated briefs, retain the requested edition, choose a source, and use compatible round/track suggestions. These records are background, not live deadline or compliance verification. |
+| Edit the deck | Six visual styles, editable headlines and slide text, uploaded images and alt text, exact speaker notes, draft checks and team review marks. |
+| Improve wording | Review deterministic findings and before/after wording suggestions, apply changes to individual unchanged sections, save a snapshot, and undo. No generated facts or AI quality score is implied. |
+| Prepare evidence and rules | Attach source notes, map requirements, assign tasks and speakers, plan demo fallback, record feedback and keep submission details. |
+| Learn from references | Paste or import a reference, save its source URL, compare text signals, and remove/undo. Reference achievements never become project facts. |
+| Review a PowerPoint | Read supported presentation formats on-device, inspect text and available typography/bounds metadata, measure supported slide-count rules, prioritize findings, mark addressed work, compare revisions, and download or print the report. |
+| Rehearse and deliver | Timer, practice questions and saved answers, presenter notes, editable PPTX, supported-text PDF, speaker script, rationale, preparation workbook and ZIP pitch kit. |
+| Recover work | Individual JSON backups, whole-library JSON backup and restore, compatibility with previous library ZIP backups, project duplication and version history. |
+| Plan preparation | Saved event library, custom event briefs, and a four-week personal calendar. The proposed hosted cohort remains closed. |
 
-The [original sample design](dist/sample-deck.mjs) and [project data](dist/engine.mjs) remain in the repository. The [historical homepage](https://github.com/shoryamittal/dayzero/tree/7c6a94bd2c49e04c4eb4852d082f124010aed410/dist) preserves the interactive implementation.
+See [the full feature status and boundaries](docs/feature-status.md) for a feature-by-feature map based on the founder's current product notes and repository history.
 
+## Local data and recovery
 
+Projects are stored in this browser's IndexedDB. The library holds up to 12 projects. **Drafts expire 24 hours after the last edit**, checked when the workspace opens. Export backups for durable storage, especially before changing hosts or clearing browser data.
 
-## PowerPoint generation backend
+Saves merge only the projects changed in the current tab. If another tab edits or removes the same project, the stale save is stopped and its unsaved text remains available in that tab. Follow the visible notice: export a backup before reloading the saved copy. This protects against silent overwrites; it does not merge competing edits automatically.
 
-Run `npm start` with Node 22+ to start the export service on port 4177. Set `PORT` on a host. `npm run dev` also serves the export route alongside the local website. The existing website export stays on-device.
+Use **Storage & settings → Back up the whole library** to download one JSON file containing every project and the active selection. **Restore a backup** accepts that file, a single project JSON, or an older library ZIP. Restoration validates the entire set before importing, preserves existing projects, creates fresh IDs, and restarts the restored drafts' retention period. A project may be up to 3 MB; the backup file may be up to 40 MB.
 
-`GET /health` reports readiness. Send JSON to `POST /api/pptx` and save the binary response as a .pptx file. Supply a project name and one or more of problem, solution, approach, proof, impact and ask. Other workspace fields such as slideHeadlines, slideImages, evidence, template and notes follow the browser project format. Missing sections receive editable placeholders. This endpoint assembles supplied content using the existing six-slide renderer. It needs no model key, database or file storage.
+New snapshots preserve story text, headlines, speaker notes, design and practice answers. Images, evidence notes and organizer rules remain part of the current project and full backups rather than being duplicated into every snapshot. Restoring a snapshot first saves the current draft so the change can be reversed.
 
-    curl -X POST http://localhost:4177/api/pptx -H "Content-Type: application/json" --data-binary @project.json -o pitch.pptx
+Public application files, current module dependencies, bundled references and export libraries are cached after the first successful load. The build regenerates the offline asset manifest. Provider responses and project data are never placed in the public asset cache. Fonts may fall back to system fonts offline; Google Fonts receives normal font requests when connected, and the host may process access logs.
 
-Example project.json:
+Each release also changes the worker's manifest URL so an installed workspace can discover updated application code. Updates never reload an editing session automatically; reopen or reload after installation to run the new release. Internal navigation waits for pending edits to save and retains the page if storage fails.
 
-    {"name":"Campus Food","problem":"Cafeterias discard surplus meals.","solution":"Students reserve surplus portions before closing."}
+## Presentation review and export boundaries
 
-Requests are limited to 4 MiB, with two concurrent exports per process. Responses use no-store. The service processes project data in memory. Authentication, billing and model-based drafting are outside this endpoint.
+The reviewer accepts PPTX, PPTM, PPSX, PPSM, POTX and POTM files with 1–40 slides and a maximum file size of 8 MB. It reads supported text and stored metadata; it does not execute macros. Old PPT/PPS/POT files must be converted to PPTX. Review marks last for the current tab, so download the report to retain them.
 
+Findings include their reason and a practical next step. Text outlines do not reproduce the original slide layout. Image/chart content, inherited styles, factual accuracy and final organizer compliance need human review. Revised-deck comparisons use the same frozen brief rather than changing requirements between runs. Marking a finding addressed records the team's acknowledgement; a fresh review is needed to measure an edited deck.
 
-## Deep presentation review
+Browser exports contain six slides. A conflicting event slide limit is flagged; use a compatible format before submission. The official-template bridge can selectively replace supported PPTX text boxes while preserving the source package. Inspect every filled template in PowerPoint. It rejects macros and unsupported embedded objects.
 
-The homepage and /review.html support standard checks and an optional deep competition review.
+The built-in PDF renderer supports its documented Latin-text range. Unsupported scripts produce a clear message; Unicode text remains in the editable PowerPoint, which can be exported to PDF with suitable fonts installed. The ZIP kit still includes the PPTX and a PDF fallback note. No cross-editor layout guarantee is made.
 
-- Standard: editable text, declared typography, stored bounds and supplied-rule checks through /api/deck-review.
-- Deep: /api/review-ai reviews up to five selected slides per call, then runs a deck-wide strategy and criterion mapping pass. Each accepted text finding has an exact slide passage, a reason, a concrete fix and optional suggested wording. New numeric claims in rewrites are removed.
-- Visual: attach a matching PDF under 2 MiB and confirm the same slide count/order. The PDF is sent to Gemini with the extracted text. Visual suggestions identify a page region; text-only runs cannot claim visual inspection.
-- References: import reference PowerPoint text or read a public reference page. Reference lessons require an exact reference passage. Winner status is not verified, and reference achievements must not become project facts.
-- Discovery: directory/encyclopedia discovery works without an AI key. A connected Gemini project enables grounded live web research for competition and past-winner sources. Google Search suggestions are displayed in a sandboxed frame. Users explicitly select a source, preview excerpts and attach the relevant brief. Restricted sites, scanned documents and unavailable rulebooks require a pasted brief or an alternate public source.
+## API work deliberately pending
 
-### Activate AI
+The browser policy is in `dist/integration-policy.mjs`; its live-service switch is off. Node provider routes independently require `PITCHVIVA_ENABLE_EXTERNAL_APIS=1` and owner-side credentials. Python local launchers force paid external access off. Never put provider keys in browser fields, project backups, tracked source or client-visible environment variables.
 
-Add GEMINI_API_KEY as a server-only Vercel environment variable and redeploy to enable the shared connection. No client-visible environment variable is needed. Customers are never asked to supply a provider key.
+[API activation and remaining work](docs/integrations-pending.md) records the later tasks for AI, live research, media, cloud accounts, payment/order handling and cohort operations. These services are not presented as finished by this release. A key alone does not implement customer authentication, payment webhooks, order entitlements or production recovery.
 
-The readiness endpoint GET /api/review-ai exposes only availability/provider/model. AI analysis requires a server connection, same-origin JSON and bounded input. The public form discloses content processing; research preparation also works with readable known/provided sources when AI is unavailable. A failed or cancelled AI run leaves standard findings available and never appears as a completed deep review.
+## Optional local PowerPoint endpoint
 
-Progress reflects actual work: reading slides, measuring standard checks, analysing slide batches, then cross-slide strategy. Revised-deck comparison runs fresh standard checks and attempts fresh deep analysis through the same automatic workflow.
+The complete local server includes `POST /api/pptx`, a renderer for supplied project JSON that makes no model request. For a standalone export process:
 
-### Review validation
+```sh
+npm run start:export
+```
 
-The automated suite exercises grounding, complete slide coverage, rule attribution, reference passages, PDF checks, cancellation, safe error handling, provider failures and export. Provider responses are mocked in tests. A real model-quality evaluation still requires a configured Gemini project and representative decks; no system guarantees selection or complete coverage of every competition.
+The standalone service listens on port 4177 or `PORT`; `GET /health` reports readiness. Send a project name and at least one story section, plus optional headlines, images, source notes and speaker notes. Missing sections remain editable placeholders. Requests are limited to 4 MiB with two concurrent exports per process. The website's normal export stays in the browser and does not need this endpoint.
 
+## Optional Python generation backend
 
-## Simplified public review
+The separate owner-operated backend includes a design catalog, durable job revisions, a render queue, retries, editable PPTX generation, article output and local LibreOffice/Poppler checks. It reads the shipped compressed catalog on a fresh checkout; there is no manual unzip requirement.
 
-The public reviewer asks for a PowerPoint, competition name, optional event link and optional additional organiser rules. Provider credentials belong in server configuration, never in the customer intake. PDF exports, reference uploads, required rulebook pasting, review-depth choices and setup confirmations are not part of the public form.
+See [backend/BACKEND.md](backend/BACKEND.md) for local installation, authorization, worker behavior and the real system dependencies. [backend/README.md](backend/README.md) documents its catalog and optional services. This owner-only backend is separate from the public browser app. Never expose its service credential or accept a visitor-chosen workspace header in a public integration.
 
-POST /api/review-ai with action prepare collects bounded source excerpts using the known organizer directory and, when the server AI connection is available, grounded competition/reference discovery. Only successfully fetched excerpts are used. Sources and limitations are shown in the report. Re-review uses the same workflow.
+## Verification
 
-The standard review remains available when extended analysis cannot run. Missing AI/research/rendering capabilities are reported accurately rather than shifting setup to the visitor. Automatic original-deck rendering is not provided by the Vercel text-review service.
+```sh
+npm run build
+cd backend
+python -m unittest -q
+```
 
+The root build checks application/API/server syntax, regenerates the offline manifest and runs the JavaScript behavior suite. Provider tests use fixtures. The Python suite includes real local rendering when its prerequisites are installed. See [docs/verification.md](docs/verification.md) for this completion pass's observed results and limits.
 
-## Automatic pitch start
+## Repository guide
 
-The dedicated pitch page accepts an idea, optional competition name/link, and optional known facts, rules and names. It opens the editor immediately, then attempts bounded competition/reference research and server-backed drafting. Provider keys are never requested in the public creation form or writing assistant. Configure GEMINI_API_KEY server-side for AI operations; without it, the editor retains the idea and shows honest missing-data prompts.
+- `dist/` — browser application, generated offline manifest and licensed export libraries.
+- `api/` — local rendering and gated future provider endpoints.
+- `backend/` — optional owner-only Python catalog and render service.
+- `scripts/` — local servers, validation and offline-manifest generation.
+- `tests/` — JavaScript behavior regressions.
+- `docs/product-suggestions.md` — recorded founder direction.
+- `docs/feature-status.md` — current feature completion map.
+- `archive/` — historical product prompt and fictional Before Close sample.
 
-The automatic flow preserves extra rules, records source excerpts and research limits, validates complete six-section drafts, and checks for edits made during the provider request before applying any automatic result. Original wording is retained in version history. No winner status, fact verification or competition success is claimed. Exports currently remain six slides: constraints requiring another structure must be addressed before submission.
+Third-party licenses are retained under `dist/vendor/` and `backend/assets/`. The historical `dist/audit-report.md` is a dated baseline, not the current release status.

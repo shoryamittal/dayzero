@@ -23,11 +23,13 @@ def initialize(db):
     db.executescript(DDL)
     db.executemany('INSERT OR IGNORE INTO design_systems VALUES(?,?,?,?,?)',[(k,*v) for k,v in SYSTEMS.items()])
     # Required when upgrading an existing v2 working database.
-    seed=ROOT/'catalog.sqlite'
-    if Path(db.execute('PRAGMA database_list').fetchone()[2]).resolve()!=seed.resolve():
-        db.execute('ATTACH DATABASE ? AS shipped',(str(seed),))
+    from store import catalog_connection
+    with catalog_connection() as seed:
         for table in ['font_discovery','icon_index']:
-            db.execute(f'INSERT OR IGNORE INTO {table} SELECT * FROM shipped.{table}')
+            records=seed.execute(f'SELECT * FROM {table}').fetchall()
+            if records:
+                placeholders=','.join('?' for _ in records[0])
+                db.executemany(f'INSERT OR IGNORE INTO {table} VALUES({placeholders})',records)
 def get_style(db,t):
     p=db.execute('SELECT * FROM type_styles WHERE id=?',(t,)).fetchone()
     if p:return dict(p)

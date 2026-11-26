@@ -1,10 +1,13 @@
 """A fresh runtime database starts from a read-only catalog snapshot."""
 import colorsys
+import gzip
 import hashlib
 import json
 import os
 import re
 import sqlite3
+import shutil
+import tempfile
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -45,8 +48,33 @@ def contrast(a,b):
 def dbpath():
     return Path(os.getenv('PPT_DB',ROOT/'runtime.sqlite'))
 @contextmanager
+def catalog_connection():
+    """Read the bundled seed in fresh checkouts and pre-expanded Docker images.
+
+    A temporary expansion avoids writing to an installed/read-only package and
+    avoids concurrent workers seeing a partially unpacked catalog.
+    """
+    seed=ROOT/'catalog.sqlite'
+    if seed.is_file() and seed.stat().st_size:
+        db=sqlite3.connect(seed.as_uri()+'?mode=ro',uri=True)
+        try:yield db
+        finally:db.close()
+        return
+    compressed=ROOT/'catalog.sqlite.gz'
+    if not compressed.is_file():
+        raise FileNotFoundError('The bundled catalog is missing. Restore backend/catalog.sqlite.gz from the repository.')
+    with tempfile.TemporaryDirectory(prefix='pitchviva-catalog-') as folder:
+        seed=Path(folder)/'catalog.sqlite'
+        with gzip.open(compressed,'rb') as source,seed.open('wb') as destination:
+            shutil.copyfileobj(source,destination)
+        db=sqlite3.connect(seed.as_uri()+'?mode=ro',uri=True)
+        try:yield db
+        finally:db.close()
+@contextmanager
 def connection():
-    db=sqlite3.connect(dbpath(),timeout=20)
+    path=dbpath()
+    path.parent.mkdir(parents=True,exist_ok=True)
+    db=sqlite3.connect(path,timeout=20)
     db.row_factory=sqlite3.Row
     db.execute('PRAGMA foreign_keys=ON')
     try:
@@ -59,7 +87,7 @@ def init():
         raise ValueError('Choose a separate runtime database')
     with connection() as db:
         if not db.execute("SELECT 1 FROM sqlite_master WHERE name='reference_decks'").fetchone():
-            with sqlite3.connect(f'file:{ROOT}/catalog.sqlite?mode=ro',uri=True) as seed: seed.backup(db)
+            with catalog_connection() as seed: seed.backup(db)
         db.execute('PRAGMA journal_mode=WAL')
         db.executescript(DDL)
         if 'competition_track' not in {r[1] for r in db.execute('PRAGMA table_info(editions)')}:

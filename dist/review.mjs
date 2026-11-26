@@ -39,7 +39,9 @@ function overviewGroup(items,s){
 function researchSummary(model){
  const r=model.research;if(!r)return '';
  const pages=[...(r.sources||[]),...(r.referenceSources||[])];
- return '<section class="rv-research-summary"><h3>Competition context</h3><p>We looked for requirements and reference material for this review.</p>'+
+ return '<section class="rv-research-summary"><h3>Competition context</h3><p>'+esc(r.mode==='local'?'This review uses the organiser rules you supplied. Live research is pending.':'Requirements and reference material used for this review.')+'</p>'+
+ (r.source?'<p>Event reference: <a href="'+esc(r.source)+'" target="_blank" rel="noopener noreferrer">'+esc(r.source)+'</a>'+(r.mode==='local'?' · saved, not fetched':'')+'</p>':'')+
+ (r.frozen?'<p>The revised deck was checked against the original saved brief.</p>':'')+
  (r.additionalRules?'<details><summary>Your additional rules</summary><p style="white-space:pre-wrap">'+esc(r.additionalRules)+'</p></details>':'')+
  (pages.length?'<details><summary>Sources used · '+pages.length+'</summary>'+pages.map(p=>'<article><a href="'+esc(p.url)+'" target="_blank" rel="noopener noreferrer">'+esc(p.title||p.url)+'</a><p>'+esc(p.checked?'Read '+p.checked.slice(0,10):'Read for this review')+'</p><details><summary>Excerpts used</summary><ul>'+(p.excerpts||[]).map(line=>'<li>'+esc(line)+'</li>').join('')+'</ul></details></article>').join('')+'</details>':'')+
  ((r.notes||[]).length?'<ul>'+r.notes.map(note=>'<li>'+esc(note)+'</li>').join('')+'</ul>':'')+
@@ -76,14 +78,14 @@ function revisionPanel(s) {
  const comparison=s.comparison;
  return `<section class="rv-revision"><div class="rv-revision-head"><div><h3>${comparison?'What changed between drafts?':'Made edits in PowerPoint?'}</h3><p>${comparison?`Previous: ${esc(comparison.name)} · Current: ${esc(s.name)}`:'Choose your revised deck to compare both drafts against the same brief.'}</p></div><label class="rv-revision-picker rv-button rv-secondary">Compare revised presentation ${icon('upload',16)}<input type="file" accept=".pptx,.pptm,.ppsx,.ppsm,.potx,.potm,.ppt,.pps,.pot" aria-label="Compare revised presentation" data-revision ${s.comparing?'disabled':''}></label></div>
  ${comparison?`<div class="rv-deltas">${comparison.rows.map(r=>`<div><span>${r.label}</span><strong><small>${r.before}</small> → ${r.after}</strong></div>`).join('')}</div><p>Counts come from a fresh review. A change in count can also reflect added or removed slides.</p>`:''}
- <p class="rv-status" data-revision-status role="status">${esc(s.revisionMessage||'')}</p></section>`;
+ ${s.comparing?'<button type="button" class="rv-button rv-secondary" data-cancel-comparison>Cancel comparison</button>':''}<p class="rv-status" data-revision-status role="status">${esc(s.revisionMessage||'')}</p></section>`;
 }
 function render(s){
  const m=s.model,report=s.report;
- report.innerHTML=`<div class="rv-results-header"><div><span class="rv-eyebrow"><i></i> ${s.demo?'FICTIONAL EXAMPLE REVIEW':'YOUR DECK, WITH FRESH EYES'}</span><h2>${esc(s.event||s.name.replace(/\.(?:pptx|pptm|ppsx|ppsm|potx|potm)$/i,''))}</h2><p>${esc(s.name)} <span>·</span> ${s.stage==='demo'?'Live demo':s.stage==='auto'?'Competition review':'Idea screening'} <span>·</span> ${m.slides.length} slides inspected</p></div><div class="rv-results-actions"><button type="button" class="rv-button rv-secondary" data-download>${icon('download',16)} Download report</button><button type="button" class="rv-button rv-primary" data-edit-context>Review another presentation ${icon('arrow',16)}</button></div></div>
+ report.innerHTML=`<div class="rv-results-header"><div><span class="rv-eyebrow"><i></i> ${s.demo?'FICTIONAL EXAMPLE REVIEW':'YOUR DECK, WITH FRESH EYES'}</span><h2>${esc(s.event||s.name.replace(/\.(?:pptx|pptm|ppsx|ppsm|potx|potm)$/i,''))}</h2><p>${esc(s.name)} <span>·</span> ${s.stage==='demo'?'Live demo':s.stage==='auto'?'Competition review':'Idea screening'} <span>·</span> ${m.slides.length} slides inspected</p></div><div class="rv-results-actions"><button type="button" class="rv-button rv-secondary" data-download>${icon('download',16)} Download report</button><button type="button" class="rv-button rv-secondary" data-print>Print / save PDF</button><button type="button" class="rv-button rv-primary" data-edit-context>Review another presentation ${icon('arrow',16)}</button></div></div>
  <div class="rv-stale" role="status" ${s.stale?'':'hidden'}>Review settings changed. Run the review again to update these findings.</div>
  <div class="rv-summary"><div class="rv-summary-lead"><span>${icon('spark',20)} THE REVIEW SNAPSHOT</span><strong>${m.priority?'A few things to strengthen.':m.findings.length?'Review the marked slides.':'No automatic flags surfaced.'}</strong><p>${s.demo?'You are exploring a fictional example. Upload your deck for your own findings.':'Start with the priorities. Keep what works. Give every important claim something to stand on.'}</p></div>${[[m.priority,'Priority actions','Fix these first'],[m.affected+'/'+m.slides.length,'Slides with observations','Editable text & metadata'],[m.checks.length,'Rules supplied',m.checks.length?m.breaches.length+' measured breach'+(m.breaches.length===1?'':'es'):'Add your organiser’s brief']].map(([n,label,detail])=>`<div class="rv-summary-stat"><strong>${n}</strong><span>${label}</span><small>${detail}</small></div>`).join('')}</div>
- ${revisionPanel(s)}<nav class="rv-view-nav" aria-label="Review views">${[['overview','Overview'],['slides','Slide review'],['rules','Rule check'],['plan','Action plan']].map(([id,label])=>`<button type="button" data-view="${id}" aria-pressed="${s.view===id}">${label}${id==='plan'?`<span>${m.findings.length}</span>`:''}</button>`).join('')}<span class="rv-session-status">${icon('shield',13)} ${s.demo?'Example review':m.deepReview?.complete?'Gemini · deep review':'Standard checks · not saved'}</span></nav>
+ ${revisionPanel(s)}<nav class="rv-view-nav" aria-label="Review views">${[['overview','Overview'],['slides','Slide review'],['rules','Rule check'],['plan','Action plan']].map(([id,label])=>`<button type="button" data-view="${id}" aria-pressed="${s.view===id}">${label}${id==='plan'?`<span>${m.findings.length}</span>`:''}</button>`).join('')}<span class="rv-session-status">${icon('shield',13)} ${s.demo?'Example review':m.deepReview?.complete?'Gemini · deep review':m.execution==='local'?'On-device checks · not saved':'Standard checks · not saved'}</span></nav>
  <div class="rv-view-content">${s.view==='overview'?overview(s):s.view==='slides'?slidesView(s):s.view==='rules'?rulesView(s):planView(s)}</div>
  <details class="rv-coverage"><summary>What this review covers ${icon('chevron',14)}</summary><p>Checks inspect editable slide text, explicit Latin font settings, picture descriptions, hidden slides and stored object bounds. Wording matches are candidate evidence. Inherited styles, rendered layout, charts, factual accuracy, colour contrast and organiser decisions need human review. This review does not predict selection.${s.embeddedCount?' '+s.embeddedCount+' embedded attachment(s) skipped; check chart values against their workbooks.':''}</p><button type="button" class="rv-text-button" data-print>Print or save a full report as PDF ${icon('arrow',14)}</button></details>`;
  const host=report.querySelector('[data-search-suggestions]');
@@ -93,9 +95,10 @@ function render(s){
  }
  report.hidden=false;
 }
-function showReport({file,event='',rules='',slides,stage='screening',demo=false,embeddedCount=0,comparison=null,stale=false,source='',additionalRules='',model=buildReview(slides,rules)}){
+function showReport({file,event='',rules='',slides,stage='screening',demo=false,embeddedCount=0,comparison=null,stale=false,source='',additionalRules='',context=null,model=buildReview(slides,rules)}){
  const report=$('report');if(!report)return;
- const s={rules,source,additionalRules,comparison,stale,model,report,name:file.name,event,stage,demo,embeddedCount,view:'overview',active:slides[0].index,lens:'all',addressed:new Set(),highlight:null};
+ states.get(report)?.comparisonRun?.abort();
+ const s={context,rules,source,additionalRules,comparison,stale,model,report,name:file.name,event,stage,demo,embeddedCount,view:'overview',active:slides[0].index,lens:'all',addressed:new Set(),highlight:null};
  states.set(report,s);render(s);report.focus({preventScroll:true});report.scrollIntoView({behavior:'smooth',block:'start'});
 }
 function refreshFile(form){
@@ -114,6 +117,7 @@ document.addEventListener('click',e=>{
  if(e.target.closest('[data-review-demo]')){if($('intake')?.hasAttribute('aria-busy'))return;showReport({file:{name:'CampusLoop — example.pptx'},event:'Campus innovation challenge',rules:demoRules,slides:demoSlides,stage:'screening',demo:true});return;}
  const report=e.target.closest('#report'),s=report&&states.get(report);if(!s)return;
  const button=e.target.closest('button');if(!button)return;
+ if(button.hasAttribute('data-cancel-comparison')){s.comparisonRun?.abort();return;}
  if(button.hasAttribute('data-edit-rules')){editContext(true);return;}
  if(button.hasAttribute('data-edit-context')){editContext();return;}
  if(button.hasAttribute('data-download')){
@@ -144,31 +148,32 @@ for(const type of ['dragenter','dragover','dragleave','drop'])document.addEventL
  drop.classList.toggle('is-dragging',type==='dragenter'||type==='dragover');
  if(type==='drop'&&!$('file').disabled&&e.dataTransfer?.files.length){if(e.dataTransfer.files.length!==1){$('status').textContent='Choose one PowerPoint at a time.';return;}const input=$('file');input.files=e.dataTransfer.files;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));}
 });
-async function inspectFile(file,update){
+async function inspectFile(file,update,signal){
+  const check=()=>{if(signal?.aborted)throw Error('Review cancelled.');};check();
   validatePresentationFile(file);
   if(file.size>8*1024*1024)throw Error('This deck is larger than 8 MB. Compress images in PowerPoint and try again.');
   update(1,'Opening your PowerPoint…');await new Promise(resolve=>setTimeout(resolve,0));
-  if(!window.JSZip)await import('./vendor/jszip.min.js');
-  const slides=[];const template=await readTemplate(new Uint8Array(await file.arrayBuffer()),window.JSZip,(doc,index,canvas)=>{slides.push(inspectSlide(doc,index,canvas));update(2,'Inspecting slide '+index+' in presentation order…');},{reviewOnly:true});
-  return {slides,embeddedCount:template.embeddedCount};
+  check();if(!window.JSZip)await import('./vendor/jszip.min.js');check();
+  const slides=[];const template=await readTemplate(new Uint8Array(await file.arrayBuffer()),window.JSZip,(doc,index,canvas)=>{check();slides.push(inspectSlide(doc,index,canvas));update(2,'Inspecting slide '+index+' in presentation order…');},{reviewOnly:true});
+  check();return {slides,embeddedCount:template.embeddedCount};
 }
 document.addEventListener('change',async e=>{
  if(!e.target.matches('[data-revision]')||!e.target.files[0])return;
  const report=e.target.closest('#report'),s=states.get(report),file=e.target.files[0];
  if(!s||s.comparing)return;
- s.comparing=true;e.target.disabled=true;
+ s.comparing=true;const controller=new AbortController();s.comparisonRun=controller;render(s);
  const update=(_,message)=>{s.revisionMessage=message;const status=report.querySelector('[data-revision-status]');if(status&&states.get(report)===s)status.textContent=message;};
  try {
-  const {slides,embeddedCount}=await inspectFile(file,update);
+  const {slides,embeddedCount}=await inspectFile(file,update,controller.signal);
   if(states.get(report)!==s||!report.isConnected)return;
   update(3,'Checking the revised slides and competition rules…');
-  const result=await runPresentationReview(slides,{event:s.event,source:s.source,additionalRules:s.additionalRules,onProgress:message=>update(3,message)});
+  const result=await runPresentationReview(slides,{event:s.event,source:s.source,additionalRules:s.additionalRules,signal:controller.signal,baseline:s.context||{rules:s.rules,source:s.source,...s.model.research},onProgress:message=>update(3,message)});
   const model=result.model;
   if(states.get(report)!==s||!report.isConnected)return;
-  showReport({file,slides,rules:result.rules,source:result.source,additionalRules:s.additionalRules,event:s.event,stage:s.stage,embeddedCount,stale:s.stale,model,
-   comparison:{name:s.name,rows:compareReviews(s.model,model)}});
+  showReport({file,slides,rules:result.rules,source:result.source,additionalRules:s.additionalRules,event:s.event,stage:s.stage,embeddedCount,stale:s.stale,model,context:result.context,
+   comparison:{name:s.name,sameBrief:true,rows:compareReviews(s.model,model)}});
  }catch(error){update(0,error.message||'Choose another PowerPoint and try again.');}
- finally{s.comparing=false;const picker=report.querySelector('[data-revision]');if(picker&&states.get(report)===s){picker.value='';picker.disabled=false;}}
+ finally{s.comparing=false;s.comparisonRun=null;if(states.get(report)===s)render(s);}
 });
 let deepRun;
 document.addEventListener('click',e=>{if(e.target.closest('#review-cancel'))deepRun?.abort();});
@@ -177,19 +182,19 @@ document.addEventListener('submit',async e=>{
  const form=e.target,file=$('file').files[0],event=$('event').value.trim(),source=$('review-source').value.trim(),additionalRules=$('review-additional-rules').value.trim();
  const fields=Array.from(form.elements);fields.forEach(field=>field.disabled=true);
  const progress=$('review-progress');progress.hidden=false;form.setAttribute('aria-busy','true');$('status').classList.remove('is-error');
- deepRun=new AbortController();const cancel=$('review-cancel');cancel.hidden=false;cancel.disabled=false;
+ deepRun?.abort();states.get($('report'))?.comparisonRun?.abort();const controller=new AbortController();deepRun=controller;const cancel=$('review-cancel');cancel.hidden=false;cancel.disabled=false;
  const step=(n,message)=>{progress.dataset.step=n;$('status').textContent=message;};
  try{
-  const {slides,embeddedCount}=await inspectFile(file,step);
-  const result=await runPresentationReview(slides,{event,source,additionalRules,signal:deepRun.signal,onProgress:message=>step(3,message)});
-  if(!form.isConnected)return;
-  showReport({file,event,rules:result.rules,source:result.source,additionalRules,slides,stage:'auto',embeddedCount,model:result.model});
-  step(3,result.model.aiError?'Your completed checks are ready. Some analysis was unavailable.':'Your review is ready.');
+  const {slides,embeddedCount}=await inspectFile(file,step,controller.signal);
+  const result=await runPresentationReview(slides,{event,source,additionalRules,signal:controller.signal,onProgress:message=>step(3,message)});
+  if(!form.isConnected||controller.signal.aborted)return;
+  showReport({file,event,rules:result.rules,source:result.source,additionalRules,slides,stage:'auto',embeddedCount,model:result.model,context:result.context});
+  step(3,result.model.aiError?'Your completed checks are ready. Some analysis was unavailable.':'Your on-device review is ready.');
  }catch(error){
   if(!form.isConnected)return;
   $('status').classList.add('is-error');$('status').textContent=error.message||'We could not review this file. Please try again.';
  }finally{
-  fields.forEach(field=>field.disabled=false);progress.hidden=true;cancel.hidden=true;form.removeAttribute('aria-busy');deepRun=null;
+  fields.forEach(field=>field.disabled=false);progress.hidden=true;cancel.hidden=true;form.removeAttribute('aria-busy');if(deepRun===controller)deepRun=null;
  }
 });
 

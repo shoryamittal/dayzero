@@ -1,6 +1,7 @@
 import {lookup} from 'node:dns/promises';
 import {get} from 'node:https';
 import {isIP} from 'node:net';
+import {externalAPIsEnabled, pendingIntegration} from './service-policy.mjs';
 
 export function publicAddress(address) {
   // Use globally routable IPv4 only. Reject IPv6 and mapped/private ranges.
@@ -17,6 +18,7 @@ export function competitionURL(value) {
 }
 
 async function readPage(value, redirects = 0) {
+  if (!externalAPIsEnabled()) throw Error(pendingIntegration.error);
   const url = competitionURL(value);
   const addresses = await lookup(url.hostname, {all:true, family:4});
   if (!addresses.length || addresses.some(item => !publicAddress(item.address))) throw Error('Unavailable source.');
@@ -68,6 +70,7 @@ export default async function handler(request,response) {
   response.setHeader('Cache-Control','no-store');
   response.setHeader('X-Content-Type-Options','nosniff');
   if (request.method !== 'GET') return response.status(405).json({error:'Use GET.'});
+  if (!externalAPIsEnabled()) return response.status(503).json(pendingIntegration);
   try {
     const url=new URL(request.url,'https://pitchviva.invalid').searchParams.get('url');
     if (!url || url.length>1000) return response.status(400).json({error:'Add a competition page link.'});

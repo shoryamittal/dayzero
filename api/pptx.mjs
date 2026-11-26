@@ -3,6 +3,7 @@ import {runInNewContext} from 'node:vm';
 import {makePowerPoint} from '../dist/deck-design.mjs';
 import {safeFilename, validateProject} from '../dist/engine.mjs';
 import {repairSlideMasters} from '../dist/pptx-package.mjs';
+import {withSpeakerNotes} from '../dist/pitch-kit.mjs';
 
 const mime = 'application/vnd.openxmlformats-officedocument.presentationml.presentation';
 const limit = 4 * 1024 * 1024;
@@ -61,7 +62,7 @@ export default async function generate(req, res) {
       return json(res, error instanceof SyntaxError ? 400 : 422, {error: 'Invalid project JSON.'});
     }
     const {PptxGenJS, JSZip} = exportLibraries();
-    const original = await makePowerPoint(project, PptxGenJS);
+    const original = await makePowerPoint(withSpeakerNotes(project), PptxGenJS);
     const file = await repairSlideMasters(original, JSZip);
     const bytes = Buffer.from(await file.arrayBuffer());
     res.writeHead(200, {'Content-Type': mime, 'Content-Length': bytes.length,

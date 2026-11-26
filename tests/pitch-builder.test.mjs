@@ -19,7 +19,7 @@ test('pitch start is brief and never asks customers for AI or reference setup',(
 });
 test('automatic pitch research and drafting use server credentials and preserve the original',async()=>{
  const p=idea(),progress=[],calls=[];
- const result=await buildStudioPitch(p,{source:'https://organizer.example',save:async()=>{},refresh:()=>progress.push(p.pitchBuild.steps.draft),fetcher:async(url,options)=>{
+ const result=await buildStudioPitch(p,{allowExternal:true,source:'https://organizer.example',save:async()=>{},refresh:()=>progress.push(p.pitchBuild.steps.draft),fetcher:async(url,options)=>{
   calls.push({url,data:JSON.parse(options.body)});assert.equal(options.headers['x-gemini-key'],undefined);
   return response(url==='/api/review-ai'?research:{result:draft});
  }});
@@ -34,19 +34,19 @@ test('automatic pitch research and drafting use server credentials and preserve 
 });
 test('without a server AI connection users keep their idea and receive meaningful next questions',async()=>{
  const p=idea();
- const result=await buildStudioPitch(p,{fetcher:async(url)=>{assert.equal(url,'/api/review-ai');return response({...research,available:false});}});
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async(url)=>{assert.equal(url,'/api/review-ai');return response({...research,available:false});}});
  assert.equal(p.problem,'');assert.equal(p.history.length,0);assert.equal(result.aiApplied,false);
  assert.equal(result.steps.draft,'limited');assert.equal(result.gaps.length,3);assert.match(result.message,/temporarily unavailable/);
 });
 test('research failures preserve user rules and never trigger a draft with invented context',async()=>{
  const p=idea();let count=0;
- const result=await buildStudioPitch(p,{fetcher:async()=>{count++;throw Error('network');}});
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async()=>{count++;throw Error('network');}});
  assert.equal(count,1);assert.equal(p.rules,'Maximum 6 slides.');assert.equal(p.solution,'Students find quiet study spaces.');
  assert.equal(result.steps.research,'limited');assert.equal(result.sources.length,0);
 });
 test('edits made during an AI request are never overwritten',async()=>{
  const p=idea();
- const result=await buildStudioPitch(p,{fetcher:async(url)=>{
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async(url)=>{
   if(url==='/api/review-ai')return response(research);
   p.solution='My newer product description.';
   return response({result:draft});
@@ -56,12 +56,12 @@ test('edits made during an AI request are never overwritten',async()=>{
 });
 test('changing the organiser rules while research runs stops automatic application',async()=>{
  const p=idea();let calls=0;
- const result=await buildStudioPitch(p,{fetcher:async()=>{calls++;p.rules='Maximum 4 slides.';return response(research);}});
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async()=>{calls++;p.rules='Maximum 4 slides.';return response(research);}});
  assert.equal(calls,1);assert.equal(p.rules,'Maximum 4 slides.');assert.equal(result.steps.draft,'limited');assert.equal(result.aiApplied,false);
 });
 test('incomplete provider drafts cannot replace the story',async()=>{
  const p=idea();
- const result=await buildStudioPitch(p,{fetcher:async(url)=>response(url==='/api/review-ai'?research:{result:{story:{solution:'Invented'},headlines:{},gaps:[]}})});
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async(url)=>response(url==='/api/review-ai'?research:{result:{story:{solution:'Invented'},headlines:{},gaps:[]}})});
  assert.equal(result.aiApplied,false);assert.equal(p.solution,'Students find quiet study spaces.');assert.equal(p.history.length,0);
 });
 test('saved build metadata bounds data and removes unsafe source URLs',()=>{
@@ -71,20 +71,20 @@ test('saved build metadata bounds data and removes unsafe source URLs',()=>{
 test('pitch drafting accepts owner-side credentials without asking visitors for a key',async()=>{
  const req=new Request('https://pitch.example/api/assist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mode:'draft',input:{solution:'Students find quiet study spaces.'}})});
  let calls=0;
- const r=await handleAssist(req,async(url,options)=>{calls++;assert.equal(options.headers['x-goog-api-key'],'server-key-for-mocked-provider-only');return response({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(draft)}]}}]});},{serverKey:'server-key-for-mocked-provider-only'});
+ const r=await handleAssist(req,async(url,options)=>{calls++;assert.equal(options.headers['x-goog-api-key'],'server-key-for-mocked-provider-only');return response({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(draft)}]}}]});},{serverKey:'server-key-for-mocked-provider-only',externalEnabled:true});
  assert.equal(r.status,200);assert.equal(calls,1);assert.equal((await r.json()).result.story.solution,draft.story.solution);
 });
 
 test('deleted or replaced projects are not saved or drafted when research returns',async()=>{
  const p=idea();let current=true,saves=0,calls=0;
- const result=await buildStudioPitch(p,{isCurrent:()=>current,save:async()=>{saves++;},fetcher:async()=>{
+ const result=await buildStudioPitch(p,{allowExternal:true,isCurrent:()=>current,save:async()=>{saves++;},fetcher:async()=>{
   calls++;current=false;return response(research);
  }});
  assert.equal(result,null);assert.equal(calls,1);assert.equal(saves,1);assert.equal(p.history.length,0);
 });
 test('deleted projects cannot receive a delayed AI draft',async()=>{
  const p=idea();let current=true,saves=0;
- const result=await buildStudioPitch(p,{isCurrent:()=>current,save:async()=>{saves++;},fetcher:async(url)=>{
+ const result=await buildStudioPitch(p,{allowExternal:true,isCurrent:()=>current,save:async()=>{saves++;},fetcher:async(url)=>{
   if(url==='/api/review-ai')return response(research);
   current=false;return response({result:draft});
  }});
@@ -92,7 +92,7 @@ test('deleted projects cannot receive a delayed AI draft',async()=>{
 });
 test('headline edits made during AI drafting are preserved',async()=>{
  const p=idea();
- const result=await buildStudioPitch(p,{fetcher:async(url)=>{
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async(url)=>{
   if(url==='/api/review-ai')return response(research);
   p.slideHeadlines.solution='My edited headline';return response({result:draft});
  }});
@@ -100,7 +100,7 @@ test('headline edits made during AI drafting are preserved',async()=>{
 });
 test('retry remembers the event link and keeps newly edited references',async()=>{
  const p=idea();p.pitchBuild=normalizePitchBuild({source:'https://organizer.example/rules'});let query;
- const result=await buildStudioPitch(p,{fetcher:async(url,options)=>{
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async(url,options)=>{
   query=JSON.parse(options.body);p.winnerReference={name:'My reference',text:'Keep my reference'};
   return response({...research,available:false});
  }});
@@ -109,14 +109,14 @@ test('retry remembers the event link and keeps newly edited references',async()=
 });
 test('malformed research cannot partially replace the user rules',async()=>{
  const p=idea();
- const result=await buildStudioPitch(p,{fetcher:async()=>response({...research,rules:'Different rules',sources:{bad:true}})});
+ const result=await buildStudioPitch(p,{allowExternal:true,fetcher:async()=>response({...research,rules:'Different rules',sources:{bad:true}})});
  assert.equal(p.rules,'Maximum 6 slides.');assert.equal(result.steps.research,'limited');assert.equal(p.history.length,0);
 });
 
 test('retry preserves the full saved rulebook beyond the research input limit',async()=>{
  const p=idea();p.rules='x'.repeat(7000)+' Keep this final instruction.';
  const original=p.rules;
- await buildStudioPitch(p,{fetcher:async(url,options)=>{
+ await buildStudioPitch(p,{allowExternal:true,fetcher:async(url,options)=>{
   const data=JSON.parse(options.body);
   return response({...research,available:false,rules:data.additionalRules+'\nNew readable requirement.'});
  }});

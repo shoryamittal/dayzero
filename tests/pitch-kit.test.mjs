@@ -11,7 +11,7 @@ test('a pitch kit follows the project and flags where the team needs proof', () 
     proof: 'We reached 100 students.',
     ask: 'Give us permission to test with one canteen.',
     slideHeadlines: {proof: 'Early validation'},
-    notes: {problem: 'The last tray leaves the serving counter just before many night classes end.'},
+    notes: {problem: 'The last tray leaves the serving counter just before many night classes end. Explain how a student currently finds a meal and why the existing process makes that difficult.'},
     preparation: {duration: 60, speakers: {problem:'Asha'}, requirements: [
       {title:'Show pilot evidence', quote:'Include what you tested in the field.', source:'https://example.org/rules', section:'proof'}
     ]}
@@ -25,7 +25,7 @@ test('a pitch kit follows the project and flags where the team needs proof', () 
   assert.equal((script.match(/^Slide \d/gm) || []).length, 6);
   assert.match(script, /0–10 s \/ Asha/);
   assert.match(script, /Trim to 10 s/);
-  assert.match(script, /Hello, we’re Team Table/);
+  assert.doesNotMatch(script, /Hello, we’re Team Table/);
   assert.match(script, /last tray leaves the serving counter/);
   assert.match(script, /Thank you for listening/);
   const practice = files['jury-questions-and-answers.txt'];

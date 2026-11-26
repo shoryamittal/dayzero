@@ -1,4 +1,5 @@
 import {eventCatalog, searchEventRecords, searchPublicEvents, normalizeEvent, validSource} from './event-engine.mjs?v=pitchviva-1';
+import {externalIntegrationsEnabled, INTEGRATION_PENDING_MESSAGE} from './integration-policy.mjs';
 
 const guides = {
   imagine: {edition:'Imagine Cup 2027', year:'2027', label:'Competition category', source:'https://imaginecup.microsoft.com/en-us/compete', choices:{
@@ -20,6 +21,11 @@ const guides = {
     Hardware:'Show the physical prototype, its operating conditions, and what your tests demonstrated.'}}
 };
 
+export function competitionRoundGuide(record, year = '') {
+  const guide=guides[record?.id];
+  return guide && !(year && guide.year && String(year)!==guide.year) ? guide : null;
+}
+
 function linkName(link) {
   const url = new URL(link);
   const host = url.hostname.replace(/^www\./,'');
@@ -31,6 +37,7 @@ function linkName(link) {
 }
 
 async function devpostSearch(query, signal) {
+  if (!externalIntegrationsEnabled()) return [];
   const url = new URL('https://devpost.com/api/hackathons');
   url.searchParams.set('search',query);
   const res = await fetch(url,{signal,credentials:'omit',referrerPolicy:'no-referrer'});
@@ -43,6 +50,7 @@ async function devpostSearch(query, signal) {
 }
 
 async function pageGuide(href,signal) {
+  if (!externalIntegrationsEnabled()) return null;
   const url=new URL(href);
   if (!/^[a-z0-9.-]+\.[a-z]{2,}$/i.test(url.hostname) || /\.(localhost|local|internal|test)$/i.test(url.hostname)) return null;
   const res=await fetch(url,{signal,mode:'cors',credentials:'omit',redirect:'error',referrerPolicy:'no-referrer'});
@@ -116,15 +124,28 @@ const cached = new Map();
 const hostOf = link => new URL(link).hostname.replace(/^www\./,'');
 const option = (label,value) => new Option(label,value);
 
-customElements.define('competition-picker',class extends HTMLElement {
+export function competitionSelection(record, {year = '', reference = ''} = {}) {
+  const selected = normalizeEvent(record);
+  if (!selected) return null;
+  const edition = /^20\d{2}$/.test(String(year)) ? String(year) : '';
+  const supplied = validSource(reference);
+  if (edition) {
+    selected.name = selected.name.replace(/\s+20\d{2}$/, '') + ' ' + edition;
+    selected.edition = edition + ' · team-selected edition; current rules not verified';
+  }
+  if (supplied) Object.assign(selected, {source:supplied,sourceLabel:'Team-supplied competition reference',official:supplied});
+  return selected;
+}
+
+if (typeof customElements !== 'undefined' && !customElements.get('competition-picker')) customElements.define('competition-picker',class extends HTMLElement {
   connectedCallback() {
     if (this.childElementCount) return;
     this.innerHTML = `<div class="field"><label for="competition-name">Find your competition</label>
       <input id="competition-name" name="event" maxlength="160" autocomplete="off" placeholder="Search by name, e.g. Imagine Cup">
       <div class="reference-link">
         <label for="competition-link">Official link <small>(optional)</small></label>
-        <input id="competition-link" type="url" placeholder="https://…" maxlength="1000">
-        <button type="button" data-link>Read link</button></div>
+        <input id="competition-link" name="competitionLink" type="url" placeholder="https://…" maxlength="1000">
+        <button type="button" data-link>${externalIntegrationsEnabled()?'Read link':'Save link'}</button></div>
       <p class="competition-status" role="status"></p><div class="competition-results"></div></div>
       <div class="competition-context" hidden><a target="_blank" rel="noopener noreferrer"></a>
         <label for="competition-options">Round or track</label><select id="competition-options"></select>
@@ -168,22 +189,22 @@ customElements.define('competition-picker',class extends HTMLElement {
     const choose=(record)=>{
       stop();
       const row=normalizeEvent(record);
-      this.record=reference?{...row,source:reference,sourceLabel:'Competition reference',official:reference}:row;
-      name.value=row.name;
+      this.record=competitionSelection(row,{year:typedYear,reference});
+      name.value=this.record.name;
       results.replaceChildren();
       const g=guides[row.id];
       guide=linkedGuide || (g && !(typedYear && g.year && typedYear!==g.year)?g:null);
-      if (guide && this.record.origin==='catalog') this.record={...this.record,edition:guide.edition};
+      if (guide && this.record.origin==='catalog' && !typedYear) this.record={...this.record,edition:guide.edition};
       const href=validSource(reference || guide?.source || row.official || row.source);
       source.hidden=!href;
       if(href){source.href=href;source.textContent=reference?'Open your reference ↗':guide?guide.edition+' ↗':row.sourceLabel+' ↗';}
-      status.textContent=guide?(reference?guide.edition:'Competition selected.'):'Competition selected. You can add a round from the organizer’s brief.';
+      status.textContent=(guide?(reference?guide.edition:'Saved competition reference selected.'):'Competition selected. Add your round from the organizer’s brief.')+(externalIntegrationsEnabled()?'':' Live research is pending; confirm the current rules yourself.');
       context.hidden=false;
       q('label[for=competition-options]').textContent=guide?.label || 'Round or track';
       select.replaceChildren(option('Choose later',''),...Object.keys(guide?.choices || {}).map(x=>option(x,x)),option('Enter my own…','other'));
       custom.value='';updateRound();
       this.dispatchEvent(new CustomEvent('competition-selected',{bubbles:true}));
-      if(!guide && row.id.startsWith('devpost-') && row.official){
+      if(externalIntegrationsEnabled() && !guide && row.id.startsWith('devpost-') && row.official){
         const token=sequence;
         const active=new AbortController();pageController=active;
         const timeout=setTimeout(()=>active.abort(),3800);
@@ -215,7 +236,12 @@ customElements.define('competition-picker',class extends HTMLElement {
       results.replaceChildren();status.textContent='';
       if(query.length<2)return;
       const local=searchEventRecords(this.savedRecords?.() || eventCatalog,query).slice(0,4);
-      display(local);status.textContent='Looking for online matches…';
+      display(local);
+      if(!externalIntegrationsEnabled()){
+        status.textContent=local.length?'Choose a saved reference or keep your event name. Current schedules and live research are pending.':'No saved match. Keep your event name and add the organizer’s rules. Live research is pending.';
+        return;
+      }
+      status.textContent='Looking for online matches…';
       const token=sequence;
       timer=setTimeout(async()=>{
         controller=new AbortController();
@@ -247,6 +273,12 @@ customElements.define('competition-picker',class extends HTMLElement {
       const domain=hostOf(href);
       const match=eventCatalog.find(e=>e.official && hostOf(e.official)===domain);
       reference=href;linkedGuide=null;pageController?.abort();
+      if(!externalIntegrationsEnabled()){
+        typedYear=(name.value+' '+href).match(/\b20\d{2}\b/)?.[0]||'';
+        choose(match||{id:'link-'+href.slice(8,90),name:name.value.trim()||linkName(href),source:href,sourceLabel:'Team-supplied competition reference',origin:'manual'});
+        status.textContent='Link saved without opening it. '+INTEGRATION_PENDING_MESSAGE+' Add the current round, track and rules from your organizer.';
+        return;
+      }
       if(match){typedYear=(href+' '+name.value).match(/\b20\d{2}\b/)?.[0]||'';choose(match);}
       else {
         stop();

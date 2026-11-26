@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {handleAssist} from '../api/assist.mjs';
+import {handleAssist as handleAssistRaw} from '../api/assist.mjs';
 import {assistInput, sections} from '../dist/assist-model.mjs';
 
 const fakeKey = 'test-key-for-mocked-provider-only';
+const handleAssist=(request,fetcher,options={})=>handleAssistRaw(request,fetcher,{externalEnabled:true,serverKey:fakeKey,...options});
 const input = {problem: 'Students miss submission deadlines.', rules: 'Maximum six slides.', name: 'Private title', team: 'Private team'};
 function request(body, headers = {}) {
   return new Request('https://dayzero.example/api/assist', {
@@ -35,7 +36,7 @@ test('review sends a bounded payload and discards invented quotes', async () => 
 
 test('missing key, foreign origin and invalid mode never call Gemini', async () => {
   const noCall = () => assert.fail('Provider called');
-  assert.equal((await handleAssist(request({mode: 'draft', input}, {'x-gemini-key': ''}), noCall)).status, 401);
+  assert.equal((await handleAssist(request({mode: 'draft', input}, {'x-gemini-key': ''}), noCall,{serverKey:''})).status, 401);
   assert.equal((await handleAssist(request({mode: 'draft', input}, {origin: 'https://other.example'}), noCall)).status, 403);
   assert.equal((await handleAssist(request({mode: 'anything', input}), noCall)).status, 400);
   assert.equal((await handleAssist(request({mode: 'review', input: {problem: 'a'.repeat(262145)}}), noCall)).status, 400);

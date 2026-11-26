@@ -1,11 +1,13 @@
 import {catalogSearch,searchPublicEvents} from './event-engine.mjs?v=pitchviva-1';
 import {aiCall} from './deep-review-client.mjs';
+import {externalIntegrationsEnabled,INTEGRATION_PENDING_MESSAGE} from './integration-policy.mjs';
 let connection;
 const mounted=new WeakSet(),searches=new WeakMap(),imports=new WeakMap();
 const field=(form,id)=>form.querySelector('#'+id);
 const add=(parent,tag,text)=>{const node=document.createElement(tag);node.textContent=text;parent.append(node);return node;};
 export function aiKey(form){return field(form,'review-ai-key')?.value.trim()||'';}
 export async function connectionReady(){
+ if(!externalIntegrationsEnabled())return {available:false,status:'pending'};
  if(!connection)connection=fetch('/api/review-ai',{credentials:'same-origin',cache:'no-store'}).then(r=>r.ok?r.json():{available:false}).catch(()=>({available:false}));
  return connection;
 }
@@ -17,10 +19,11 @@ function setDepth(form){
  form.querySelector('.rv-visual').hidden=!deep;
 }
 export async function mountReviewConnection(form){
+ if(!field(form,'review-depth'))return;
  if(mounted.has(form))return;mounted.add(form);
  const info=await connectionReady();if(!form.isConnected)return;
  form.dataset.aiAvailable=String(!!info.available);
- field(form,'review-connection-status').textContent=info.available?'AI connection ready. Deep analysis runs in batches, followed by a competition strategy pass.':'AI connection needed for deep review. Add a Gemini key below, or choose standard checks.';
+ field(form,'review-connection-status').textContent=info.available?'AI connection ready. Deep analysis runs in batches, followed by a competition strategy pass.':INTEGRATION_PENDING_MESSAGE;
  setDepth(form);
 }
 function link(parent,title,url){
@@ -28,6 +31,7 @@ function link(parent,title,url){
 }
 function safeURL(value){try{const u=new URL(value);return u.protocol==='https:'&&!u.username&&!u.password?u.href:'';}catch{return '';}}
 async function search(form,winners=false){
+ if(!externalIntegrationsEnabled()){const panel=field(form,'review-search-results');if(panel){panel.replaceChildren();add(panel,'p',INTEGRATION_PENDING_MESSAGE);}return;}
  const name=field(form,'event').value.trim(),edition=field(form,'review-edition').value.trim(),panel=field(form,'review-search-results');
  searches.get(form)?.abort();const controller=new AbortController();searches.set(form,controller);panel.replaceChildren();
  if(name.length<2){add(panel,'p','Enter the competition name first. Include a country or organizer when names overlap.');return;}
@@ -67,6 +71,7 @@ async function search(form,winners=false){
  }catch(error){if(!controller.signal.aborted&&form.isConnected){panel.replaceChildren();add(panel,'p',error.message);}}
 }
 async function readSource(form,reference=false,referenceURL=''){
+ if(!externalIntegrationsEnabled()){const panel=field(form,'review-source-status');if(panel){panel.replaceChildren();add(panel,'p',INTEGRATION_PENDING_MESSAGE);}return;}
  const panel=field(form,'review-source-status'),url=safeURL(referenceURL||field(form,'review-source').value);
  panel.replaceChildren();if(!url){add(panel,'p','Use a public HTTPS organizer or reference link.');return;}
  const button=field(form,'review-read-source');button.disabled=true;add(panel,'p',reference?'Reading the reference page…':'Reading the organizer page…');

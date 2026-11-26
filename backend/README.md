@@ -14,7 +14,9 @@ Verification: `npm run build` covers the website and recovery tests; `cd backend
 
 Start with [BACKEND.md](BACKEND.md) for the generation job, worker, review, rendered QA and downloads. Run `python local_server.py` after installing the prerequisites. The API integrations below are deferred.
 
-# Open START_HERE.html for the V3 product plan, local gallery and cost calculator.
+## Local gallery
+
+Run `python make_gallery.py`, then open `gallery/index.html` to browse the bundled editable templates. The compressed catalog is loaded automatically. This step uses no provider API. The cost estimator is a planning utility; provider integrations remain pending.
 
 # PPTGenerator competition and design API
 

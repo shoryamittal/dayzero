@@ -3,6 +3,7 @@ import html,json,re,sqlite3,csv
 from pathlib import Path
 from PIL import Image,ImageDraw,ImageFont
 from designs import SYSTEMS,render,scene,family_data,W,H
+from store import catalog_connection
 ROOT=Path(__file__).resolve().parent
 def preview(shapes,destination):
     scale=76
@@ -26,7 +27,12 @@ def preview(shapes,destination):
         for i,line in enumerate(lines):draw.text((x,y+i*size*1.22),line,font=f,fill=c)
     im.save(destination,'WEBP',quality=85)
 def build():
-    db=sqlite3.connect(ROOT/'catalog.sqlite');db.row_factory=sqlite3.Row
+    # Supports the compressed catalog in a fresh checkout as well as Docker.
+    with catalog_connection() as db:
+        return build_from_catalog(db)
+
+def build_from_catalog(db):
+    db.row_factory=sqlite3.Row
     out=ROOT/'gallery';out.mkdir(exist_ok=True);(out/'decks').mkdir(exist_ok=True);(out/'previews').mkdir(exist_ok=True)
     manifest=[]
     for r in db.execute('SELECT * FROM deck_recipes ORDER BY id'):

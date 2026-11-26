@@ -1,3 +1,5 @@
+import {externalIntegrationsEnabled, INTEGRATION_PENDING_MESSAGE} from './integration-policy.mjs';
+
 const text=(value,max=1000)=>typeof value==='string'?value.replace(/\0/g,'').trim().slice(0,max):'';
 const checked='2026-11-04';
 export const eventCatalog=[
@@ -26,8 +28,9 @@ export function wikiResults(data,now=new Date(),query=''){
  const tokens=query.toLowerCase().split(/\s+/).filter(t=>t.length>2&&!/^(the|and|for|202\d)$/.test(t));
  return pages.filter(p=>p.ns===0&&p.pageid>0&&p.title&&p.extract&&!Object.hasOwn(p.pageprops||{},'disambiguation')&&(!tokens.length||tokens.some(t=>p.title.toLowerCase().includes(t)))).sort((a,b)=>(a.index||0)-(b.index||0)).slice(0,5).map(p=>normalizeEvent({id:'wiki-'+p.pageid,name:p.title,kind:'Background result',code:'W',color:'blue',scope:'Wikipedia · background only',summary:p.extract,source:'https://en.wikipedia.org/?curid='+p.pageid,sourceLabel:'Wikipedia · CC BY-SA',edition:'Article background · event identity unconfirmed',checked:now.toISOString().slice(0,10),origin:'wikipedia',facts:[['Source type','Encyclopedia background, not organizer rules'],['Event identity','Confirm this is the event and edition you mean']],angles:[]}));
 }
-export async function searchPublicEvents(query,{signal,fetcher=fetch}={}){
+export async function searchPublicEvents(query,{signal,fetcher=fetch,externalEnabled=externalIntegrationsEnabled()}={}){
  const q=text(query,160);if(q.length<2)return [];
+ if(!externalEnabled)throw Error(INTEGRATION_PENDING_MESSAGE);
  const url=new URL('https://en.wikipedia.org/w/api.php');url.search=new URLSearchParams({action:'query',format:'json',formatversion:'2',origin:'*',generator:'search',gsrsearch:q,gsrlimit:'5',gsrnamespace:'0',prop:'extracts|pageprops',exintro:'1',explaintext:'1',exsentences:'3',exlimit:'5',redirects:'1'});
  const response=await fetcher(url,{signal,credentials:'omit',referrerPolicy:'no-referrer'});
  if(!response.ok)throw Error('Public search is temporarily unavailable.');
