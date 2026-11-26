@@ -31,7 +31,7 @@ const missingAnswer = [
 
 function hasDraft(value) {
   const text = clean(value);
-  return Boolean(text) && !/^\[ADD DATA\b/i.test(text);
+  return Boolean(text) && !/^\[ADD (?:DATA|EVIDENCE)\b/i.test(text);
 }
 
 function context(p) {
@@ -141,4 +141,24 @@ export function slideReviewSignature(project, key) {
 
 export function slideReviewed(project, key) {
   return Boolean(project.slideReviews?.[key] && project.slideReviews[key] === slideReviewSignature(project, key));
+}
+
+export function pitchDelivery(project){
+ const deck=slides(project);
+ const missing=deck.filter(slide=>!hasDraft(project[slide.key])).map(slide=>slide.key);
+ return {total:deck.length,filled:deck.length-missing.length,missing,
+  slides:deck.map(slide=>({key:slide.key,title:project.slideHeadlines?.[slide.key]||slide.title,hasContent:hasDraft(project[slide.key])})),
+  files:['Editable PowerPoint','Speaker script','Judge questions & answer drafts','Slide rationale','Project backup']};
+}
+export function resolvedSpeakerNotes(project){
+ return Object.fromEntries(slides(project).map((slide,index)=>{
+  const supplied=clean(project.notes?.[slide.key],3000);
+  if(supplied)return [slide.key,supplied];
+  const content=hasDraft(project[slide.key])?clean(project[slide.key],6000):missingAnswer[index];
+  const opening=index===0?'Hello, we’re '+(project.team||'the team behind '+project.name)+'.':'';
+  return [slide.key,[opening,content,transitions[index]].filter(Boolean).join('\n\n')];
+ }));
+}
+export function withSpeakerNotes(project){
+ return {...project,notes:resolvedSpeakerNotes(project)};
 }
