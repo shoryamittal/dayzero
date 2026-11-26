@@ -25,8 +25,9 @@ export function pitchStart(icons) {
  <li><b>03</b><div><strong>A draft you can make your own</strong><p>Edit slides, names, images and notes. Rehearse and export an editable PowerPoint.</p></div></li>
  </ol></aside></div></section>`;
 }
-export async function enrichStudio(project,href,save,refresh) {
+export async function enrichStudio(project,href,save,refresh,isCurrent=()=>true) {
+ if(studioLookups.has(project.id))return;
  studioLookups.set(project.id,true);
- try{return await buildStudioPitch(project,{source:href,save,refresh});}
+ try{return await buildStudioPitch(project,{source:href,save,refresh,isCurrent});}
  finally{studioLookups.delete(project.id);refresh();}
 }

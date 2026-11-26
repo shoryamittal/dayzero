@@ -74,3 +74,51 @@ test('pitch drafting accepts owner-side credentials without asking visitors for 
  const r=await handleAssist(req,async(url,options)=>{calls++;assert.equal(options.headers['x-goog-api-key'],'server-key-for-mocked-provider-only');return response({candidates:[{finishReason:'STOP',content:{parts:[{text:JSON.stringify(draft)}]}}]});},{serverKey:'server-key-for-mocked-provider-only'});
  assert.equal(r.status,200);assert.equal(calls,1);assert.equal((await r.json()).result.story.solution,draft.story.solution);
 });
+
+test('deleted or replaced projects are not saved or drafted when research returns',async()=>{
+ const p=idea();let current=true,saves=0,calls=0;
+ const result=await buildStudioPitch(p,{isCurrent:()=>current,save:async()=>{saves++;},fetcher:async()=>{
+  calls++;current=false;return response(research);
+ }});
+ assert.equal(result,null);assert.equal(calls,1);assert.equal(saves,1);assert.equal(p.history.length,0);
+});
+test('deleted projects cannot receive a delayed AI draft',async()=>{
+ const p=idea();let current=true,saves=0;
+ const result=await buildStudioPitch(p,{isCurrent:()=>current,save:async()=>{saves++;},fetcher:async(url)=>{
+  if(url==='/api/review-ai')return response(research);
+  current=false;return response({result:draft});
+ }});
+ assert.equal(result,null);assert.equal(saves,2);assert.equal(p.history.length,0);
+});
+test('headline edits made during AI drafting are preserved',async()=>{
+ const p=idea();
+ const result=await buildStudioPitch(p,{fetcher:async(url)=>{
+  if(url==='/api/review-ai')return response(research);
+  p.slideHeadlines.solution='My edited headline';return response({result:draft});
+ }});
+ assert.equal(result.aiApplied,false);assert.equal(p.slideHeadlines.solution,'My edited headline');assert.equal(p.history.length,0);
+});
+test('retry remembers the event link and keeps newly edited references',async()=>{
+ const p=idea();p.pitchBuild=normalizePitchBuild({source:'https://organizer.example/rules'});let query;
+ const result=await buildStudioPitch(p,{fetcher:async(url,options)=>{
+  query=JSON.parse(options.body);p.winnerReference={name:'My reference',text:'Keep my reference'};
+  return response({...research,available:false});
+ }});
+ assert.equal(query.source,'https://organizer.example/rules');assert.equal(result.source,query.source);
+ assert.equal(p.winnerReference.text,'Keep my reference');
+});
+test('malformed research cannot partially replace the user rules',async()=>{
+ const p=idea();
+ const result=await buildStudioPitch(p,{fetcher:async()=>response({...research,rules:'Different rules',sources:{bad:true}})});
+ assert.equal(p.rules,'Maximum 6 slides.');assert.equal(result.steps.research,'limited');assert.equal(p.history.length,0);
+});
+
+test('retry preserves the full saved rulebook beyond the research input limit',async()=>{
+ const p=idea();p.rules='x'.repeat(7000)+' Keep this final instruction.';
+ const original=p.rules;
+ await buildStudioPitch(p,{fetcher:async(url,options)=>{
+  const data=JSON.parse(options.body);
+  return response({...research,available:false,rules:data.additionalRules+'\nNew readable requirement.'});
+ }});
+ assert.ok(p.rules.startsWith(original));assert.match(p.rules,/New readable requirement/);assert.ok(p.rules.length<=10000);
+});
